@@ -1,7 +1,8 @@
+
 import React, { useRef, useState } from 'react';
 import { 
     ChevronRight, User as UserIcon, Briefcase, GraduationCap, Zap, 
-    XCircle, Plus, Sparkles, Loader2, X 
+    XCircle, Plus, Sparkles, Loader2, X, ChevronUp, ChevronDown 
 } from 'lucide-react';
 import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 import RichTextEditor from '../../components/RichTextEditor';
@@ -43,13 +44,26 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
         }
     };
 
+    // Generic move function
+    const moveItem = <T,>(arr: T[], index: number, direction: 'up' | 'down'): T[] => {
+        const newArr = [...arr];
+        if (direction === 'up' && index > 0) {
+            [newArr[index], newArr[index - 1]] = [newArr[index - 1], newArr[index]];
+        } else if (direction === 'down' && index < newArr.length - 1) {
+            [newArr[index], newArr[index + 1]] = [newArr[index + 1], newArr[index]];
+        }
+        return newArr;
+    };
+
     const addExperience = () => setCvData(prev => ({ ...prev, experience: [...prev.experience, { id: Date.now().toString(), title: '', company: '', location: '', startDate: '', endDate: '', current: false, description: '' }] }));
     const updateExperience = (id: string, field: keyof CVExperience, value: string | boolean) => setCvData(prev => ({ ...prev, experience: prev.experience.map(item => item.id === id ? { ...item, [field]: value } : item) }));
     const removeExperience = (id: string) => setCvData(prev => ({ ...prev, experience: prev.experience.filter(item => item.id !== id) }));
+    const moveExperience = (index: number, direction: 'up' | 'down') => setCvData(prev => ({ ...prev, experience: moveItem(prev.experience, index, direction) }));
     
     const addEducation = () => setCvData(prev => ({ ...prev, education: [...prev.education, { id: Date.now().toString(), degree: '', school: '', location: '', year: '' }] }));
     const updateEducation = (id: string, field: keyof CVEducation, value: string) => setCvData(prev => ({ ...prev, education: prev.education.map(item => item.id === id ? { ...item, [field]: value } : item) }));
     const removeEducation = (id: string) => setCvData(prev => ({ ...prev, education: prev.education.filter(item => item.id !== id) }));
+    const moveEducation = (index: number, direction: 'up' | 'down') => setCvData(prev => ({ ...prev, education: moveItem(prev.education, index, direction) }));
 
     const addSkill = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && skillInput.trim()) {
@@ -125,10 +139,14 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                 </button>
                 {activeAccordion === 'experience' && (
                     <div className="p-4 bg-white dark:bg-slate-900">
-                        {cvData.experience.map((exp) => (
+                        {cvData.experience.map((exp, index) => (
                             <div key={exp.id} className="mb-6 pb-6 border-b border-slate-100 dark:border-slate-800 last:border-0 last:mb-0 last:pb-0 relative group">
-                                <button onClick={() => removeExperience(exp.id)} className="absolute right-0 top-0 text-slate-300 hover:text-red-500 z-10" aria-label="Remove Experience"><XCircle size={16}/></button>
-                                <div className="space-y-3">
+                                <div className="absolute right-0 top-0 flex gap-1 z-10">
+                                    <button onClick={() => moveExperience(index, 'up')} disabled={index === 0} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30" aria-label="Move Up"><ChevronUp size={16}/></button>
+                                    <button onClick={() => moveExperience(index, 'down')} disabled={index === cvData.experience.length - 1} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30" aria-label="Move Down"><ChevronDown size={16}/></button>
+                                    <button onClick={() => removeExperience(exp.id)} className="p-1 text-slate-300 hover:text-red-500 ml-2" aria-label="Remove Experience"><XCircle size={16}/></button>
+                                </div>
+                                <div className="space-y-3 pt-6">
                                     <Input placeholder="Job Title" value={exp.title} onChange={e => updateExperience(exp.id, 'title', e.target.value)} className="font-semibold" />
                                     <div className="grid grid-cols-2 gap-3">
                                         <Input placeholder="Company" value={exp.company} onChange={e => updateExperience(exp.id, 'company', e.target.value)} />
@@ -160,14 +178,20 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                 </button>
                 {activeAccordion === 'education' && (
                     <div className="p-4 bg-white dark:bg-slate-900">
-                        {cvData.education.map((edu) => (
+                        {cvData.education.map((edu, index) => (
                             <div key={edu.id} className="mb-4 pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:mb-0 last:pb-0 relative">
-                                <button onClick={() => removeEducation(edu.id)} className="absolute right-0 top-0 text-slate-300 hover:text-red-500" aria-label="Remove Education"><XCircle size={16}/></button>
-                                <Input placeholder="Degree" value={edu.degree} onChange={e => updateEducation(edu.id, 'degree', e.target.value)} className="mb-2" />
-                                <Input placeholder="School" value={edu.school} onChange={e => updateEducation(edu.id, 'school', e.target.value)} className="mb-2" />
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Input placeholder="Location" value={edu.location} onChange={e => updateEducation(edu.id, 'location', e.target.value)} />
-                                    <Input placeholder="Year" value={edu.year} onChange={e => updateEducation(edu.id, 'year', e.target.value)} />
+                                <div className="absolute right-0 top-0 flex gap-1 z-10">
+                                    <button onClick={() => moveEducation(index, 'up')} disabled={index === 0} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30" aria-label="Move Up"><ChevronUp size={16}/></button>
+                                    <button onClick={() => moveEducation(index, 'down')} disabled={index === cvData.education.length - 1} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30" aria-label="Move Down"><ChevronDown size={16}/></button>
+                                    <button onClick={() => removeEducation(edu.id)} className="p-1 text-slate-300 hover:text-red-500 ml-2" aria-label="Remove Education"><XCircle size={16}/></button>
+                                </div>
+                                <div className="pt-6">
+                                    <Input placeholder="Degree" value={edu.degree} onChange={e => updateEducation(edu.id, 'degree', e.target.value)} className="mb-2" />
+                                    <Input placeholder="School" value={edu.school} onChange={e => updateEducation(edu.id, 'school', e.target.value)} className="mb-2" />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Input placeholder="Location" value={edu.location} onChange={e => updateEducation(edu.id, 'location', e.target.value)} />
+                                        <Input placeholder="Year" value={edu.year} onChange={e => updateEducation(edu.id, 'year', e.target.value)} />
+                                    </div>
                                 </div>
                             </div>
                         ))}

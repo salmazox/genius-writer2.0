@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check } from 'lucide-react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig } from '../types';
@@ -128,8 +128,15 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const handleCopy = () => {
         if (!documentContent) return;
         navigator.clipboard.writeText(documentContent);
-        showToast(t('dashboard.toasts.copied'), 'info');
+        showToast("Copied Markdown", 'info');
     };
+
+    const handleCopyHtml = () => {
+        if (!previewRef.current) return;
+        const html = previewRef.current.innerHTML;
+        navigator.clipboard.writeText(html);
+        showToast("Copied HTML Code", 'info');
+    }
 
     const handleExportWord = () => {
         if (!documentContent) { showToast("No content to export", "error"); return; }
@@ -273,7 +280,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                             )}
                         </div>
                         <div className="flex items-center gap-2">
-                             <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Text" icon={Copy} />
+                             <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Markdown" icon={Copy} />
+                             <Button variant="ghost" size="sm" onClick={handleCopyHtml} title="Copy HTML" icon={Code} />
                              <Button variant="ghost" size="sm" onClick={handleExportWord} title="Export as Word" icon={FileType} />
                              <Button variant="ghost" size="sm" onClick={handleDownloadPDF} title="Export as PDF" icon={Download} />
                         </div>
