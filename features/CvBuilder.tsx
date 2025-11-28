@@ -242,13 +242,14 @@ const CvBuilder: React.FC = () => {
             <div className={`w-full lg:w-[380px] xl:w-[450px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto p-4 custom-scrollbar z-10 flex-shrink-0 ${mobileTab === 'preview' ? 'hidden lg:block' : 'flex-1 lg:block'}`}>
                  <div className="mb-6 space-y-4">
                      {/* Score */}
-                     <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+                     <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden" role="region" aria-label="Profile Strength">
                         <div className="flex justify-between items-end mb-2 relative z-10">
                             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
                                 <Trophy size={14} className={completionScore === 100 ? "text-yellow-500" : "text-slate-400"} />
                                 Profile Strength
                             </h3>
                             <span className={`text-lg font-bold ${completionScore === 100 ? 'text-green-500' : 'text-indigo-600'}`}>{completionScore}%</span>
+                            <span className="sr-only">Completion score: {completionScore} percent</span>
                         </div>
                         <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 relative z-10">
                             <div className={`h-2 rounded-full transition-all duration-500 ease-out ${completionScore === 100 ? 'bg-green-500' : 'bg-indigo-600'}`} style={{ width: `${completionScore}%` }}></div>

@@ -5,6 +5,7 @@ import { useToast } from '../contexts/ToastContext';
 import { generateContent } from '../services/gemini';
 import { ToolType } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const LANGUAGES = [
     "English", "Spanish", "French", "German", "Italian", "Portuguese", "Dutch", "Polish", "Russian",
@@ -15,9 +16,12 @@ const LANGUAGES = [
 
 const Translator: React.FC = () => {
     const { showToast } = useToast();
-    const [sourceLang, setSourceLang] = useState('');
-    const [targetLang, setTargetLang] = useState('English');
-    const [documentContent, setDocumentContent] = useState('');
+    
+    // Persist state
+    const [sourceLang, setSourceLang] = useLocalStorage<string>('trans_source', '');
+    const [targetLang, setTargetLang] = useLocalStorage<string>('trans_target', 'English');
+    const [documentContent, setDocumentContent] = useLocalStorage<string>('trans_content', '');
+    
     const [translationOutput, setTranslationOutput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     
