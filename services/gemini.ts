@@ -1,11 +1,47 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { ToolType, CVData, ATSAnalysis } from "../types";
 import { getPromptConfig } from "../config/aiPrompts";
 
-// Initialize Gemini Client
-// IMPORTANT: API_KEY must be set in environment variables (see vite.config.ts)
+/**
+ * ⚠️ SECURITY WARNING ⚠️
+ * 
+ * This application is currently configured for a client-side only demonstration.
+ * The API key is exposed in the browser bundle via process.env.API_KEY.
+ * 
+ * IN PRODUCTION:
+ * 1. Do not expose your Gemini API key in client-side code.
+ * 2. Implement a backend proxy (Node.js, Python, Go) to handle API calls.
+ * 3. Store the API key securely in your backend server variables.
+ * 4. Implement rate limiting and user authentication on your backend.
+ */
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+// Simple in-memory cache to prevent redundant API calls
+const requestCache = new Map<string, string>();
+
+/**
+ * Retry helper with exponential backoff
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>, 
+  retries = 3, 
+  delay = 1000,
+  signal?: AbortSignal
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: any) {
+    if (signal?.aborted) throw error;
+    
+    // Retry on server errors (503) or rate limits (429)
+    if (retries > 0 && (error.status === 503 || error.status === 429)) {
+      console.warn(`API Error ${error.status}. Retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return withRetry(fn, retries - 1, delay * 2, signal);
+    }
+    throw error;
+  }
+}
 
 export const generateContent = async (
   tool: ToolType,
@@ -15,6 +51,12 @@ export const generateContent = async (
 ): Promise<string> => {
   
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+  // Create a cache key based on inputs
+  const cacheKey = `${tool}-${JSON.stringify(inputs)}-${brandVoiceInstruction || ''}`;
+  if (requestCache.has(cacheKey)) {
+    return requestCache.get(cacheKey)!;
+  }
 
   // Handle Image Gen separately
   if (tool === ToolType.IMAGE_GEN) {
@@ -52,15 +94,23 @@ export const generateContent = async (
   }
 
   try {
-    const response = await ai.models.generateContent({
-      model: promptConfig.modelName,
-      contents: promptConfig.generatePrompt(inputs),
-      config: { systemInstruction: systemInstruction },
-    });
+    // Wrap API call with retry logic
+    const response = await withRetry(async () => {
+      return await ai.models.generateContent({
+        model: promptConfig.modelName,
+        contents: promptConfig.generatePrompt(inputs),
+        config: { systemInstruction: systemInstruction },
+      });
+    }, 3, 1000, signal);
 
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-    return response.text || "No response generated.";
+    const text = response.text || "No response generated.";
+    
+    // Cache the successful result
+    requestCache.set(cacheKey, text);
+    
+    return text;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
     console.error("Gemini API Error:", error);
@@ -83,11 +133,13 @@ export const refineContent = async (
   }
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Original Text:\n"${currentContent}"\n\nInstruction: ${instruction}\n\nRewrite the text to follow the instruction. Return ONLY the rewritten text, no conversational filler. Keep existing HTML or Markdown formatting unless asked to change it.`,
-      config: { systemInstruction: sysInstruct },
-    });
+    const response = await withRetry(async () => {
+      return await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `Original Text:\n"${currentContent}"\n\nInstruction: ${instruction}\n\nRewrite the text to follow the instruction. Return ONLY the rewritten text, no conversational filler. Keep existing HTML or Markdown formatting unless asked to change it.`,
+        config: { systemInstruction: sysInstruct },
+      });
+    }, 3, 1000, signal);
 
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
@@ -118,7 +170,8 @@ export const analyzeATS = async (
     `;
 
     try {
-        const response = await ai.models.generateContent({
+        const response = await withRetry(async () => {
+           return await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: `
             You are an expert ATS (Applicant Tracking System) algorithm analyzer. 
@@ -146,7 +199,8 @@ export const analyzeATS = async (
                 "improvedSummary": "The rewritten profile summary..."
             }
             `
-        });
+          });
+        }, 3, 1000, signal);
 
         if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 

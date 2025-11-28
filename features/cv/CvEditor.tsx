@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { 
     ChevronRight, User as UserIcon, Briefcase, GraduationCap, Zap, 
@@ -9,6 +8,8 @@ import RichTextEditor from '../../components/RichTextEditor';
 import { CVData, CVExperience, CVEducation } from '../../types';
 import { validateImageFile } from '../../utils/security';
 import { useToast } from '../../contexts/ToastContext';
+import { Input, Textarea, Select } from '../../components/ui/Forms';
+import { Button } from '../../components/ui/Button';
 
 interface CvEditorProps {
     cvData: CVData;
@@ -76,30 +77,42 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                                 {cvData.personal.photoBase64 ? <img src={cvData.personal.photoBase64} alt="Preview" className="w-full h-full object-cover" /> : <UserIcon className="text-slate-400" />}
                             </div>
                             <div className="flex-1 space-y-2">
-                                <input type="file" accept="image/png, image/jpeg, image/webp" ref={fileInputRef} onChange={handleImageUpload} className="hidden" />
-                                <button onClick={() => fileInputRef.current?.click()} className="text-xs bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 px-3 py-1.5 rounded font-medium hover:bg-slate-50 transition-colors">{t('dashboard.cv.uploadPhoto')}</button>
+                                <input type="file" accept="image/png, image/jpeg, image/webp" ref={fileInputRef} onChange={handleImageUpload} className="hidden" aria-label="Upload Profile Photo" />
+                                <Button size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()} className="text-xs">{t('dashboard.cv.uploadPhoto')}</Button>
                                 {cvData.personal.photoBase64 && (
                                     <div className="flex gap-2">
-                                        <select value={cvData.personal.photoShape} onChange={(e) => handleCvChange('photoShape', e.target.value)} className="text-xs p-1 rounded border border-slate-300 dark:border-slate-700 bg-transparent"><option value="circle">Circle</option><option value="square">Square</option><option value="rounded">Rounded</option></select>
-                                        <select value={cvData.personal.photoFilter} onChange={(e) => handleCvChange('photoFilter', e.target.value)} className="text-xs p-1 rounded border border-slate-300 dark:border-slate-700 bg-transparent"><option value="none">None</option><option value="grayscale">B&W</option></select>
+                                        <Select 
+                                            value={cvData.personal.photoShape} 
+                                            onChange={(e) => handleCvChange('photoShape', e.target.value)} 
+                                            options={['circle', 'square', 'rounded']} 
+                                            className="text-xs py-1"
+                                            aria-label="Photo Shape"
+                                        />
+                                        <Select 
+                                            value={cvData.personal.photoFilter} 
+                                            onChange={(e) => handleCvChange('photoFilter', e.target.value)} 
+                                            options={['none', 'grayscale']} 
+                                            className="text-xs py-1"
+                                            aria-label="Photo Filter"
+                                        />
                                     </div>
                                 )}
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                            <input type="text" placeholder={t('auth.name')} value={cvData.personal.fullName} onChange={e => handleCvChange('fullName', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
-                            <input type="text" placeholder="Job Title" value={cvData.personal.jobTitle} onChange={e => handleCvChange('jobTitle', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
+                            <Input placeholder={t('auth.name')} value={cvData.personal.fullName} onChange={e => handleCvChange('fullName', e.target.value)} />
+                            <Input placeholder="Job Title" value={cvData.personal.jobTitle} onChange={e => handleCvChange('jobTitle', e.target.value)} />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                            <input type="email" placeholder="Email" value={cvData.personal.email} onChange={e => handleCvChange('email', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
-                            <input type="text" placeholder="Phone" value={cvData.personal.phone} onChange={e => handleCvChange('phone', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
+                            <Input type="email" placeholder="Email" value={cvData.personal.email} onChange={e => handleCvChange('email', e.target.value)} />
+                            <Input placeholder="Phone" value={cvData.personal.phone} onChange={e => handleCvChange('phone', e.target.value)} />
                         </div>
-                        <input type="text" placeholder="Location" value={cvData.personal.address} onChange={e => handleCvChange('address', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
+                        <Input placeholder="Location" value={cvData.personal.address} onChange={e => handleCvChange('address', e.target.value)} />
                         <div className="grid grid-cols-2 gap-4">
-                            <input type="text" placeholder="Website" value={cvData.personal.website} onChange={e => handleCvChange('website', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
-                            <input type="text" placeholder="LinkedIn" value={cvData.personal.linkedin} onChange={e => handleCvChange('linkedin', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
+                            <Input placeholder="Website" value={cvData.personal.website} onChange={e => handleCvChange('website', e.target.value)} />
+                            <Input placeholder="LinkedIn" value={cvData.personal.linkedin} onChange={e => handleCvChange('linkedin', e.target.value)} />
                         </div>
-                        <textarea placeholder="Summary" value={cvData.personal.summary} onChange={e => handleCvChange('summary', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-sm h-24 resize-none" />
+                        <Textarea placeholder="Summary" value={cvData.personal.summary} onChange={e => handleCvChange('summary', e.target.value)} className="h-24" />
                     </div>
                 )}
             </div>
@@ -114,27 +127,27 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                     <div className="p-4 bg-white dark:bg-slate-900">
                         {cvData.experience.map((exp) => (
                             <div key={exp.id} className="mb-6 pb-6 border-b border-slate-100 dark:border-slate-800 last:border-0 last:mb-0 last:pb-0 relative group">
-                                <button onClick={() => removeExperience(exp.id)} className="absolute right-0 top-0 text-slate-300 hover:text-red-500"><XCircle size={16}/></button>
+                                <button onClick={() => removeExperience(exp.id)} className="absolute right-0 top-0 text-slate-300 hover:text-red-500 z-10" aria-label="Remove Experience"><XCircle size={16}/></button>
                                 <div className="space-y-3">
-                                    <input type="text" placeholder="Job Title" value={exp.title} onChange={e => updateExperience(exp.id, 'title', e.target.value)} className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-transparent text-sm font-semibold" />
+                                    <Input placeholder="Job Title" value={exp.title} onChange={e => updateExperience(exp.id, 'title', e.target.value)} className="font-semibold" />
                                     <div className="grid grid-cols-2 gap-3">
-                                        <input type="text" placeholder="Company" value={exp.company} onChange={e => updateExperience(exp.id, 'company', e.target.value)} className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
-                                        <input type="text" placeholder="Location" value={exp.location} onChange={e => updateExperience(exp.id, 'location', e.target.value)} className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
+                                        <Input placeholder="Company" value={exp.company} onChange={e => updateExperience(exp.id, 'company', e.target.value)} />
+                                        <Input placeholder="Location" value={exp.location} onChange={e => updateExperience(exp.id, 'location', e.target.value)} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <input type="text" placeholder="Start Date" value={exp.startDate} onChange={e => updateExperience(exp.id, 'startDate', e.target.value)} className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
-                                        <input type="text" placeholder="End Date" value={exp.endDate} onChange={e => updateExperience(exp.id, 'endDate', e.target.value)} className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
+                                        <Input placeholder="Start Date" value={exp.startDate} onChange={e => updateExperience(exp.id, 'startDate', e.target.value)} />
+                                        <Input placeholder="End Date" value={exp.endDate} onChange={e => updateExperience(exp.id, 'endDate', e.target.value)} />
                                     </div>
                                     <div className="relative">
                                         <RichTextEditor value={exp.description} onChange={(val) => updateExperience(exp.id, 'description', val)} />
-                                        <button onClick={() => generateCvDescription(exp.id, exp)} className="absolute bottom-2 right-2 p-1.5 bg-indigo-100 text-indigo-600 rounded-md hover:bg-indigo-200 transition-colors z-10">
+                                        <button onClick={() => generateCvDescription(exp.id, exp)} className="absolute bottom-2 right-2 p-1.5 bg-indigo-100 text-indigo-600 rounded-md hover:bg-indigo-200 transition-colors z-10" aria-label="AI Generate Description">
                                             {isLoading ? <Loader2 size={12} className="animate-spin"/> : <Sparkles size={12} />}
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         ))}
-                        <button onClick={addExperience} className="w-full py-2 flex items-center justify-center gap-2 text-sm text-indigo-600 font-medium border border-dashed border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors mt-2"><Plus size={14} /> Add Position</button>
+                        <Button onClick={addExperience} variant="outline" className="w-full border-dashed flex gap-2"><Plus size={14} /> Add Position</Button>
                     </div>
                 )}
             </div>
@@ -149,16 +162,16 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                     <div className="p-4 bg-white dark:bg-slate-900">
                         {cvData.education.map((edu) => (
                             <div key={edu.id} className="mb-4 pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:mb-0 last:pb-0 relative">
-                                <button onClick={() => removeEducation(edu.id)} className="absolute right-0 top-0 text-slate-300 hover:text-red-500"><XCircle size={16}/></button>
-                                <input type="text" placeholder="Degree" value={edu.degree} onChange={e => updateEducation(edu.id, 'degree', e.target.value)} className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-transparent text-sm mb-2" />
-                                <input type="text" placeholder="School" value={edu.school} onChange={e => updateEducation(edu.id, 'school', e.target.value)} className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-transparent text-sm mb-2" />
+                                <button onClick={() => removeEducation(edu.id)} className="absolute right-0 top-0 text-slate-300 hover:text-red-500" aria-label="Remove Education"><XCircle size={16}/></button>
+                                <Input placeholder="Degree" value={edu.degree} onChange={e => updateEducation(edu.id, 'degree', e.target.value)} className="mb-2" />
+                                <Input placeholder="School" value={edu.school} onChange={e => updateEducation(edu.id, 'school', e.target.value)} className="mb-2" />
                                 <div className="grid grid-cols-2 gap-2">
-                                    <input type="text" placeholder="Location" value={edu.location} onChange={e => updateEducation(edu.id, 'location', e.target.value)} className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
-                                    <input type="text" placeholder="Year" value={edu.year} onChange={e => updateEducation(edu.id, 'year', e.target.value)} className="w-full p-2 rounded border border-slate-200 dark:border-slate-700 bg-transparent text-sm" />
+                                    <Input placeholder="Location" value={edu.location} onChange={e => updateEducation(edu.id, 'location', e.target.value)} />
+                                    <Input placeholder="Year" value={edu.year} onChange={e => updateEducation(edu.id, 'year', e.target.value)} />
                                 </div>
                             </div>
                         ))}
-                        <button onClick={addEducation} className="w-full py-2 flex items-center justify-center gap-2 text-sm text-indigo-600 font-medium border border-dashed border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors mt-2"><Plus size={14} /> Add Education</button>
+                        <Button onClick={addEducation} variant="outline" className="w-full border-dashed flex gap-2"><Plus size={14} /> Add Education</Button>
                     </div>
                 )}
             </div>
@@ -171,10 +184,10 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                 </button>
                 {activeAccordion === 'skills' && (
                     <div className="p-4 bg-white dark:bg-slate-900">
-                        <input type="text" placeholder="Type skill & hit Enter" value={skillInput} onChange={e => setSkillInput(e.target.value)} onKeyDown={addSkill} className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent text-sm mb-3" />
+                        <Input placeholder="Type skill & hit Enter" value={skillInput} onChange={e => setSkillInput(e.target.value)} onKeyDown={addSkill} className="mb-3" />
                         <div className="flex flex-wrap gap-2">
                             {cvData.skills.map(skill => (
-                                <span key={skill} className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center gap-1 group cursor-default">{skill}<button onClick={() => removeSkill(skill)} className="text-slate-400 group-hover:text-red-500"><X size={12}/></button></span>
+                                <span key={skill} className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center gap-1 group cursor-default">{skill}<button onClick={() => removeSkill(skill)} className="text-slate-400 group-hover:text-red-500" aria-label={`Remove ${skill}`}><X size={12}/></button></span>
                             ))}
                         </div>
                     </div>

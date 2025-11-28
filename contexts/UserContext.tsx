@@ -1,6 +1,6 @@
-
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { BrandVoice, User } from '../types';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface UserContextType {
   user: User;
@@ -35,31 +35,9 @@ const INITIAL_USER: User = {
 };
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User>(INITIAL_USER);
-  const [brandVoices, setBrandVoices] = useState<BrandVoice[]>(DEFAULT_VOICES);
+  const [user, setUser] = useLocalStorage<User>('ai_writer_user', INITIAL_USER);
+  const [brandVoices, setBrandVoices] = useLocalStorage<BrandVoice[]>('ai_writer_voices', DEFAULT_VOICES);
   const [selectedVoiceId, setSelectedVoiceId] = useState<string | null>(null);
-
-  // Load from local storage on mount
-  useEffect(() => {
-    const savedVoices = localStorage.getItem('ai_writer_voices');
-    if (savedVoices) {
-      setBrandVoices(JSON.parse(savedVoices));
-    }
-    
-    const savedUser = localStorage.getItem('ai_writer_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-  }, []);
-
-  // Save to local storage on change
-  useEffect(() => {
-    localStorage.setItem('ai_writer_voices', JSON.stringify(brandVoices));
-  }, [brandVoices]);
-
-  useEffect(() => {
-    localStorage.setItem('ai_writer_user', JSON.stringify(user));
-  }, [user]);
 
   const addBrandVoice = (voice: BrandVoice) => {
     setBrandVoices(prev => [...prev, voice]);
@@ -85,8 +63,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('ai_writer_user');
-    window.location.href = '/'; // Redirect to home/login
+    if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('ai_writer_user');
+        window.location.href = '/'; 
+    }
   };
 
   return (

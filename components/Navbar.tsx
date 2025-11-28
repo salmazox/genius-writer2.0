@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Sun, Moon, User } from 'lucide-react';
@@ -24,7 +23,7 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center gap-3 group">
+            <Link to="/" className="flex-shrink-0 flex items-center gap-3 group" aria-label="Genius Writer Home">
               <div className="group-hover:scale-110 transition-transform duration-300 drop-shadow-md">
                 <Logo size={36} />
               </div>
@@ -52,28 +51,38 @@ const Navbar: React.FC = () => {
              {/* Theme Toggle */}
              <button 
               onClick={toggleTheme}
+              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
               className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
             >
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
 
             {/* Language Switcher */}
-            <div className="flex items-center gap-2 border-l border-r border-slate-200 dark:border-slate-700 px-3 h-6">
+            <div className="flex items-center gap-2 border-l border-r border-slate-200 dark:border-slate-700 px-3 h-6" role="group" aria-label="Language selection">
               <button 
                 onClick={() => setLanguage('en')}
+                aria-label="Switch to English"
+                aria-pressed={language === 'en'}
                 className={`text-xs font-bold ${language === 'en' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
               >
                 EN
               </button>
               <button 
                 onClick={() => setLanguage('de')}
+                aria-label="Switch to German"
+                aria-pressed={language === 'de'}
                 className={`text-xs font-bold ${language === 'de' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
               >
                 DE
               </button>
             </div>
 
-            <Link to="/user-dashboard" className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors" title="My Account">
+            <Link 
+              to="/user-dashboard" 
+              className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors" 
+              title="My Account"
+              aria-label="User Dashboard"
+            >
                 <User size={20} />
             </Link>
             
@@ -88,6 +97,7 @@ const Navbar: React.FC = () => {
           <div className="flex items-center md:hidden gap-4">
              <button 
               onClick={toggleTheme}
+              aria-label="Toggle theme"
               className="text-slate-600 dark:text-slate-300"
             >
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
@@ -95,6 +105,7 @@ const Navbar: React.FC = () => {
             
             <button
               onClick={() => setIsOpen(!isOpen)}
+              aria-label="Toggle menu"
               className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 focus:outline-none"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}

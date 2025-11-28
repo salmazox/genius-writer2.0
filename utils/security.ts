@@ -1,14 +1,15 @@
+import DOMPurify from 'dompurify';
 
 /**
- * Basic XSS sanitization. 
- * NOTE: In a production environment, use a library like DOMPurify.
+ * XSS sanitization using DOMPurify.
+ * This removes malicious scripts and event handlers from HTML content.
  */
 export const sanitizeHtml = (html: string): string => {
   if (!html) return "";
-  // Basic script tag removal
-  return html
-    .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, "")
-    .replace(/on\w+="[^"]*"/g, "");
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'ul', 'ol', 'li', 'br', 'u', 'span', 'div'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style'],
+  });
 };
 
 /**

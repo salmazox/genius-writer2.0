@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig } from '../types';
@@ -11,6 +11,8 @@ import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { Button } from '../components/ui/Button';
 import { Input, Select, Textarea } from '../components/ui/Forms';
 import { Skeleton } from '../components/ui/Skeleton';
+import { useDebounce } from '../hooks/useDebounce';
+import { useSwipe } from '../hooks/useSwipe';
 
 interface GenericToolProps {
     tool: ToolConfig;
@@ -25,27 +27,75 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const [documentContent, setDocumentContent] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
     const [mobileTab, setMobileTab] = useState<'input' | 'result'>('input');
+    const [isAutoSaving, setIsAutoSaving] = useState(false);
     
     const previewRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    // Reset when tool changes
+    // Debounce state for auto-save
+    const debouncedForm = useDebounce(formValues, 1000);
+    const debouncedContent = useDebounce(documentContent, 1000);
+
+    // Swipe gestures
+    const swipeHandlers = useSwipe({
+        onSwipeLeft: () => setMobileTab('result'),
+        onSwipeRight: () => setMobileTab('input'),
+        threshold: 75
+    });
+
+    // Stats
+    const stats = useMemo(() => {
+        const text = documentContent.replace(/<[^>]*>/g, '');
+        return {
+            words: text.trim() ? text.trim().split(/\s+/).length : 0,
+            chars: text.length,
+            readTime: Math.ceil(text.trim().split(/\s+/).length / 200)
+        };
+    }, [documentContent]);
+
+    // Load draft on mount/tool change
     useEffect(() => {
-        setFormValues({});
-        setDocumentContent('');
+        const loadDraft = () => {
+            try {
+                const saved = localStorage.getItem(`draft_${tool.id}`);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    setFormValues(parsed.formValues || {});
+                    setDocumentContent(parsed.documentContent || '');
+                } else {
+                    setFormValues({});
+                    setDocumentContent('');
+                }
+            } catch (e) {
+                console.error("Failed to load draft", e);
+            }
+        };
+
+        loadDraft();
         setMobileTab('input');
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
+        if (abortControllerRef.current) abortControllerRef.current.abort();
+
     }, [tool.id]);
 
+    // Auto-save effect
+    useEffect(() => {
+        if (Object.keys(debouncedForm).length === 0 && !debouncedContent) return;
+
+        const saveDraft = () => {
+            setIsAutoSaving(true);
+            localStorage.setItem(`draft_${tool.id}`, JSON.stringify({
+                formValues: debouncedForm,
+                documentContent: debouncedContent,
+                lastSaved: Date.now()
+            }));
+            setTimeout(() => setIsAutoSaving(false), 500);
+        };
+
+        saveDraft();
+    }, [debouncedForm, debouncedContent, tool.id]);
+
     const handleGenerate = async () => {
-        // Cancel previous request if active
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-        
-        // Create new controller
+        if (abortControllerRef.current) abortControllerRef.current.abort();
         const controller = new AbortController();
         abortControllerRef.current = controller;
 
@@ -61,8 +111,6 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             );
             setDocumentContent(result);
             showToast(t('dashboard.toasts.generated'), 'success');
-            
-            // Auto-switch to result tab on mobile/tablet after generation
             setMobileTab('result');
         } catch (e: any) {
             if (e.name !== 'AbortError') {
@@ -84,15 +132,11 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     };
 
     const handleExportWord = () => {
-        if (!documentContent) {
-            showToast("No content to export", "error");
-            return;
-        }
-        
+        if (!documentContent) { showToast("No content to export", "error"); return; }
         const element = previewRef.current;
         if (!element) return;
 
-        const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML to Word Document</title></head><body>";
+        const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export Document</title></head><body>";
         const footer = "</body></html>";
         const sourceHTML = header + element.innerHTML + footer;
         
@@ -107,10 +151,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     };
 
     const handleDownloadPDF = () => {
-        if (!documentContent) {
-            showToast("No content to export", "error");
-            return;
-        }
+        if (!documentContent) { showToast("No content to export", "error"); return; }
         const element = previewRef.current;
         if (!element) return;
         const opt = {
@@ -129,7 +170,10 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     };
 
     return (
-        <div className="flex h-full flex-col lg:flex-row relative">
+        <div 
+            className="flex h-full flex-col lg:flex-row relative touch-pan-y"
+            {...swipeHandlers}
+        >
             {/* Mobile/Tablet Tab Switcher */}
             <div className="lg:hidden flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 z-20">
                 <button 
@@ -149,8 +193,15 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             {/* Input Panel */}
             <div className={`w-full lg:w-96 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 overflow-y-auto custom-scrollbar shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 flex-shrink-0 ${mobileTab === 'result' ? 'hidden lg:block' : 'flex-1 lg:block'}`}>
                 <div className="mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white mb-4 shadow-lg shadow-indigo-500/30">
-                         <FileText size={24} />
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                            <FileText size={24} />
+                        </div>
+                        {isAutoSaving ? (
+                            <span className="text-[10px] text-slate-400 flex items-center gap-1"><Save size={10} className="animate-pulse"/> Saving...</span>
+                        ) : (
+                            <span className="text-[10px] text-green-500 flex items-center gap-1"><Check size={10}/> Saved</span>
+                        )}
                     </div>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">{tool.name}</h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">{tool.description}</p>
@@ -163,7 +214,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                         <select 
                             value={selectedVoiceId || ''}
                             onChange={(e) => setSelectedVoiceId(e.target.value || null)}
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                         >
                             <option value="">Default AI Tone</option>
                             {brandVoices.map(voice => <option key={voice.id} value={voice.id}>{voice.name}</option>)}
@@ -209,7 +260,18 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     
                     {/* Toolbar */}
                     <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 bg-white dark:bg-slate-900 flex-shrink-0">
-                        <div className="text-sm font-bold text-slate-500 uppercase tracking-wide px-2">Generated Output</div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-sm font-bold text-slate-500 uppercase tracking-wide px-2">Output</div>
+                            {documentContent && (
+                                <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">
+                                    <span>{stats.words} words</span>
+                                    <span>•</span>
+                                    <span>{stats.chars} chars</span>
+                                    <span>•</span>
+                                    <span>{stats.readTime} min read</span>
+                                </div>
+                            )}
+                        </div>
                         <div className="flex items-center gap-2">
                              <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Text" icon={Copy} />
                              <Button variant="ghost" size="sm" onClick={handleExportWord} title="Export as Word" icon={FileType} />

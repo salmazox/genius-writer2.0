@@ -1,11 +1,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3 } from 'lucide-react';
+import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { generateContent, analyzeATS } from '../services/gemini';
 import { ToolType, CVData, CVTheme, ATSAnalysis, CVExperience } from '../types';
 import { Button } from '../components/ui/Button';
+import { useDebounce } from '../hooks/useDebounce';
+import { useSwipe } from '../hooks/useSwipe';
 
 // Sub-components
 import CvEditor from './cv/CvEditor';
@@ -42,16 +44,51 @@ const CvBuilder: React.FC = () => {
     const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
+    const [isAutoSaving, setIsAutoSaving] = useState(false);
     
     const cvPreviewRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    // Cleanup API on unmount
+    const debouncedCvData = useDebounce(cvData, 1500);
+
+    // Swipe handlers for mobile
+    const swipeHandlers = useSwipe({
+        onSwipeLeft: () => setMobileTab('preview'),
+        onSwipeRight: () => setMobileTab('editor'),
+        threshold: 75
+    });
+
+    // Load Draft
     useEffect(() => {
+        try {
+            const saved = localStorage.getItem('cv_draft');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                // Ensure default theme/template if missing in old saves
+                if (!parsed.theme) parsed.theme = CV_THEMES[0];
+                if (!parsed.template) parsed.template = 'modern';
+                setCvData(parsed);
+            }
+        } catch (e) {
+            console.error("Failed to load CV draft", e);
+        }
+
         return () => {
             if (abortControllerRef.current) abortControllerRef.current.abort();
         };
     }, []);
+
+    // Auto-Save
+    useEffect(() => {
+        if (JSON.stringify(debouncedCvData) === JSON.stringify(INITIAL_CV)) return;
+        
+        const saveDraft = () => {
+            setIsAutoSaving(true);
+            localStorage.setItem('cv_draft', JSON.stringify(debouncedCvData));
+            setTimeout(() => setIsAutoSaving(false), 500);
+        };
+        saveDraft();
+    }, [debouncedCvData]);
 
     // --- Actions ---
 
@@ -164,7 +201,10 @@ const CvBuilder: React.FC = () => {
     })();
 
     return (
-        <div className="flex h-full flex-col lg:flex-row relative">
+        <div 
+            className="flex h-full flex-col lg:flex-row relative touch-pan-y" 
+            {...swipeHandlers}
+        >
              {/* Mobile/Tablet Tab Switcher */}
              <div className="lg:hidden flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 z-20">
                 <button 
@@ -182,7 +222,14 @@ const CvBuilder: React.FC = () => {
             </div>
 
              {/* Action Bar (Download/ATS) - Desktop only */}
-             <div className="absolute top-4 right-4 z-30 flex gap-2 hidden lg:flex">
+             <div className="absolute top-4 right-4 z-30 flex gap-2 hidden lg:flex items-center">
+                 <div className="mr-4">
+                     {isAutoSaving ? (
+                        <span className="text-[10px] text-slate-400 flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-1 rounded-full shadow-sm"><Save size={10} className="animate-pulse"/> Saving...</span>
+                     ) : (
+                        <span className="text-[10px] text-green-500 flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-1 rounded-full shadow-sm"><Check size={10}/> Saved</span>
+                     )}
+                 </div>
                  <Button size="sm" variant="outline" onClick={() => setShowAtsSidebar(!showAtsSidebar)}>
                      <Target size={16} className="mr-2"/> {showAtsSidebar ? 'Hide ATS' : 'ATS Optimizer'}
                  </Button>
