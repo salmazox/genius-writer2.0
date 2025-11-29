@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import { 
     Bold, Italic, Underline, List, ListOrdered, Undo, Redo, Sparkles, Loader2, 
@@ -56,6 +57,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
     const [inputValue, setInputValue] = useState('');
     const [savedRange, setSavedRange] = useState<Range | null>(null);
 
+    // Helper to check if editor is effectively empty (handles <p><br></p>)
+    const isEmpty = (html: string) => {
+        if (!html) return true;
+        const text = html.replace(/<[^>]*>/g, '').trim();
+        return text === '' && !html.includes('<img');
+    };
+
     // Sync external value changes if not typing
     useEffect(() => {
         if (editorRef.current && !isTypingRef.current && editorRef.current.innerHTML !== value) {
@@ -66,10 +74,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
     // Calculate Stats
     const stats = useMemo(() => {
         if (!showStats) return null;
-        const text = value.replace(/<[^>]*>/g, '');
+        const text = value.replace(/<[^>]*>/g, ' '); // Replace tags with space to prevent joining words
         const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-        const chars = text.length;
+        const chars = value.replace(/<[^>]*>/g, '').length;
         const readTime = Math.ceil(words / 200);
+        // If it's effectively empty, force 0
+        if (isEmpty(value)) return { words: 0, chars: 0, readTime: 0 };
         return { words, chars, readTime };
     }, [value, showStats]);
 
@@ -277,7 +287,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                 if (onClick) onClick();
                 else if (command) exec(command, arg);
             }}
-            className={`p-1.5 rounded-lg transition-all duration-200 flex items-center justify-center ${
+            className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center flex-shrink-0 min-w-[32px] min-h-[32px] ${
                 isActive 
                 ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' 
                 : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
@@ -285,7 +295,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
             title={title}
             aria-label={title}
         >
-            <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
+            <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
         </button>
     );
 
@@ -302,9 +312,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
         width?: string,
         label: string
     }) => (
-        <div className={`relative ${width}`}>
+        <div className={`relative ${width} flex-shrink-0`}>
             <select
-                className="w-full bg-transparent text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-md py-1 pl-2 pr-4 appearance-none focus:outline-none hover:border-indigo-300 transition-colors cursor-pointer"
+                className="w-full bg-transparent text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-md py-1.5 pl-2 pr-4 appearance-none focus:outline-none hover:border-indigo-300 transition-colors cursor-pointer"
                 onChange={(e) => onChange(e.target.value)}
                 value={defaultValue}
                 aria-label={label}
@@ -312,11 +322,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
             >
                 {options.map(opt => <option key={opt.value} value={opt.value}>{opt.name}</option>)}
             </select>
-            <ChevronDown size={12} className="absolute right-1 top-1.5 text-slate-400 pointer-events-none" />
+            <ChevronDown size={12} className="absolute right-1 top-2 text-slate-400 pointer-events-none" />
         </div>
     );
 
-    const Divider = () => <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1 self-center" />;
+    const Divider = () => <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1 self-center flex-shrink-0" />;
 
     return (
         <div className={`flex flex-col relative group ${className}`} style={style}>
@@ -331,13 +341,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
             />
 
             {!hideToolbar && (
-                <div className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 p-1.5 rounded-t-xl select-none shadow-sm transition-all">
+                <div className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 p-1.5 rounded-t-xl select-none shadow-sm transition-all overflow-hidden">
                     
-                    {/* Main Toolbar */}
+                    {/* Main Toolbar - Force horizontal scroll on overflow */}
                     {!inputMode ? (
-                        <div className="flex flex-wrap items-center gap-1">
+                        <div className="flex flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar pb-1 w-full max-w-[100vw]">
                             {/* Undo/Redo */}
-                            <div className="flex gap-0.5 mr-1">
+                            <div className="flex gap-0.5 mr-1 flex-shrink-0">
                                 <ToolbarButton icon={Undo} command="undo" title="Undo" />
                                 <ToolbarButton icon={Redo} command="redo" title="Redo" />
                             </div>
@@ -345,7 +355,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                             <Divider />
 
                             {/* Font Controls */}
-                            <div className="flex gap-1 items-center">
+                            <div className="flex gap-1 items-center flex-shrink-0">
                                 <ToolbarSelect 
                                     label="Font Family"
                                     options={FONTS} 
@@ -365,7 +375,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                             <Divider />
 
                             {/* Typography */}
-                            <div className="flex gap-0.5">
+                            <div className="flex gap-0.5 flex-shrink-0">
                                 <ToolbarButton icon={Bold} command="bold" isActive={activeFormats.includes('bold')} title="Bold" />
                                 <ToolbarButton icon={Italic} command="italic" isActive={activeFormats.includes('italic')} title="Italic" />
                                 <ToolbarButton icon={Underline} command="underline" isActive={activeFormats.includes('underline')} title="Underline" />
@@ -375,7 +385,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                             <Divider />
 
                             {/* Alignment */}
-                            <div className="flex gap-0.5 hidden sm:flex">
+                            <div className="flex gap-0.5 flex-shrink-0">
                                 <ToolbarButton icon={AlignLeft} command="justifyLeft" isActive={activeFormats.includes('left')} title="Align Left" />
                                 <ToolbarButton icon={AlignCenter} command="justifyCenter" isActive={activeFormats.includes('center')} title="Align Center" />
                                 <ToolbarButton icon={AlignRight} command="justifyRight" isActive={activeFormats.includes('right')} title="Align Right" />
@@ -384,7 +394,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                             <Divider />
 
                             {/* Lists */}
-                            <div className="flex gap-0.5 hidden sm:flex">
+                            <div className="flex gap-0.5 flex-shrink-0">
                                 <ToolbarButton icon={List} command="insertUnorderedList" isActive={activeFormats.includes('ul')} title="Bullet List" />
                                 <ToolbarButton icon={ListOrdered} command="insertOrderedList" isActive={activeFormats.includes('ol')} title="Numbered List" />
                             </div>
@@ -392,16 +402,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                             <Divider />
 
                             {/* Inserts */}
-                            <div className="flex gap-0.5">
+                            <div className="flex gap-0.5 flex-shrink-0">
                                 <ToolbarButton icon={LinkIcon} onClick={() => openInput('link')} title="Insert Link" />
                                 <ToolbarButton icon={ImageIcon} onClick={() => openInput('image')} title="Insert Image" />
                             </div>
 
                             {/* AI Action */}
-                            <div className="ml-auto flex items-center pl-2">
+                            <div className="ml-auto flex items-center pl-2 flex-shrink-0 sticky right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
                                 <button
                                     onMouseDown={(e) => { e.preventDefault(); handleRefine("Fix spelling and grammar"); }}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-md text-xs font-bold transition-all hover:shadow-md"
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-md text-xs font-bold transition-all hover:shadow-md whitespace-nowrap"
                                     title="AI Magic Fix"
                                     aria-label="AI Magic Fix"
                                     disabled={isRefining}
@@ -414,16 +424,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                     ) : (
                         /* Input Mode Toolbar */
                         <div className="flex items-center gap-2 px-2 py-0.5 w-full animate-in slide-in-from-top-2 duration-200">
-                            <div className="flex items-center gap-2 text-sm font-bold text-slate-500 uppercase tracking-wide mr-2">
+                            <div className="flex items-center gap-2 text-sm font-bold text-slate-500 uppercase tracking-wide mr-2 flex-shrink-0">
                                 {inputMode === 'link' ? <LinkIcon size={16}/> : <ImageIcon size={16}/>}
-                                {inputMode === 'link' ? 'Link' : 'Image'}
+                                <span className="hidden sm:inline">{inputMode === 'link' ? 'Link' : 'Image'}</span>
                             </div>
                             <input
                                 autoFocus
                                 type="text"
                                 aria-label={inputMode === 'link' ? "Link URL" : "Image URL"}
-                                className="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white placeholder-slate-400"
-                                placeholder={inputMode === 'link' ? "https://example.com" : "https://example.com/image.png"}
+                                className="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white placeholder-slate-400 min-w-[50px]"
+                                placeholder={inputMode === 'link' ? "https://..." : "https://... or upload"}
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') applyInput(); else if (e.key === 'Escape') closeInput(); }}
@@ -433,7 +443,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                             {inputMode === 'image' && (
                                 <button 
                                     onMouseDown={(e) => { e.preventDefault(); triggerFileUpload(); }} 
-                                    className="p-1.5 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 dark:text-slate-400 rounded-md transition-colors" 
+                                    className="p-1.5 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 dark:text-slate-400 rounded-md transition-colors flex-shrink-0" 
                                     title="Upload Local Image"
                                     aria-label="Upload Local Image"
                                 >
@@ -441,10 +451,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                                 </button>
                             )}
 
-                            <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
+                            <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1 flex-shrink-0"></div>
 
-                            <button onMouseDown={(e) => { e.preventDefault(); applyInput(); }} aria-label="Confirm" className="p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"><Check size={18}/></button>
-                            <button onMouseDown={(e) => { e.preventDefault(); closeInput(); }} aria-label="Cancel" className="p-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-md transition-colors"><X size={18}/></button>
+                            <button onMouseDown={(e) => { e.preventDefault(); applyInput(); }} aria-label="Confirm" className="p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors flex-shrink-0"><Check size={18}/></button>
+                            <button onMouseDown={(e) => { e.preventDefault(); closeInput(); }} aria-label="Cancel" className="p-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-md transition-colors flex-shrink-0"><X size={18}/></button>
                         </div>
                     )}
                 </div>
@@ -463,9 +473,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                 suppressContentEditableWarning={true}
             />
             
-            {/* Placeholder Overlay */}
-            {(!value && placeholder) && (
-                <div className="absolute top-[60px] left-6 md:left-8 text-slate-400 pointer-events-none select-none italic">
+            {/* Placeholder Overlay - Updated logic to handle empty HTML states */}
+            {(isEmpty(value) && placeholder) && (
+                <div className="absolute top-[60px] left-6 md:left-8 text-slate-300 pointer-events-none select-none italic text-lg">
                     {placeholder}
                 </div>
             )}

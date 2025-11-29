@@ -1,7 +1,9 @@
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
-    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle
+    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -27,12 +29,14 @@ const SmartEditor: React.FC = () => {
     const { showToast } = useToast();
     const { user } = useUser();
     const { t } = useThemeLanguage();
+    const [searchParams, setSearchParams] = useSearchParams();
     
     // --- State ---
-    const [content, setContent] = useLocalStorage<string>('smart_editor_content', '<h1>Untitled Document</h1><p>Start writing here...</p>');
+    // Initialize with empty string for cleaner word count/placeholder logic
+    const [content, setContent] = useLocalStorage<string>('smart_editor_content', '');
     const [title, setTitle] = useLocalStorage<string>('smart_editor_title', 'Untitled Document');
     const [currentDoc, setCurrentDoc] = useState<SavedDocument | null>(null);
-    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | null>('ai');
+    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | null>(null); // Default closed
     
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
         { id: '1', role: 'model', text: 'Hi! I am your AI writing companion. I can help you brainstorm, draft, or edit this document. What are we working on today?' }
@@ -58,6 +62,13 @@ const SmartEditor: React.FC = () => {
     const chatEndRef = useRef<HTMLDivElement>(null);
     
     const isPro = user.plan !== 'free';
+
+    // Migration Effect for old default content
+    useEffect(() => {
+        if (content === '<h1>Untitled Document</h1><p>Start writing here...</p>') {
+            setContent('');
+        }
+    }, []);
 
     // --- Load Current Doc ---
     useEffect(() => {
@@ -118,6 +129,10 @@ const SmartEditor: React.FC = () => {
             handler: handleSaveDocument
         }
     ]);
+
+    const handleBack = () => {
+        setSearchParams({ tab: 'library' });
+    };
 
     // --- Chat Logic ---
     useEffect(() => {
@@ -264,33 +279,46 @@ const SmartEditor: React.FC = () => {
             {/* Main Editor Area */}
             <div className="flex-1 flex flex-col h-full min-w-0">
                 {/* Top Bar */}
-                <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 shrink-0 z-30 shadow-sm">
-                    <div className="flex items-center gap-4 flex-1">
-                        <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600">
+                <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 lg:px-8 shrink-0 z-30 shadow-sm gap-2">
+                    
+                    {/* Left: Back (Mobile) & Title */}
+                    <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0">
+                        <button onClick={handleBack} className="lg:hidden p-2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 -ml-2">
+                            <ArrowLeft size={20} />
+                        </button>
+                        
+                        <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 hidden sm:block">
                              <Sparkles size={20} />
                         </div>
                         <input 
                             value={title} 
                             onChange={(e) => setTitle(e.target.value)}
                             aria-label="Document Title"
-                            className="bg-transparent text-lg font-bold text-slate-900 dark:text-white outline-none placeholder-slate-400 w-full max-w-md"
+                            className="bg-transparent text-base lg:text-lg font-bold text-slate-900 dark:text-white outline-none placeholder-slate-400 w-full max-w-[150px] sm:max-w-md truncate"
                             placeholder="Document Title"
                         />
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    {/* Right: Actions */}
+                    <div className="flex items-center gap-1 sm:gap-2">
                         <div className="hidden md:flex text-xs text-slate-400 mr-2 items-center gap-1">
                             {isSaving ? <><Loader2 size={12} className="animate-spin"/> {t('dashboard.smart.saving')}</> : <><Check size={12}/> {t('dashboard.smart.saved')}</>}
                         </div>
                         
-                        <Button variant="ghost" size="sm" icon={Share2} onClick={() => { handleSaveDocument(); setIsShareOpen(true); }} title={t('dashboard.smart.share')} aria-label={t('dashboard.smart.share')}>{t('dashboard.smart.share')}</Button>
-                        <Button variant="ghost" size="sm" icon={History} onClick={() => { if(!currentDoc) handleSaveDocument(); setIsHistoryOpen(true); }} title={t('dashboard.smart.history')} aria-label={t('dashboard.smart.history')} />
-                        <Button variant="ghost" size="sm" icon={ShieldCheck} onClick={handleFactCheck} title={t('dashboard.smart.check')} aria-label={t('dashboard.smart.check')}>{t('dashboard.smart.check')}</Button>
-                        <Button variant="secondary" size="sm" icon={Save} onClick={handleSaveDocument} aria-label={t('dashboard.smart.save')}>{t('dashboard.smart.save')}</Button>
+                        <Button variant="ghost" size="sm" icon={Share2} onClick={() => { handleSaveDocument(); setIsShareOpen(true); }} className="hidden sm:flex">
+                            <span className="hidden md:inline">{t('dashboard.smart.share')}</span>
+                        </Button>
+                        <Button variant="ghost" size="sm" icon={History} onClick={() => { if(!currentDoc) handleSaveDocument(); setIsHistoryOpen(true); }} className="hidden sm:flex" />
                         
-                        {/* Export Dropdown Group */}
+                        <Button variant="secondary" size="sm" icon={Save} onClick={handleSaveDocument} aria-label={t('dashboard.smart.save')} className="hidden sm:flex">
+                            <span className="hidden md:inline">{t('dashboard.smart.save')}</span>
+                        </Button>
+                        
+                        {/* Export Dropdown Group - Visible on all screens but compact */}
                         <div className="relative group">
-                            <Button variant={isPro ? "secondary" : "ghost"} size="sm" icon={isPro ? Download : Lock} aria-label="Export Menu">{t('dashboard.smart.export')}</Button>
+                            <Button variant={isPro ? "secondary" : "ghost"} size="sm" icon={isPro ? Download : Lock} aria-label="Export Menu">
+                                <span className="hidden md:inline">{t('dashboard.smart.export')}</span>
+                            </Button>
                             <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                                 <button onClick={() => handleExport('html')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-t-xl">HTML</button>
                                 <button onClick={() => handleExport('txt')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-b-xl">Plain Text</button>
@@ -299,11 +327,11 @@ const SmartEditor: React.FC = () => {
                         
                         <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
 
+                        {/* Sidebar Toggles - Always visible for quick access */}
                         <button 
                             onClick={() => setActiveSidebar(activeSidebar === 'seo' ? null : 'seo')} 
                             className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'seo' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} 
                             title="SEO Analysis"
-                            aria-label="SEO Analysis"
                         >
                             <Search size={20} />
                         </button>
@@ -312,7 +340,6 @@ const SmartEditor: React.FC = () => {
                             onClick={() => setActiveSidebar(activeSidebar === 'comments' ? null : 'comments')} 
                             className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'comments' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} 
                             title={t('dashboard.smart.comments')}
-                            aria-label={activeSidebar === 'comments' ? "Hide Comments" : "Show Comments"}
                         >
                             <MessageCircle size={20} />
                             {comments.filter(c => !c.resolved).length > 0 && (
@@ -324,7 +351,6 @@ const SmartEditor: React.FC = () => {
                             onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')} 
                             className={`p-2 rounded-lg transition-colors ${activeSidebar === 'ai' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} 
                             title={t('dashboard.smart.aiCompanion')}
-                            aria-label={activeSidebar === 'ai' ? "Hide AI Companion" : "Show AI Companion"}
                         >
                             <Sidebar size={20} />
                         </button>
@@ -332,7 +358,7 @@ const SmartEditor: React.FC = () => {
                 </div>
 
                 {/* Editor Canvas Container */}
-                <div className="flex-1 overflow-y-auto p-4 lg:p-8 flex justify-center bg-slate-200 dark:bg-slate-950" onClick={handleSelectionCheck}>
+                <div className="flex-1 overflow-y-auto p-2 lg:p-8 flex justify-center bg-slate-200 dark:bg-slate-950" onClick={handleSelectionCheck}>
                     {/* A4 Page Container */}
                     <div className="w-full max-w-[210mm] bg-white dark:bg-slate-900 shadow-2xl mb-20 transition-all min-h-[297mm] relative">
                          {/* Selection Highlight for Commenting (Simple Visual) */}

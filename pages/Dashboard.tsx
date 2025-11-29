@@ -1,5 +1,5 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Menu, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder } from 'lucide-react';
 import { ToolType, SavedDocument, Folder as FolderType } from '../types';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
@@ -29,17 +29,24 @@ const Dashboard: React.FC = () => {
   const { t } = useThemeLanguage();
   const { showToast } = useToast();
   const { user, toggleFavoriteTool } = useUser();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const TOOLS = getTools(t);
 
-  // Core State
-  const [activeToolId, setActiveToolId] = useState<ToolType | null>(null);
+  // Core State (Synched with URL)
+  const [activeToolId, setActiveToolId] = useState<ToolType | null>(() => {
+      return searchParams.get('tool') as ToolType | null;
+  });
+  const [viewMode, setViewMode] = useState<'library' | 'documents' | 'trash'>(() => {
+      const tab = searchParams.get('tab');
+      return (tab === 'documents' || tab === 'trash') ? tab : 'library';
+  });
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  const [viewMode, setViewMode] = useState<'library' | 'documents' | 'trash'>('library');
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
   
   // Data State
@@ -58,6 +65,33 @@ const Dashboard: React.FC = () => {
   const [docToShare, setDocToShare] = useState<SavedDocument | null>(null);
 
   const activeTool = activeToolId ? TOOLS.find(t => t.id === activeToolId) : null;
+
+  // Sync State with URL changes (Back button, Deep links)
+  useEffect(() => {
+      const tool = searchParams.get('tool') as ToolType | null;
+      const tab = searchParams.get('tab') as 'library' | 'documents' | 'trash' | null;
+
+      if (tool !== activeToolId) {
+          setActiveToolId(tool);
+      }
+
+      const targetViewMode = (tab === 'documents' || tab === 'trash') ? tab : 'library';
+      if (!tool && targetViewMode !== viewMode) {
+          setViewMode(targetViewMode);
+      }
+  }, [searchParams, activeToolId, viewMode]);
+
+  // Helper to update URL (and thus trigger state update)
+  const navigateTo = (params: { tool?: ToolType | null, tab?: 'library' | 'documents' | 'trash' }) => {
+      const newParams: Record<string, string> = {};
+      
+      if (params.tool) {
+          newParams.tool = params.tool;
+      } else {
+          newParams.tab = params.tab || 'library';
+      }
+      setSearchParams(newParams);
+  };
 
   useEffect(() => {
       const hasCompletedOnboarding = localStorage.getItem('genius_writer_onboarding_complete');
@@ -225,7 +259,7 @@ const Dashboard: React.FC = () => {
               lastSaved: Date.now()
           }));
       }
-      setActiveToolId(doc.templateId);
+      navigateTo({ tool: doc.templateId });
   };
 
   const SidebarToolList = () => (
@@ -235,7 +269,7 @@ const Dashboard: React.FC = () => {
             return (
                 <button
                     key={tool.id}
-                    onClick={() => setActiveToolId(tool.id)}
+                    onClick={() => navigateTo({ tool: tool.id })}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group ${
                         activeToolId === tool.id
                         ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
@@ -266,7 +300,7 @@ const Dashboard: React.FC = () => {
             <aside className="w-64 hidden lg:flex bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col flex-shrink-0 transition-colors duration-200">
                 <div className="p-4 border-b border-slate-100 dark:border-slate-800">
                     <button 
-                        onClick={() => setActiveToolId(null)}
+                        onClick={() => navigateTo({ tab: 'library' })}
                         className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors mb-4"
                     >
                         <ArrowLeft size={16} /> Back to Library
@@ -290,7 +324,7 @@ const Dashboard: React.FC = () => {
         ) : (
             <aside className="w-16 hidden lg:flex bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col flex-shrink-0 items-center py-4 gap-4 z-20">
                 <button 
-                    onClick={() => setActiveToolId(null)} 
+                    onClick={() => navigateTo({ tab: 'library' })}
                     className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 text-slate-500 hover:text-indigo-600 transition-colors group relative" 
                     title="Back to Library"
                 >
@@ -316,7 +350,7 @@ const Dashboard: React.FC = () => {
                     <Menu size={20} />
                 </button>
                 <span className="font-bold text-sm text-slate-900 dark:text-white truncate mx-4">{activeTool?.name}</span>
-                <button onClick={() => setActiveToolId(null)} className="text-slate-500">
+                <button onClick={() => navigateTo({ tab: 'library' })} className="text-slate-500">
                     <Grid size={20} />
                 </button>
             </div>
@@ -342,13 +376,13 @@ const Dashboard: React.FC = () => {
                         {/* Tabs */}
                         <div className="flex justify-center gap-4 mb-8">
                             <button 
-                                onClick={() => setViewMode('library')} 
+                                onClick={() => navigateTo({ tab: 'library' })}
                                 className={`px-4 py-2 rounded-full font-bold text-sm transition-all ${viewMode === 'library' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                             >
                                 <LayoutTemplate size={16} className="inline mr-2"/> Templates
                             </button>
                             <button 
-                                onClick={() => setViewMode('documents')} 
+                                onClick={() => navigateTo({ tab: 'documents' })}
                                 className={`px-4 py-2 rounded-full font-bold text-sm transition-all ${viewMode === 'documents' || viewMode === 'trash' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                             >
                                 <Folder size={16} className="inline mr-2"/> My Documents
@@ -360,7 +394,7 @@ const Dashboard: React.FC = () => {
                         <DashboardLibrary 
                             tools={filteredTools} 
                             searchQuery={debouncedSearchQuery} 
-                            onSelectTool={setActiveToolId}
+                            onSelectTool={(id) => navigateTo({ tool: id })}
                             favoriteToolIds={user.favorites || []}
                             onToggleFavorite={toggleFavoriteTool}
                         />
@@ -375,7 +409,7 @@ const Dashboard: React.FC = () => {
                             allTags={allTags}
                             sortOrder={sortOrder}
                             
-                            setViewMode={(mode) => setViewMode(mode)}
+                            setViewMode={(mode) => navigateTo({ tab: mode })}
                             setActiveFolderId={setActiveFolderId}
                             onToggleTag={toggleTag}
                             onCreateFolder={() => setIsNewFolderModalOpen(true)}

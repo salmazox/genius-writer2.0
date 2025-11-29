@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock } from 'lucide-react';
+import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { generateContent, analyzeATS, parseResume, generateCoverLetter } from '../services/gemini';
@@ -42,6 +43,7 @@ const CvBuilder: React.FC = () => {
     const { t } = useThemeLanguage();
     const { showToast } = useToast();
     const { user } = useUser();
+    const [searchParams, setSearchParams] = useSearchParams();
     
     // State
     const [viewMode, setViewMode] = useState<'cv' | 'cover_letter'>('cv');
@@ -154,6 +156,10 @@ const CvBuilder: React.FC = () => {
             }
         };
         reader.readAsDataURL(file);
+    };
+
+    const handleBack = () => {
+        setSearchParams({ tab: 'library' });
     };
 
     // --- Actions ---
@@ -289,20 +295,31 @@ const CvBuilder: React.FC = () => {
     return (
         <div className="flex h-full flex-col relative">
             {/* Top Toolbar */}
-            <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-6 shrink-0 z-30 shadow-sm">
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                    <button 
-                        onClick={() => setViewMode('cv')}
-                        className={`px-3 py-1.5 rounded-md text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'cv' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <FileText size={16} /> CV Builder
+            <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 lg:px-6 shrink-0 z-30 shadow-sm gap-2">
+                <div className="flex items-center gap-2">
+                    {/* NEW: Back Button for Mobile */}
+                    <button onClick={handleBack} className="lg:hidden p-2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 -ml-1">
+                        <ArrowLeft size={20} />
                     </button>
-                    <button 
-                         onClick={() => setViewMode('cover_letter')}
-                         className={`px-3 py-1.5 rounded-md text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'cover_letter' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        <Mail size={16} /> Cover Letter
-                    </button>
+                    
+                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                        <button 
+                            onClick={() => setViewMode('cv')}
+                            className={`px-3 py-1.5 rounded-md text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'cv' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <FileText size={16} /> 
+                            <span className="hidden md:inline">CV Builder</span>
+                            <span className="md:hidden">CV</span>
+                        </button>
+                        <button 
+                             onClick={() => setViewMode('cover_letter')}
+                             className={`px-3 py-1.5 rounded-md text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'cover_letter' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <Mail size={16} /> 
+                            <span className="hidden md:inline">Cover Letter</span>
+                            <span className="md:hidden">Cover</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -323,11 +340,11 @@ const CvBuilder: React.FC = () => {
                      )}
                      
                      <Button size="sm" variant="secondary" onClick={handleSaveDocument} icon={Save}>
-                         Save
+                         <span className="hidden md:inline">Save</span>
                      </Button>
                      <Button size="sm" variant={isPro ? "primary" : "ghost"} onClick={handleDownloadPDF} disabled={!isPro && false}>
                          {isPro ? <Download size={16} className="mr-2"/> : <Lock size={16} className="mr-2"/>}
-                         Export
+                         <span className="hidden md:inline">Export</span>
                      </Button>
                 </div>
             </div>
