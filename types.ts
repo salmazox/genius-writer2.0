@@ -79,6 +79,12 @@ export interface DocumentVersion {
   type?: 'text' | 'image' | 'cv_json'; // Added cv_json type
 }
 
+export interface Folder {
+  id: string;
+  name: string;
+  createdAt: number;
+}
+
 export interface SavedDocument {
   id: string;
   title: string;
@@ -86,6 +92,8 @@ export interface SavedDocument {
   templateId: ToolType;
   lastModified: number;
   versions: DocumentVersion[];
+  folderId?: string; // New: Organization
+  tags?: string[]; // New: Filtering
 }
 
 export interface Collaborator {

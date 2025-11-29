@@ -1,15 +1,18 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck 
+    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, FileType
 } from 'lucide-react';
 import RichTextEditor from '../components/RichTextEditor';
 import { Button } from '../components/ui/Button';
+import { Modal } from '../components/ui/Modal';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useDebounce } from '../hooks/useDebounce';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { chatWithAI, factCheck } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { useToast } from '../contexts/ToastContext';
-import { ToolType } from '../types';
+import { ToolType, SavedDocument } from '../types';
 
 interface ChatMessage {
     id: string;
@@ -23,6 +26,7 @@ const SmartEditor: React.FC = () => {
     // --- State ---
     const [content, setContent] = useLocalStorage<string>('smart_editor_content', '<h1>Untitled Document</h1><p>Start writing here...</p>');
     const [title, setTitle] = useLocalStorage<string>('smart_editor_title', 'Untitled Document');
+    const [currentDocId, setCurrentDocId] = useState<string | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
         { id: '1', role: 'model', text: 'Hi! I am your AI writing companion. I can help you brainstorm, draft, or edit this document. What are we working on today?' }
@@ -31,22 +35,64 @@ const SmartEditor: React.FC = () => {
     const [isChatLoading, setIsChatLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
+    // History Modal State
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [docHistory, setDocHistory] = useState<SavedDocument | null>(null);
+
     const debouncedContent = useDebounce(content, 1000);
     const debouncedTitle = useDebounce(title, 1000);
     const chatEndRef = useRef<HTMLDivElement>(null);
 
-    // --- Auto Save & Persistence ---
+    // --- Auto Save State Indicator ---
     useEffect(() => {
         if (debouncedContent || debouncedTitle) {
+            // We don't auto-commit to persistence to avoid creating too many versions,
+            // but we visually indicate "local" save is done via local storage hook.
             setIsSaving(true);
             setTimeout(() => setIsSaving(false), 600);
         }
     }, [debouncedContent, debouncedTitle]);
 
     const handleSaveDocument = () => {
-        documentService.create(title, content, ToolType.SMART_EDITOR);
-        showToast("Document saved to My Documents", "success");
+        setIsSaving(true);
+        try {
+            if (currentDocId) {
+                // Update existing
+                const existing = documentService.getById(currentDocId);
+                if (existing) {
+                    documentService.save({
+                        ...existing,
+                        title,
+                        content,
+                        lastModified: Date.now()
+                    });
+                    showToast("Document updated", "success");
+                } else {
+                    // Fallback if ID lost
+                    const newDoc = documentService.create(title, content, ToolType.SMART_EDITOR);
+                    setCurrentDocId(newDoc.id);
+                    showToast("Document saved", "success");
+                }
+            } else {
+                // Create new
+                const newDoc = documentService.create(title, content, ToolType.SMART_EDITOR);
+                setCurrentDocId(newDoc.id);
+                showToast("New document saved", "success");
+            }
+        } catch (error) {
+            showToast("Failed to save", "error");
+        } finally {
+            setIsSaving(false);
+        }
     };
+
+    // Keyboard Shortcuts
+    useKeyboardShortcuts([
+        {
+            combo: { key: 's', ctrlKey: true },
+            handler: handleSaveDocument
+        }
+    ]);
 
     // --- Chat Logic ---
     useEffect(() => {
@@ -91,13 +137,49 @@ const SmartEditor: React.FC = () => {
         }
     };
 
-    const handleExport = () => {
+    const handleExport = (format: 'html' | 'txt') => {
         const element = document.createElement("a");
-        const file = new Blob([content], {type: 'text/html'});
+        let file: Blob;
+        let name = title.replace(/\s+/g, '_');
+
+        if (format === 'html') {
+            file = new Blob([content], {type: 'text/html'});
+            name += '.html';
+        } else {
+            // Simple strip tags for TXT
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            const text = tempDiv.textContent || tempDiv.innerText || '';
+            file = new Blob([text], {type: 'text/plain'});
+            name += '.txt';
+        }
+        
         element.href = URL.createObjectURL(file);
-        element.download = `${title.replace(/\s+/g, '_')}.html`;
+        element.download = name;
         document.body.appendChild(element);
         element.click();
+        document.body.removeChild(element);
+    };
+
+    const openHistory = () => {
+        if (!currentDocId) {
+            showToast("Save the document first to see history.", "info");
+            return;
+        }
+        const doc = documentService.getById(currentDocId);
+        if (doc) {
+            setDocHistory(doc);
+            setIsHistoryOpen(true);
+        }
+    };
+
+    const restoreVersion = (versionContent: string) => {
+        if (confirm("Restore this version? Current content will be overwritten (but saved as a new version).")) {
+            handleSaveDocument(); // Save current state before restoring
+            setContent(versionContent);
+            setIsHistoryOpen(false);
+            showToast("Version restored", "success");
+        }
     };
 
     return (
@@ -118,13 +200,24 @@ const SmartEditor: React.FC = () => {
                         />
                     </div>
                     
-                    <div className="flex items-center gap-3">
-                        <div className="text-xs text-slate-400 mr-2 flex items-center gap-1">
+                    <div className="flex items-center gap-2">
+                        <div className="hidden md:flex text-xs text-slate-400 mr-2 items-center gap-1">
                             {isSaving ? <><Loader2 size={12} className="animate-spin"/> Saving...</> : <><Check size={12}/> Saved</>}
                         </div>
+                        
+                        <Button variant="ghost" size="sm" icon={History} onClick={openHistory} title="Version History" />
                         <Button variant="ghost" size="sm" icon={ShieldCheck} onClick={handleFactCheck} title="Verify Facts">Check</Button>
                         <Button variant="secondary" size="sm" icon={Save} onClick={handleSaveDocument}>Save</Button>
-                        <Button variant="secondary" size="sm" icon={Download} onClick={handleExport}>Export</Button>
+                        
+                        {/* Export Dropdown Group */}
+                        <div className="relative group">
+                            <Button variant="secondary" size="sm" icon={Download}>Export</Button>
+                            <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                <button onClick={() => handleExport('html')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-t-xl">HTML</button>
+                                <button onClick={() => handleExport('txt')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-b-xl">Plain Text</button>
+                            </div>
+                        </div>
+
                         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={`p-2 rounded-lg transition-colors ${isSidebarOpen ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} title="Toggle AI Companion">
                             <Sidebar size={20} />
                         </button>
@@ -188,6 +281,38 @@ const SmartEditor: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* History Modal */}
+            <Modal
+                isOpen={isHistoryOpen}
+                onClose={() => setIsHistoryOpen(false)}
+                title="Version History"
+            >
+                <div className="space-y-4">
+                    {!docHistory?.versions || docHistory.versions.length === 0 ? (
+                        <div className="text-center text-slate-500 py-4">No previous versions found.</div>
+                    ) : (
+                        docHistory.versions.map((ver, idx) => (
+                            <div key={ver.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <div>
+                                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                                        {new Date(ver.timestamp).toLocaleString()}
+                                    </p>
+                                    <p className="text-xs text-slate-500">{ver.changeDescription}</p>
+                                </div>
+                                <Button 
+                                    size="sm" 
+                                    variant="secondary" 
+                                    icon={RotateCcw} 
+                                    onClick={() => restoreVersion(ver.content)}
+                                >
+                                    Restore
+                                </Button>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </Modal>
         </div>
     );
 };

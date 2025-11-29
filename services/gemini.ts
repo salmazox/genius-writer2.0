@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { ToolType, CVData, ATSAnalysis } from "../types";
 import { getPromptConfig } from "../config/aiPrompts";
@@ -17,8 +16,83 @@ import { getPromptConfig } from "../config/aiPrompts";
  */
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// Simple in-memory cache to prevent redundant API calls
-const requestCache = new Map<string, string>();
+/**
+ * LRU Cache Implementation to prevent unbounded memory growth
+ */
+class LRUCache<K, V> {
+  private maxSize: number;
+  private cache: Map<K, V>;
+
+  constructor(maxSize: number) {
+    this.maxSize = maxSize;
+    this.cache = new Map();
+  }
+
+  get(key: K): V | undefined {
+    if (!this.cache.has(key)) return undefined;
+    // Refresh item
+    const value = this.cache.get(key)!;
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    return value;
+  }
+
+  set(key: K, value: V): void {
+    if (this.cache.has(key)) {
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxSize) {
+      // Evict oldest (first item in Map)
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey !== undefined) this.cache.delete(firstKey);
+    }
+    this.cache.set(key, value);
+  }
+
+  has(key: K): boolean {
+    return this.cache.has(key);
+  }
+}
+
+// Limit cache to 50 items
+const requestCache = new LRUCache<string, string>(50);
+
+/**
+ * Client-Side Rate Limiter
+ * Token Bucket implementation to prevent abuse in the demo environment.
+ */
+class RateLimiter {
+  private tokens: number;
+  private maxTokens: number;
+  private refillRate: number; // tokens per ms
+  private lastRefill: number;
+
+  constructor(maxTokens: number, refillRatePerSecond: number) {
+    this.maxTokens = maxTokens;
+    this.tokens = maxTokens;
+    this.refillRate = refillRatePerSecond / 1000;
+    this.lastRefill = Date.now();
+  }
+
+  tryAcquire(): boolean {
+    this.refill();
+    if (this.tokens >= 1) {
+      this.tokens -= 1;
+      return true;
+    }
+    return false;
+  }
+
+  private refill() {
+    const now = Date.now();
+    const elapsed = now - this.lastRefill;
+    const newTokens = elapsed * this.refillRate;
+    this.tokens = Math.min(this.maxTokens, this.tokens + newTokens);
+    this.lastRefill = now;
+  }
+}
+
+// Allow 5 requests per 10 seconds, refilling slowly
+const apiLimiter = new RateLimiter(5, 0.5);
 
 /**
  * Retry helper with exponential backoff
@@ -52,6 +126,10 @@ export const generateContent = async (
 ): Promise<string> => {
   
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+  if (!apiLimiter.tryAcquire()) {
+      throw new Error("Rate limit exceeded. Please wait a moment before generating again.");
+  }
 
   // Create a cache key based on inputs
   const cacheKey = `${tool}-${JSON.stringify(inputs)}-${brandVoiceInstruction || ''}`;
@@ -128,6 +206,10 @@ export const refineContent = async (
   if (!currentContent) return "";
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   
+  if (!apiLimiter.tryAcquire()) {
+    throw new Error("Rate limit exceeded. Please wait.");
+  }
+
   let sysInstruct = "You are a professional editor. Improve the text based on the user's specific instruction.";
   if (brandVoiceInstruction) {
     sysInstruct += `\n\nApply the following Brand Voice/Style: ${brandVoiceInstruction}`;
@@ -160,6 +242,10 @@ export const chatWithAI = async (
 ): Promise<string> => {
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
+  if (!apiLimiter.tryAcquire()) {
+    throw new Error("Rate limit exceeded.");
+  }
+
   try {
     const chatHistory = history.map(h => ({
       role: h.role,
@@ -188,6 +274,49 @@ export const chatWithAI = async (
     if (error instanceof DOMException && error.name === "AbortError") throw error;
     console.error("Chat Error:", error);
     throw error;
+  }
+};
+
+export const generateCoverLetter = async (
+  cvData: CVData, 
+  jobDescription: string,
+  signal?: AbortSignal
+): Promise<string> => {
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
+
+  const cvSummary = `
+    Name: ${cvData.personal.fullName}
+    Title: ${cvData.personal.jobTitle}
+    Experience: ${cvData.experience.map(e => `${e.title} at ${e.company}`).join(', ')}
+    Skills: ${cvData.skills.join(', ')}
+  `;
+
+  try {
+    const response = await withRetry(async () => {
+      return await ai.models.generateContent({
+        model: 'gemini-3-pro-preview',
+        contents: `
+          Write a compelling cover letter for the following applicant matching the job description.
+          
+          APPLICANT:
+          ${cvSummary}
+          
+          JOB DESCRIPTION:
+          ${jobDescription}
+          
+          Format: HTML (using <p>, <br>, <strong>).
+          Tone: Professional, enthusiastic, and confident.
+        `
+      });
+    }, 3, 1000, signal);
+
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    return response.text || "";
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") throw e;
+    console.error("Cover Letter Gen Error", e);
+    throw new Error("Failed to generate cover letter");
   }
 };
 
@@ -349,6 +478,8 @@ export const factCheck = async (
     signal?: AbortSignal
 ): Promise<string> => {
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
 
     try {
         const response = await withRetry(async () => {

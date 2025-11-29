@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { 
     Bold, Italic, Underline, List, Undo, Redo, Sparkles, Loader2, 
@@ -277,7 +278,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
     const Divider = () => <div className="w-px h-5 bg-slate-300 dark:bg-slate-700 mx-1" />;
 
     return (
-        <div className={`relative ${className} flex flex-col`}>
+        <div className={`relative ${className} flex flex-col`} style={style}>
             {showSmartToolbar && (
                 <div 
                     className="fixed z-[9999] transform -translate-x-1/2 bg-slate-900 text-white rounded-lg shadow-2xl border border-slate-700 p-1.5 flex items-center gap-1 animate-in zoom-in-95 duration-200"
