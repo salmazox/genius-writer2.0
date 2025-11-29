@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code } from 'lucide-react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig } from '../types';
@@ -13,6 +12,7 @@ import { Input, Select, Textarea } from '../components/ui/Forms';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useDebounce } from '../hooks/useDebounce';
 import { useSwipe } from '../hooks/useSwipe';
+import { BrandVoiceManager } from './BrandVoiceManager';
 
 interface GenericToolProps {
     tool: ToolConfig;
@@ -28,6 +28,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [mobileTab, setMobileTab] = useState<'input' | 'result'>('input');
     const [isAutoSaving, setIsAutoSaving] = useState(false);
+    const [showVoiceManager, setShowVoiceManager] = useState(false);
     
     const previewRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -181,6 +182,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             className="flex h-full flex-col lg:flex-row relative touch-pan-y"
             {...swipeHandlers}
         >
+            {showVoiceManager && <BrandVoiceManager onClose={() => setShowVoiceManager(false)} />}
+
             {/* Mobile/Tablet Tab Switcher */}
             <div className="lg:hidden flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 z-20">
                 <button 
@@ -217,7 +220,12 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 {/* Dynamic Inputs */}
                 <div className="space-y-5 md:pb-0">
                     <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Brand Voice</label>
+                        <div className="flex justify-between items-center mb-2">
+                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">Brand Voice</label>
+                             <button onClick={() => setShowVoiceManager(true)} className="text-xs text-indigo-600 font-medium flex items-center gap-1 hover:underline">
+                                 <Settings2 size={12} /> Manage
+                             </button>
+                        </div>
                         <select 
                             value={selectedVoiceId || ''}
                             onChange={(e) => setSelectedVoiceId(e.target.value || null)}

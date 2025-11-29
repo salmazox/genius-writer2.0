@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Check, X as XIcon, Star, Building, ShieldCheck } from 'lucide-react';
+import { Check, X as XIcon, Star, Building, ShieldCheck, Zap, ArrowRight, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
@@ -8,220 +7,245 @@ const PricingPage: React.FC = () => {
   const { t } = useThemeLanguage();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
-  // Pricing Strategy (Euro - Premium Market)
+  // Pricing Strategy (Premium)
   const prices = {
-      pro: billingCycle === 'monthly' ? 29 : 24,
-      agency: billingCycle === 'monthly' ? 99 : 79
+      pro: billingCycle === 'monthly' ? 39 : 29,
+      agency: billingCycle === 'monthly' ? 119 : 99
   };
 
+  const FeatureItem = ({ text, included = true }: { text: string; included?: boolean }) => (
+      <li className={`flex items-start gap-3 text-sm ${included ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-600 line-through decoration-slate-400/50'}`}>
+          <div className={`mt-0.5 p-0.5 rounded-full flex-shrink-0 ${included ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+              {included ? <Check size={12} strokeWidth={3} /> : <XIcon size={12} strokeWidth={3} />}
+          </div>
+          <span className="leading-5">{text}</span>
+      </li>
+  );
+
   return (
-    <div className="bg-slate-50 dark:bg-slate-950 min-h-screen py-20 transition-colors duration-200">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-200 font-sans selection:bg-indigo-500/30 relative overflow-hidden">
+      
+      {/* Background Decor */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+      <div className="absolute left-1/2 top-0 -z-10 -translate-x-1/2 h-[600px] w-[600px] rounded-full bg-indigo-500/10 blur-[100px]"></div>
+
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-base font-semibold text-indigo-600 dark:text-indigo-400 tracking-wide uppercase">{t('pricing.label')}</h2>
-          <h1 className="mt-2 text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight sm:text-5xl">
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-300 text-xs font-bold mb-6 animate-in fade-in zoom-in duration-500">
+             <Star size={12} className="fill-indigo-600 dark:fill-indigo-300"/>
+             <span>Flexible Plans for Everyone</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6">
             {t('pricing.title')}
           </h1>
-          <p className="mt-4 text-xl text-slate-500 dark:text-slate-400">
+          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
             {t('pricing.subtitle')}
           </p>
           
-          {/* Billing Toggle */}
-          <div className="mt-8 flex justify-center">
-             <div className="bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center relative shadow-sm">
-                 <button 
-                    onClick={() => setBillingCycle('monthly')}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'monthly' ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                 >
-                     {t('pricing.monthly')}
-                 </button>
-                 <button 
-                    onClick={() => setBillingCycle('yearly')}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'yearly' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
-                 >
-                     {t('pricing.yearly')}
-                 </button>
-             </div>
+          {/* Custom Billing Toggle */}
+          <div className="mt-10 flex justify-center items-center gap-4 select-none">
+             <span className={`text-sm font-bold transition-colors ${billingCycle === 'monthly' ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>{t('pricing.monthly')}</span>
+             <button 
+                onClick={() => setBillingCycle(prev => prev === 'monthly' ? 'yearly' : 'monthly')}
+                className="relative w-14 h-8 bg-slate-200 dark:bg-slate-800 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:ring-offset-slate-900 cursor-pointer"
+             >
+                 <span className={`absolute top-1 left-1 bg-white dark:bg-slate-300 shadow-md w-6 h-6 rounded-full transition-transform duration-300 ${billingCycle === 'yearly' ? 'translate-x-6' : 'translate-x-0'}`}></span>
+             </button>
+             <span className={`text-sm font-bold flex items-center gap-2 transition-colors ${billingCycle === 'yearly' ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>
+                 {t('pricing.yearly')}
+                 <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-extrabold">Save 20%</span>
+             </span>
           </div>
         </div>
 
-        {/* Pricing Cards Grid (4 Columns for Enterprise) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-20">
+        {/* Pricing Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 mb-24 items-start">
           
           {/* Free Tier */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 flex flex-col">
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{t('pricing.starter')}</h3>
-            <p className="mt-2 text-slate-500 dark:text-slate-400 text-sm">{t('pricing.starterDesc')}</p>
-            <div className="my-6">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full group">
+            <div className="mb-6">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('pricing.starter')}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed min-h-[40px]">{t('pricing.starterDesc')}</p>
+            </div>
+            <div className="mb-8">
               <span className="text-4xl font-extrabold text-slate-900 dark:text-white">€0</span>
               <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
             </div>
-            <Link to="/dashboard" className="block w-full py-3 px-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-center hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <Link to="/dashboard" className="block w-full py-3 px-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold rounded-xl text-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors mb-8">
               {t('nav.getStarted')}
             </Link>
-            <div className="mt-8 space-y-4 flex-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Includes</p>
-              {[t('pricing.features.words2k'), t('pricing.features.modelFlash'), t('pricing.features.templatesBasic'), t('pricing.features.imagesNo')].map((feat) => (
-                <li key={feat} className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
-                  <Check className="h-5 w-5 text-indigo-500 flex-shrink-0" />
-                  <span className="text-sm">{feat}</span>
-                </li>
-              ))}
+            <div className="space-y-4 flex-1">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">Core Features</p>
+              <ul className="space-y-3">
+                <FeatureItem text={t('pricing.features.words2k')} />
+                <FeatureItem text={t('pricing.features.modelFlash')} />
+                <FeatureItem text={t('pricing.features.templatesBasic')} />
+                <FeatureItem text="1 Project" />
+                <FeatureItem text={t('pricing.features.imagesNo')} included={false} />
+              </ul>
             </div>
           </div>
 
-          {/* Pro Tier (Premium) */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border-2 border-indigo-600 p-8 flex flex-col relative transform xl:-translate-y-4 z-10">
-            <div className="absolute top-0 right-0 left-0 bg-indigo-600 h-2"></div>
-            <div className="absolute top-4 right-4 bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide flex items-center gap-1">
-                <Star size={12} className="fill-indigo-700" /> {t('pricing.popular')}
+          {/* Pro Tier (Highlighted) */}
+          <div className="relative bg-white dark:bg-slate-900 rounded-3xl p-8 border-2 border-indigo-600 dark:border-indigo-500 shadow-2xl shadow-indigo-500/20 transform xl:-translate-y-4 flex flex-col h-full z-10">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wide flex items-center gap-1 shadow-lg">
+                <Star size={12} className="fill-white" /> {t('pricing.popular')}
             </div>
-            <h3 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">{t('pricing.pro')}</h3>
-            <p className="mt-2 text-slate-500 dark:text-slate-400 text-sm">{t('pricing.proDesc')}</p>
-            <div className="my-6">
-              <span className="text-4xl font-extrabold text-slate-900 dark:text-white">€{prices.pro}</span>
-              <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
+            <div className="mb-6">
+                <h3 className="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-2">{t('pricing.pro')}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed min-h-[40px]">{t('pricing.proDesc')}</p>
             </div>
-            <Link to="/auth?plan=pro" className="block w-full py-3 px-4 bg-indigo-600 text-white font-bold rounded-xl text-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/30 hover:scale-[1.02]">
+            <div className="mb-8">
+              <div className="flex items-baseline gap-1">
+                <span className="text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">€{prices.pro}</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
+              </div>
+              {billingCycle === 'yearly' && <p className="text-xs text-green-600 font-medium mt-1">Billed €{prices.pro * 12} yearly</p>}
+            </div>
+            <Link to="/auth?plan=pro" className="block w-full py-3.5 px-4 bg-indigo-600 text-white font-bold rounded-xl text-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/30 hover:scale-[1.02] mb-8">
               {t('pricing.startTrial')}
             </Link>
-            <div className="mt-8 space-y-4 flex-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Everything in Free, plus:</p>
-              {[
-                  t('pricing.features.words50k'), 
-                  t('pricing.features.modelPro'), 
-                  t('pricing.features.atsAccess'),
-                  t('pricing.features.images50'),
-                  t('pricing.features.templatesAll'),
-                  t('pricing.features.brandVoices1')
-                ].map((feat) => (
-                <li key={feat} className="flex items-start gap-3 text-slate-700 dark:text-slate-200 font-medium">
-                  <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-full p-0.5">
-                    <Check className="h-4 w-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
-                  </div>
-                  <span className="text-sm">{feat}</span>
-                </li>
-              ))}
+            <div className="space-y-4 flex-1">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">Everything in Free, plus:</p>
+              <ul className="space-y-3">
+                <FeatureItem text={t('pricing.features.words50k')} />
+                <FeatureItem text={t('pricing.features.modelPro')} />
+                <FeatureItem text={t('pricing.features.atsAccess')} />
+                <FeatureItem text={t('pricing.features.images50')} />
+                <FeatureItem text={t('pricing.features.templatesAll')} />
+                <FeatureItem text={t('pricing.features.brandVoices1')} />
+              </ul>
             </div>
           </div>
 
           {/* Agency Tier */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 flex flex-col">
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{t('pricing.agency')}</h3>
-            <p className="mt-2 text-slate-500 dark:text-slate-400 text-sm">{t('pricing.agencyDesc')}</p>
-            <div className="my-6">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col h-full">
+            <div className="mb-6">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">{t('pricing.agency')}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed min-h-[40px]">{t('pricing.agencyDesc')}</p>
+            </div>
+            <div className="mb-8">
               <span className="text-4xl font-extrabold text-slate-900 dark:text-white">€{prices.agency}</span>
               <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
             </div>
-             <Link to="/contact" className="block w-full py-3 px-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-center hover:border-indigo-600 hover:text-indigo-600 dark:hover:border-indigo-500 dark:hover:text-indigo-400 transition-colors">
+             <Link to="/contact" className="block w-full py-3 px-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-center hover:border-indigo-600 hover:text-indigo-600 dark:hover:border-indigo-500 dark:hover:text-indigo-400 transition-colors mb-8">
               {t('pricing.contactSales')}
             </Link>
-            <div className="mt-8 space-y-4 flex-1">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Everything in Pro, plus:</p>
-              {[
-                  t('pricing.features.words200k'),
-                  t('pricing.features.seats3'), 
-                  t('pricing.features.images200'), 
-                  t('pricing.features.brandVoicesUnlim'),
-                  t('pricing.features.supportPrio'),
-                  t('pricing.features.apiAccess')
-                ].map((feat) => (
-                <li key={feat} className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
-                  <Check className="h-5 w-5 text-indigo-500 flex-shrink-0" />
-                  <span className="text-sm">{feat}</span>
-                </li>
-              ))}
+            <div className="space-y-4 flex-1">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">Everything in Pro, plus:</p>
+                <ul className="space-y-3">
+                    <FeatureItem text={t('pricing.features.words200k')} />
+                    <FeatureItem text={t('pricing.features.seats3')} />
+                    <FeatureItem text={t('pricing.features.images200')} />
+                    <FeatureItem text={t('pricing.features.brandVoicesUnlim')} />
+                    <FeatureItem text={t('pricing.features.supportPrio')} />
+                    <FeatureItem text={t('pricing.features.apiAccess')} />
+                </ul>
             </div>
           </div>
 
-           {/* Enterprise Tier (NEW) */}
-           <div className="bg-slate-900 dark:bg-black rounded-3xl shadow-xl border border-slate-800 dark:border-slate-800 p-8 flex flex-col text-white">
-            <div className="flex items-center gap-2 mb-2">
-                 <Building size={20} className="text-indigo-400"/>
-                 <h3 className="text-xl font-semibold text-white">{t('pricing.enterprise')}</h3>
+           {/* Enterprise Tier */}
+           <div className="bg-slate-900 dark:bg-black rounded-3xl p-8 border border-slate-800 dark:border-slate-800 shadow-xl flex flex-col h-full text-white relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-colors"></div>
+            
+            <div className="mb-6 relative z-10">
+                 <div className="flex items-center gap-2 mb-2 text-indigo-400">
+                     <Building size={20} />
+                     <h3 className="text-lg font-bold text-white">{t('pricing.enterprise')}</h3>
+                 </div>
+                 <p className="text-slate-400 text-sm leading-relaxed min-h-[40px]">{t('pricing.enterpriseDesc')}</p>
             </div>
-            <p className="text-slate-400 text-sm">{t('pricing.enterpriseDesc')}</p>
-            <div className="my-6">
+            <div className="mb-8 relative z-10">
               <span className="text-4xl font-extrabold text-white">Custom</span>
             </div>
-             <Link to="/contact" className="block w-full py-3 px-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-xl text-center transition-colors">
+             <Link to="/contact" className="relative z-10 block w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-center transition-colors mb-8 shadow-lg shadow-indigo-900/50">
               {t('pricing.contactSales')}
             </Link>
-            <div className="mt-8 space-y-4 flex-1">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Ultimate Power</p>
-              {[
-                  t('pricing.features.wordsUnlim'),
-                  t('pricing.features.seatsUnlim'), 
-                  t('pricing.features.imagesUnlim'), 
-                  t('pricing.features.sso'),
-                  t('pricing.features.supportDed'),
-                ].map((feat) => (
-                <li key={feat} className="flex items-start gap-3 text-slate-300">
-                  <ShieldCheck className="h-5 w-5 text-indigo-400 flex-shrink-0" />
-                  <span className="text-sm">{feat}</span>
-                </li>
-              ))}
+            <div className="space-y-4 flex-1 relative z-10">
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">Ultimate Power</p>
+                <ul className="space-y-3">
+                    <li className="flex items-start gap-3 text-sm text-slate-300">
+                        <ShieldCheck size={16} className="mt-0.5 text-indigo-400 shrink-0" />
+                        <span>{t('pricing.features.wordsUnlim')}</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-sm text-slate-300">
+                         <ShieldCheck size={16} className="mt-0.5 text-indigo-400 shrink-0" />
+                        <span>{t('pricing.features.seatsUnlim')}</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-sm text-slate-300">
+                         <ShieldCheck size={16} className="mt-0.5 text-indigo-400 shrink-0" />
+                        <span>{t('pricing.features.sso')}</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-sm text-slate-300">
+                         <ShieldCheck size={16} className="mt-0.5 text-indigo-400 shrink-0" />
+                        <span>{t('pricing.features.supportDed')}</span>
+                    </li>
+                     <li className="flex items-start gap-3 text-sm text-slate-300">
+                         <ShieldCheck size={16} className="mt-0.5 text-indigo-400 shrink-0" />
+                        <span>Custom AI Model Tuning</span>
+                    </li>
+                </ul>
             </div>
           </div>
-
         </div>
 
-        {/* Feature Comparison Table */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-8 border-b border-slate-200 dark:border-slate-800">
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{t('pricing.compare.title')}</h3>
+        {/* Comparison Table Section */}
+        <div className="max-w-6xl mx-auto animate-in slide-in-from-bottom-8 duration-700">
+            <div className="text-center mb-10">
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{t('pricing.compare.title')}</h2>
+                <p className="text-slate-500 dark:text-slate-400">Detailed feature breakdown for all plans.</p>
             </div>
-            <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                    <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-800/50">
-                            <th className="p-4 pl-8 font-medium text-slate-500 min-w-[200px]">{t('pricing.compare.feature')}</th>
-                            <th className="p-4 font-bold text-slate-900 dark:text-white min-w-[150px]">{t('pricing.compare.free')}</th>
-                            <th className="p-4 font-bold text-indigo-600 dark:text-indigo-400 min-w-[150px]">{t('pricing.compare.pro')}</th>
-                            <th className="p-4 font-bold text-slate-900 dark:text-white min-w-[150px]">{t('pricing.compare.agency')}</th>
-                            <th className="p-4 font-bold text-slate-900 dark:text-white min-w-[150px]">{t('pricing.compare.enterprise')}</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        <tr>
-                            <td className="p-4 pl-8 font-medium text-slate-700 dark:text-slate-300">Word Limit (Monthly)</td>
-                            <td className="p-4 text-slate-500">2,000</td>
-                            <td className="p-4 text-slate-900 dark:text-white font-medium">50,000</td>
-                            <td className="p-4 text-slate-900 dark:text-white font-medium">200,000</td>
-                            <td className="p-4 text-indigo-600 dark:text-indigo-400 font-bold">Unlimited</td>
-                        </tr>
-                        <tr>
-                            <td className="p-4 pl-8 font-medium text-slate-700 dark:text-slate-300">AI Model</td>
-                            <td className="p-4 text-slate-500">Gemini Flash</td>
-                            <td className="p-4 text-slate-900 dark:text-white font-medium">Gemini Pro</td>
-                            <td className="p-4 text-slate-900 dark:text-white font-medium">Gemini Pro</td>
-                            <td className="p-4 text-slate-900 dark:text-white font-medium">Gemini Pro/Ultra</td>
-                        </tr>
-                        <tr>
-                            <td className="p-4 pl-8 font-medium text-slate-700 dark:text-slate-300">Image Generation</td>
-                            <td className="p-4 text-slate-500"><XIcon size={16} /></td>
-                            <td className="p-4 text-slate-900 dark:text-white font-medium">50 / mo</td>
-                            <td className="p-4 text-slate-900 dark:text-white font-medium">200 / mo</td>
-                            <td className="p-4 text-indigo-600 dark:text-indigo-400 font-bold">Unlimited</td>
-                        </tr>
-                        <tr>
-                            <td className="p-4 pl-8 font-medium text-slate-700 dark:text-slate-300">CV ATS Analysis</td>
-                            <td className="p-4 text-slate-500"><XIcon size={16} /></td>
-                            <td className="p-4 text-green-500"><Check size={16} /></td>
-                            <td className="p-4 text-green-500"><Check size={16} /></td>
-                            <td className="p-4 text-green-500"><Check size={16} /></td>
-                        </tr>
-                        <tr>
-                            <td className="p-4 pl-8 font-medium text-slate-700 dark:text-slate-300">User Seats</td>
-                            <td className="p-4 text-slate-500">1</td>
-                            <td className="p-4 text-slate-900 dark:text-white font-medium">1</td>
-                            <td className="p-4 text-slate-900 dark:text-white font-medium">3</td>
-                            <td className="p-4 text-indigo-600 dark:text-indigo-400 font-bold">Custom</td>
-                        </tr>
-                    </tbody>
-                </table>
+            
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-800">
+                                <th className="p-6 font-semibold text-slate-500 uppercase tracking-wider text-xs w-1/4 min-w-[200px]">{t('pricing.compare.feature')}</th>
+                                <th className="p-6 font-bold text-slate-900 dark:text-white w-1/5 min-w-[140px] text-center">{t('pricing.compare.free')}</th>
+                                <th className="p-6 font-bold text-indigo-600 dark:text-indigo-400 w-1/5 min-w-[140px] text-center">{t('pricing.compare.pro')}</th>
+                                <th className="p-6 font-bold text-slate-900 dark:text-white w-1/5 min-w-[140px] text-center">{t('pricing.compare.agency')}</th>
+                                <th className="p-6 font-bold text-slate-900 dark:text-white w-1/5 min-w-[140px] text-center">{t('pricing.compare.enterprise')}</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {[
+                                { name: 'Word Limit (Monthly)', free: '2,000', pro: '50,000', agency: '200,000', ent: 'Unlimited' },
+                                { name: 'AI Model', free: 'Gemini Flash', pro: 'Gemini Pro', agency: 'Gemini Pro', ent: 'Custom / Ultra' },
+                                { name: 'Image Generation', free: false, pro: '50 / mo', agency: '200 / mo', ent: 'Unlimited' },
+                                { name: 'Brand Voices', free: '0', pro: '1', agency: 'Unlimited', ent: 'Unlimited' },
+                                { name: 'ATS Analysis', free: false, pro: true, agency: true, ent: true },
+                                { name: 'User Seats', free: '1', pro: '1', agency: '3', ent: 'Custom' },
+                                { name: 'API Access', free: false, pro: false, agency: true, ent: true },
+                                { name: 'Support', free: 'Community', pro: 'Standard', agency: 'Priority', ent: 'Dedicated Mgr' },
+                            ].map((row, i) => (
+                                <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
+                                    <td className="p-5 pl-6 font-medium text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800/50">{row.name}</td>
+                                    
+                                    {/* Cells */}
+                                    {[row.free, row.pro, row.agency, row.ent].map((cell, idx) => (
+                                        <td key={idx} className={`p-5 text-center ${idx === 1 ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
+                                            {typeof cell === 'boolean' ? (
+                                                cell ? <div className="flex justify-center"><CheckCircle2 size={20} className="text-green-500" /></div> : <div className="flex justify-center"><div className="w-5 h-1 bg-slate-200 dark:bg-slate-700 rounded-full"></div></div>
+                                            ) : (
+                                                <span className={`font-medium ${idx === 3 || cell === 'Unlimited' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-300'}`}>{cell}</span>
+                                            )}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div className="mt-12 text-center">
+                 <p className="text-slate-500 mb-4">Have specific requirements?</p>
+                 <Link to="/contact" className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:underline">
+                     Contact our sales team <ArrowRight size={16} />
+                 </Link>
             </div>
         </div>
       </div>

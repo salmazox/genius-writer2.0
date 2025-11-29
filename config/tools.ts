@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   FileText, Globe, Image as ImageIcon, Twitter, Linkedin, Mail, PenTool, 
   Search, Tag, Briefcase, HelpCircle, Lightbulb, ShoppingBag, BarChart2,
-  Wand2, Minimize2
+  Wand2, Minimize2, Edit, FileEdit
 } from 'lucide-react';
 import { ToolConfig, ToolType } from '../types';
 
@@ -24,9 +24,19 @@ export const IconMap: Record<string, React.ElementType> = {
   'help-circle': HelpCircle,
   'wand-2': Wand2,
   'minimize-2': Minimize2,
+  'file-edit': FileEdit,
 };
 
 export const getTools = (t: (key: string) => string): ToolConfig[] => [
+    { 
+      id: ToolType.SMART_EDITOR, 
+      name: 'Smart Document Editor', 
+      category: t('dashboard.categories.Business'), 
+      description: 'A full-featured document editor with a real-time AI companion.', 
+      icon: 'file-edit', 
+      model: 'gemini-3-pro-preview', 
+      inputs: [] // Handled by custom UI
+    },
     { 
       id: ToolType.CV_BUILDER, 
       name: 'CV / Resume Builder', 

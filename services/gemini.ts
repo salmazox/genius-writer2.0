@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { ToolType, CVData, ATSAnalysis } from "../types";
 import { getPromptConfig } from "../config/aiPrompts";
@@ -151,6 +152,86 @@ export const refineContent = async (
   }
 };
 
+export const chatWithAI = async (
+  history: { role: 'user' | 'model', text: string }[],
+  newMessage: string,
+  context?: string,
+  signal?: AbortSignal
+): Promise<string> => {
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+  try {
+    const chatHistory = history.map(h => ({
+      role: h.role,
+      parts: [{ text: h.text }]
+    }));
+
+    const chat = ai.chats.create({
+      model: 'gemini-3-pro-preview',
+      history: chatHistory,
+      config: {
+        systemInstruction: `You are a helpful writing assistant inside a document editor. 
+        Context of the user's document:\n${context?.substring(0, 5000) || "No content yet."}
+        
+        Your goal is to help them brainstorm, outline, or rewrite parts of this document. Be concise and helpful.`
+      }
+    });
+
+    const response = await withRetry(async () => {
+      return await chat.sendMessage({ message: newMessage });
+    }, 3, 1000, signal);
+
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    return response.text || "";
+
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    console.error("Chat Error:", error);
+    throw error;
+  }
+};
+
+export const extractBrandVoice = async (
+    textSample: string,
+    signal?: AbortSignal
+): Promise<{ name: string; description: string }> => {
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    try {
+        const response = await withRetry(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-3-pro-preview',
+                contents: `
+                Analyze the following text sample. Identify the Tone, Style, and Personality. 
+                
+                TEXT SAMPLE:
+                "${textSample}"
+
+                Task:
+                1. Give it a catchy Name (max 3 words).
+                2. Write a concise Description (max 1 sentence) that describes instructions for an AI to write in this style.
+
+                Return response in JSON format:
+                { "name": "...", "description": "..." }
+                `
+            });
+        }, 3, 1000, signal);
+
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+        const text = response.text || "{}";
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        console.error("Brand Voice Extraction Error", e);
+        return {
+            name: "Analysis Failed",
+            description: "Could not analyze the text sample."
+        };
+    }
+};
+
 export const analyzeATS = async (
     cvData: CVData, 
     jobDescription: string,
@@ -217,5 +298,77 @@ export const analyzeATS = async (
             summary: "Failed to analyze.",
             improvedSummary: ""
         };
+    }
+};
+
+export const parseResume = async (
+    base64Image: string, 
+    signal?: AbortSignal
+): Promise<Partial<CVData>> => {
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    // Clean base64 string
+    const cleanedBase64 = base64Image.split(',')[1] || base64Image;
+
+    try {
+        const response = await withRetry(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType: 'image/png', data: cleanedBase64 } },
+                        { text: `
+                            Extract resume data from this image into JSON format matching this structure:
+                            {
+                                "personal": { "fullName": "", "email": "", "phone": "", "address": "", "website": "", "linkedin": "", "jobTitle": "", "summary": "" },
+                                "experience": [{ "title": "", "company": "", "location": "", "startDate": "", "endDate": "", "description": "", "current": false }],
+                                "education": [{ "degree": "", "school": "", "location": "", "year": "" }],
+                                "skills": ["skill1", "skill2"]
+                            }
+                            Return ONLY raw JSON.
+                        ` }
+                    ]
+                }
+            });
+        }, 3, 1000, signal);
+
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+        
+        const text = response.text || "{}";
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        console.error("Resume Parsing Error", e);
+        throw new Error("Failed to parse resume");
+    }
+};
+
+export const factCheck = async (
+    content: string,
+    signal?: AbortSignal
+): Promise<string> => {
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    try {
+        const response = await withRetry(async () => {
+             return await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `
+                Fact check the following text. Identify any claims that seem dubious or incorrect, and provide corrections or notes.
+                
+                TEXT:
+                "${content}"
+
+                Return a bulleted list of potential issues. If none found, say "No major factual issues detected."
+                `
+            });
+        }, 3, 1000, signal);
+        
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+        return response.text || "No response.";
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        throw e;
     }
 };

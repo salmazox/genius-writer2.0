@@ -1,13 +1,14 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check } from 'lucide-react';
+import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
-import { generateContent, analyzeATS } from '../services/gemini';
+import { generateContent, analyzeATS, parseResume } from '../services/gemini';
+import { documentService } from '../services/documentService';
 import { ToolType, CVData, CVTheme, ATSAnalysis, CVExperience } from '../types';
 import { Button } from '../components/ui/Button';
 import { useDebounce } from '../hooks/useDebounce';
 import { useSwipe } from '../hooks/useSwipe';
+import { validateImageFile } from '../utils/security';
 
 // Sub-components
 import CvEditor from './cv/CvEditor';
@@ -45,8 +46,10 @@ const CvBuilder: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
     const [isAutoSaving, setIsAutoSaving] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
     
     const cvPreviewRef = useRef<HTMLDivElement>(null);
+    const importInputRef = useRef<HTMLInputElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
     const debouncedCvData = useDebounce(cvData, 1500);
@@ -64,7 +67,6 @@ const CvBuilder: React.FC = () => {
             const saved = localStorage.getItem('cv_draft');
             if (saved) {
                 const parsed = JSON.parse(saved);
-                // Ensure default theme/template if missing in old saves
                 if (!parsed.theme) parsed.theme = CV_THEMES[0];
                 if (!parsed.template) parsed.template = 'modern';
                 setCvData(parsed);
@@ -90,16 +92,62 @@ const CvBuilder: React.FC = () => {
         saveDraft();
     }, [debouncedCvData]);
 
+    const handleSaveDocument = () => {
+        documentService.create(
+            cvData.personal.fullName ? `${cvData.personal.fullName}'s CV` : 'Untitled CV',
+            JSON.stringify(cvData),
+            ToolType.CV_BUILDER
+        );
+        showToast("CV saved to My Documents", "success");
+    };
+
+    const handleImportCV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Basic validation - In real app, backend would handle PDF parsing better.
+        // Here we rely on Gemini Multimodal to "see" the CV image.
+        if (!file.type.startsWith('image/')) {
+            showToast("For this demo, please upload an image (PNG/JPG) of your resume.", "info");
+            // Allow proceed if it is image
+        }
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+            setIsImporting(true);
+            try {
+                const base64 = reader.result as string;
+                const parsedData = await parseResume(base64);
+                
+                // Merge parsed data with defaults to ensure structure
+                setCvData(prev => ({
+                    ...prev,
+                    personal: { ...prev.personal, ...parsedData.personal },
+                    experience: parsedData.experience?.map((e: any) => ({...e, id: Date.now().toString() + Math.random()})) || [],
+                    education: parsedData.education?.map((e: any) => ({...e, id: Date.now().toString() + Math.random()})) || [],
+                    skills: parsedData.skills || []
+                }));
+                
+                showToast("Resume parsed successfully!", "success");
+            } catch (err) {
+                console.error(err);
+                showToast("Failed to parse resume. Try a clearer image.", "error");
+            } finally {
+                setIsImporting(false);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
     // --- Actions ---
 
     const handleDownloadPDF = () => {
         const element = cvPreviewRef.current;
         if (!element) return;
 
-        // Force preview tab on mobile to ensure it's rendered for capture
         if (mobileTab !== 'preview' && window.innerWidth < 1024) {
             setMobileTab('preview');
-            setTimeout(handleDownloadPDF, 500); // retry after render
+            setTimeout(handleDownloadPDF, 500); 
             return;
         }
 
@@ -201,35 +249,25 @@ const CvBuilder: React.FC = () => {
     })();
 
     return (
-        <div 
-            className="flex h-full flex-col lg:flex-row relative touch-pan-y" 
-            {...swipeHandlers}
-        >
+        <div className="flex h-full flex-col lg:flex-row relative touch-pan-y" {...swipeHandlers}>
              {/* Mobile/Tablet Tab Switcher */}
              <div className="lg:hidden flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 z-20">
-                <button 
-                    onClick={() => setMobileTab('editor')} 
-                    className={`flex-1 p-3 text-sm font-bold flex items-center justify-center gap-2 ${mobileTab === 'editor' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 dark:text-slate-400'}`}
-                >
-                    <Edit3 size={16}/> Editor
-                </button>
-                <button 
-                    onClick={() => setMobileTab('preview')} 
-                    className={`flex-1 p-3 text-sm font-bold flex items-center justify-center gap-2 ${mobileTab === 'preview' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 dark:text-slate-400'}`}
-                >
-                    <Eye size={16}/> Preview
-                </button>
+                <button onClick={() => setMobileTab('editor')} className={`flex-1 p-3 text-sm font-bold flex items-center justify-center gap-2 ${mobileTab === 'editor' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 dark:text-slate-400'}`}><Edit3 size={16}/> Editor</button>
+                <button onClick={() => setMobileTab('preview')} className={`flex-1 p-3 text-sm font-bold flex items-center justify-center gap-2 ${mobileTab === 'preview' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-500 dark:text-slate-400'}`}><Eye size={16}/> Preview</button>
             </div>
 
-             {/* Action Bar (Download/ATS) - Desktop only */}
+             {/* Action Bar (Download/ATS/Import) - Desktop only */}
              <div className="absolute top-4 right-4 z-30 flex gap-2 hidden lg:flex items-center">
                  <div className="mr-4">
-                     {isAutoSaving ? (
-                        <span className="text-[10px] text-slate-400 flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-1 rounded-full shadow-sm"><Save size={10} className="animate-pulse"/> Saving...</span>
-                     ) : (
-                        <span className="text-[10px] text-green-500 flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-1 rounded-full shadow-sm"><Check size={10}/> Saved</span>
-                     )}
+                     {isAutoSaving ? <span className="text-[10px] text-slate-400 flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-1 rounded-full shadow-sm"><Save size={10} className="animate-pulse"/> Saving...</span> : <span className="text-[10px] text-green-500 flex items-center gap-1 bg-white dark:bg-slate-900 px-2 py-1 rounded-full shadow-sm"><Check size={10}/> Saved</span>}
                  </div>
+                 <input type="file" ref={importInputRef} className="hidden" accept="image/*" onChange={handleImportCV} />
+                 <Button size="sm" variant="secondary" onClick={() => importInputRef.current?.click()} icon={Upload} isLoading={isImporting}>
+                     Import CV
+                 </Button>
+                 <Button size="sm" variant="secondary" onClick={handleSaveDocument} icon={Save}>
+                     Save to Docs
+                 </Button>
                  <Button size="sm" variant="outline" onClick={() => setShowAtsSidebar(!showAtsSidebar)}>
                      <Target size={16} className="mr-2"/> {showAtsSidebar ? 'Hide ATS' : 'ATS Optimizer'}
                  </Button>
@@ -244,10 +282,7 @@ const CvBuilder: React.FC = () => {
                      {/* Score */}
                      <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden" role="region" aria-label="Profile Strength">
                         <div className="flex justify-between items-end mb-2 relative z-10">
-                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                                <Trophy size={14} className={completionScore === 100 ? "text-yellow-500" : "text-slate-400"} />
-                                Profile Strength
-                            </h3>
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><Trophy size={14} className={completionScore === 100 ? "text-yellow-500" : "text-slate-400"} /> Profile Strength</h3>
                             <span className={`text-lg font-bold ${completionScore === 100 ? 'text-green-500' : 'text-indigo-600'}`}>{completionScore}%</span>
                             <span className="sr-only">Completion score: {completionScore} percent</span>
                         </div>
@@ -258,9 +293,7 @@ const CvBuilder: React.FC = () => {
 
                     {/* Template & Theme Selectors */}
                     <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
-                        <h3 className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wide mb-3 flex items-center gap-2">
-                            <LayoutTemplate size={14} /> {t('dashboard.cv.template')}
-                        </h3>
+                        <h3 className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wide mb-3 flex items-center gap-2"><LayoutTemplate size={14} /> {t('dashboard.cv.template')}</h3>
                         <div className="grid grid-cols-3 gap-2">
                             {['modern', 'classic', 'minimal'].map(tmpl => (
                                 <button key={tmpl} onClick={() => setCvData(prev => ({...prev, template: tmpl as any}))} className={`px-3 py-2 text-xs font-medium rounded-lg capitalize border transition-all ${cvData.template === tmpl ? 'bg-white shadow-sm border-indigo-500 text-indigo-600' : 'border-transparent hover:bg-white/50 text-slate-500'}`}>{tmpl}</button>
@@ -268,9 +301,7 @@ const CvBuilder: React.FC = () => {
                         </div>
                     </div>
                     <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
-                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-2">
-                            <Palette size={14} /> {t('dashboard.cv.theme')}
-                        </h3>
+                        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-2"><Palette size={14} /> {t('dashboard.cv.theme')}</h3>
                         <div className="grid grid-cols-3 gap-2">
                             {CV_THEMES.map(theme => (
                                 <button key={theme.name} onClick={() => setCvData(prev => ({...prev, theme: theme}))} className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${cvData.theme.name === theme.name ? 'border-slate-400 bg-white dark:bg-slate-700 shadow-sm' : 'border-transparent hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
@@ -282,16 +313,10 @@ const CvBuilder: React.FC = () => {
                     </div>
                  </div>
 
-                 {/* Editor Form Component */}
-                 <CvEditor 
-                    cvData={cvData} 
-                    setCvData={setCvData} 
-                    generateCvDescription={generateCvDescription}
-                    isLoading={isLoading}
-                 />
+                 <CvEditor cvData={cvData} setCvData={setCvData} generateCvDescription={generateCvDescription} isLoading={isLoading} />
             </div>
 
-            {/* Column 2: Live Preview Component */}
+            {/* Column 2: Live Preview */}
             <div className={`flex-1 bg-slate-100 dark:bg-slate-950 p-4 md:p-8 overflow-hidden ${mobileTab === 'editor' ? 'hidden lg:block' : 'flex flex-col'}`}>
                  <div className="flex lg:hidden justify-between items-center mb-4 shrink-0">
                      <span className="text-xs font-bold uppercase text-slate-500">Preview Mode</span>
@@ -303,19 +328,8 @@ const CvBuilder: React.FC = () => {
                  </div>
             </div>
 
-            {/* Column 3: ATS Sidebar Component */}
-            <CvAtsSidebar 
-                show={showAtsSidebar}
-                onClose={() => setShowAtsSidebar(false)}
-                atsAnalysis={atsAnalysis}
-                jobDescription={jobDescription}
-                setJobDescription={setJobDescription}
-                runAtsAnalysis={runAtsAnalysis}
-                isLoading={isLoading}
-                handleApplyKeywords={handleApplyKeywords}
-                handleApplySummary={handleApplySummary}
-                clearAnalysis={() => setAtsAnalysis(null)}
-            />
+            {/* Column 3: ATS Sidebar */}
+            <CvAtsSidebar show={showAtsSidebar} onClose={() => setShowAtsSidebar(false)} atsAnalysis={atsAnalysis} jobDescription={jobDescription} setJobDescription={setJobDescription} runAtsAnalysis={runAtsAnalysis} isLoading={isLoading} handleApplyKeywords={handleApplyKeywords} handleApplySummary={handleApplySummary} clearAnalysis={() => setAtsAnalysis(null)} />
         </div>
     );
 };
