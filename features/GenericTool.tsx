@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -128,7 +129,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         } catch (e: any) {
             if (e.name !== 'AbortError') {
                 console.error(e);
-                showToast(t('dashboard.toasts.error'), 'error');
+                const msg = e.message || t('dashboard.toasts.error');
+                showToast(msg, 'error');
             }
         } finally {
             if (abortControllerRef.current === controller) {

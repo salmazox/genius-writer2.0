@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
@@ -31,6 +32,8 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
       // Save to local storage
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        // Dispatches a storage event for other components in the same window (optional but good practice for same-tab sync if needed)
+        window.dispatchEvent(new StorageEvent('storage', { key, newValue: JSON.stringify(valueToStore) }));
       }
     } catch (error) {
       console.warn(`Error setting localStorage key “${key}”:`, error);
@@ -39,8 +42,23 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
 
   useEffect(() => {
     setStoredValue(readValue());
+    
+    // Cross-tab synchronization
+    const handleStorageChange = (event: StorageEvent) => {
+        if (event.key === key && event.newValue !== null) {
+            try {
+                setStoredValue(JSON.parse(event.newValue));
+            } catch (error) {
+                console.warn(`Error parsing storage change for key "${key}":`, error);
+            }
+        }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+    
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [key]);
 
   return [storedValue, setValue];
 }

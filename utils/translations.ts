@@ -136,6 +136,13 @@ export const translations = {
       generatedWith: 'Generated with',
       placeholder: 'Your masterpiece starts here...',
       atsOptimizer: 'ATS Optimizer',
+      sort: {
+        label: 'Sort by',
+        newest: 'Newest First',
+        oldest: 'Oldest First',
+        az: 'Name (A-Z)',
+        za: 'Name (Z-A)',
+      },
       categories: {
         Social: 'Social',
         Email: 'Email',
@@ -249,6 +256,21 @@ export const translations = {
           issuer: 'Issuer',
           credentialUrl: 'Credential URL',
           proficiency: 'Proficiency',
+      },
+      smart: {
+          title: 'Smart Editor',
+          aiCompanion: 'AI Companion',
+          comments: 'Comments',
+          share: 'Share',
+          history: 'Version History',
+          check: 'Verify Facts',
+          save: 'Save',
+          export: 'Export',
+          saving: 'Saving...',
+          saved: 'Saved',
+          askAi: 'Ask AI to help...',
+          noComments: 'No comments yet. Select text to add context.',
+          saveFirst: 'Save document to enable comments.',
       }
     },
     contact: {
@@ -472,6 +494,13 @@ export const translations = {
       generatedWith: 'Generiert mit',
       placeholder: 'Dein Meisterwerk beginnt hier...',
       atsOptimizer: 'ATS Optimierer',
+      sort: {
+        label: 'Sortieren',
+        newest: 'Neueste',
+        oldest: 'Älteste',
+        az: 'Name (A-Z)',
+        za: 'Name (Z-A)',
+      },
       categories: {
         Social: 'Sozial',
         Email: 'E-Mail',
@@ -585,6 +614,21 @@ export const translations = {
           issuer: 'Aussteller',
           credentialUrl: 'Zertifikats-URL',
           proficiency: 'Sprachniveau',
+      },
+      smart: {
+          title: 'Smart Editor',
+          aiCompanion: 'KI Begleiter',
+          comments: 'Kommentare',
+          share: 'Teilen',
+          history: 'Versionsverlauf',
+          check: 'Fakten prüfen',
+          save: 'Speichern',
+          export: 'Exportieren',
+          saving: 'Speichert...',
+          saved: 'Gespeichert',
+          askAi: 'Frage die KI um Hilfe...',
+          noComments: 'Noch keine Kommentare. Wähle Text aus, um Kontext hinzuzufügen.',
+          saveFirst: 'Speichere das Dokument, um Kommentare zu aktivieren.',
       }
     },
     contact: {

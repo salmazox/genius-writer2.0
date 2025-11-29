@@ -16,6 +16,7 @@ import { useToast } from '../contexts/ToastContext';
 import { ToolType, SavedDocument, Comment } from '../types';
 import { useUser } from '../contexts/UserContext';
 import { Watermark } from '../components/Watermark';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface ChatMessage {
     id: string;
@@ -26,6 +27,7 @@ interface ChatMessage {
 const SmartEditor: React.FC = () => {
     const { showToast } = useToast();
     const { user } = useUser();
+    const { t } = useThemeLanguage();
     
     // --- State ---
     const [content, setContent] = useLocalStorage<string>('smart_editor_content', '<h1>Untitled Document</h1><p>Start writing here...</p>');
@@ -94,17 +96,17 @@ const SmartEditor: React.FC = () => {
                     };
                     documentService.save(updated);
                     setCurrentDoc(updated);
-                    showToast("Document updated", "success");
+                    showToast(t('dashboard.toasts.saved'), "success");
                 }
             } else {
                 // Create new
                 const newDoc = documentService.create(title, content, ToolType.SMART_EDITOR);
                 setCurrentDoc(newDoc);
                 docId = newDoc.id;
-                showToast("New document saved", "success");
+                showToast(t('dashboard.toasts.saved'), "success");
             }
         } catch (error) {
-            showToast("Failed to save", "error");
+            showToast(t('dashboard.toasts.error'), "error");
         } finally {
             setIsSaving(false);
         }
@@ -139,7 +141,7 @@ const SmartEditor: React.FC = () => {
             const newAiMsg: ChatMessage = { id: (Date.now() + 1).toString(), role: 'model', text: response };
             setChatHistory(prev => [...prev, newAiMsg]);
         } catch (e) {
-            showToast("Failed to get AI response", "error");
+            showToast(t('dashboard.toasts.error'), "error");
         } finally {
             setIsChatLoading(false);
         }
@@ -157,7 +159,7 @@ const SmartEditor: React.FC = () => {
             const result = await factCheck(content);
             setChatHistory(prev => [...prev, { id: Date.now().toString(), role: 'model', text: result }]);
         } catch (e) {
-            showToast("Fact check failed", "error");
+            showToast(t('dashboard.toasts.error'), "error");
         } finally {
             setIsChatLoading(false);
         }
@@ -166,7 +168,7 @@ const SmartEditor: React.FC = () => {
     // --- Comment Logic ---
     const handleAddComment = () => {
         if (!currentDoc) {
-            showToast("Please save the document first to add comments.", "info");
+            showToast(t('dashboard.smart.saveFirst'), "info");
             return;
         }
         if (!newComment.trim()) return;
@@ -246,7 +248,7 @@ const SmartEditor: React.FC = () => {
             handleSaveDocument(); // Save current state before restoring
             setContent(versionContent);
             setIsHistoryOpen(false);
-            showToast("Version restored", "success");
+            showToast(t('dashboard.toasts.restored'), "success");
         }
     };
 
@@ -263,6 +265,7 @@ const SmartEditor: React.FC = () => {
                         <input 
                             value={title} 
                             onChange={(e) => setTitle(e.target.value)}
+                            aria-label="Document Title"
                             className="bg-transparent text-lg font-bold text-slate-900 dark:text-white outline-none placeholder-slate-400 w-full max-w-md"
                             placeholder="Document Title"
                         />
@@ -270,17 +273,17 @@ const SmartEditor: React.FC = () => {
                     
                     <div className="flex items-center gap-2">
                         <div className="hidden md:flex text-xs text-slate-400 mr-2 items-center gap-1">
-                            {isSaving ? <><Loader2 size={12} className="animate-spin"/> Saving...</> : <><Check size={12}/> Saved</>}
+                            {isSaving ? <><Loader2 size={12} className="animate-spin"/> {t('dashboard.smart.saving')}</> : <><Check size={12}/> {t('dashboard.smart.saved')}</>}
                         </div>
                         
-                        <Button variant="ghost" size="sm" icon={Share2} onClick={() => { handleSaveDocument(); setIsShareOpen(true); }} title="Share">Share</Button>
-                        <Button variant="ghost" size="sm" icon={History} onClick={() => { if(!currentDoc) handleSaveDocument(); setIsHistoryOpen(true); }} title="Version History" />
-                        <Button variant="ghost" size="sm" icon={ShieldCheck} onClick={handleFactCheck} title="Verify Facts">Check</Button>
-                        <Button variant="secondary" size="sm" icon={Save} onClick={handleSaveDocument}>Save</Button>
+                        <Button variant="ghost" size="sm" icon={Share2} onClick={() => { handleSaveDocument(); setIsShareOpen(true); }} title={t('dashboard.smart.share')} aria-label={t('dashboard.smart.share')}>{t('dashboard.smart.share')}</Button>
+                        <Button variant="ghost" size="sm" icon={History} onClick={() => { if(!currentDoc) handleSaveDocument(); setIsHistoryOpen(true); }} title={t('dashboard.smart.history')} aria-label={t('dashboard.smart.history')} />
+                        <Button variant="ghost" size="sm" icon={ShieldCheck} onClick={handleFactCheck} title={t('dashboard.smart.check')} aria-label={t('dashboard.smart.check')}>{t('dashboard.smart.check')}</Button>
+                        <Button variant="secondary" size="sm" icon={Save} onClick={handleSaveDocument} aria-label={t('dashboard.smart.save')}>{t('dashboard.smart.save')}</Button>
                         
                         {/* Export Dropdown Group */}
                         <div className="relative group">
-                            <Button variant={isPro ? "secondary" : "ghost"} size="sm" icon={isPro ? Download : Lock}>Export</Button>
+                            <Button variant={isPro ? "secondary" : "ghost"} size="sm" icon={isPro ? Download : Lock} aria-label="Export Menu">{t('dashboard.smart.export')}</Button>
                             <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                                 <button onClick={() => handleExport('html')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-t-xl">HTML</button>
                                 <button onClick={() => handleExport('txt')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-b-xl">Plain Text</button>
@@ -289,14 +292,24 @@ const SmartEditor: React.FC = () => {
                         
                         <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
 
-                        <button onClick={() => setActiveSidebar(activeSidebar === 'comments' ? null : 'comments')} className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'comments' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} title="Comments">
+                        <button 
+                            onClick={() => setActiveSidebar(activeSidebar === 'comments' ? null : 'comments')} 
+                            className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'comments' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} 
+                            title={t('dashboard.smart.comments')}
+                            aria-label={activeSidebar === 'comments' ? "Hide Comments" : "Show Comments"}
+                        >
                             <MessageCircle size={20} />
                             {comments.filter(c => !c.resolved).length > 0 && (
                                 <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
                             )}
                         </button>
 
-                        <button onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')} className={`p-2 rounded-lg transition-colors ${activeSidebar === 'ai' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} title="AI Companion">
+                        <button 
+                            onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')} 
+                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'ai' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} 
+                            title={t('dashboard.smart.aiCompanion')}
+                            aria-label={activeSidebar === 'ai' ? "Hide AI Companion" : "Show AI Companion"}
+                        >
                             <Sidebar size={20} />
                         </button>
                     </div>
@@ -318,7 +331,7 @@ const SmartEditor: React.FC = () => {
                             value={content} 
                             onChange={setContent} 
                             className="min-h-[297mm] border-none z-10 relative bg-transparent"
-                            placeholder="Start writing..."
+                            placeholder={t('dashboard.placeholder')}
                         />
                     </div>
                 </div>
@@ -332,8 +345,8 @@ const SmartEditor: React.FC = () => {
                     {activeSidebar === 'ai' && (
                         <>
                             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
-                                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2"><MessageSquare size={16} className="text-indigo-600"/> AI Companion</h3>
-                                <button onClick={() => setActiveSidebar(null)} className="lg:hidden"><X size={20} className="text-slate-400"/></button>
+                                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2"><MessageSquare size={16} className="text-indigo-600"/> {t('dashboard.smart.aiCompanion')}</h3>
+                                <button onClick={() => setActiveSidebar(null)} className="lg:hidden" aria-label="Close Sidebar"><X size={20} className="text-slate-400"/></button>
                             </div>
                             
                             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-900">
@@ -360,11 +373,12 @@ const SmartEditor: React.FC = () => {
                                         value={chatInput}
                                         onChange={(e) => setChatInput(e.target.value)}
                                         onKeyDown={(e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
-                                        placeholder="Ask AI to help..."
+                                        placeholder={t('dashboard.smart.askAi')}
                                         className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none max-h-32"
                                         rows={2}
+                                        aria-label="AI Chat Input"
                                     />
-                                    <button onClick={handleSendMessage} disabled={!chatInput.trim() || isChatLoading} className="absolute right-2 bottom-2 p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                                    <button onClick={handleSendMessage} disabled={!chatInput.trim() || isChatLoading} aria-label="Send Message" className="absolute right-2 bottom-2 p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
                                         <Send size={16} />
                                     </button>
                                 </div>
@@ -376,15 +390,15 @@ const SmartEditor: React.FC = () => {
                     {activeSidebar === 'comments' && (
                         <>
                              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
-                                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2"><MessageCircle size={16} className="text-indigo-600"/> Comments</h3>
-                                <button onClick={() => setActiveSidebar(null)} className="lg:hidden"><X size={20} className="text-slate-400"/></button>
+                                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2"><MessageCircle size={16} className="text-indigo-600"/> {t('dashboard.smart.comments')}</h3>
+                                <button onClick={() => setActiveSidebar(null)} className="lg:hidden" aria-label="Close Sidebar"><X size={20} className="text-slate-400"/></button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-900">
                                 {!currentDoc ? (
-                                    <div className="text-center py-10 text-slate-400 text-sm">Save document to enable comments.</div>
+                                    <div className="text-center py-10 text-slate-400 text-sm">{t('dashboard.smart.saveFirst')}</div>
                                 ) : comments.length === 0 ? (
-                                    <div className="text-center py-10 text-slate-400 text-sm">No comments yet. Select text to add context.</div>
+                                    <div className="text-center py-10 text-slate-400 text-sm">{t('dashboard.smart.noComments')}</div>
                                 ) : (
                                     comments.map(comment => (
                                         <div key={comment.id} className={`bg-white dark:bg-slate-800 p-3 rounded-xl border ${comment.resolved ? 'border-slate-100 dark:border-slate-800 opacity-60' : 'border-slate-200 dark:border-slate-700'} shadow-sm`}>
@@ -397,10 +411,10 @@ const SmartEditor: React.FC = () => {
                                                     <span className="text-xs text-slate-400">{new Date(comment.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                                 </div>
                                                 <div className="flex gap-1">
-                                                     <button onClick={() => handleResolveComment(comment.id)} className="p-1 hover:bg-green-50 text-slate-400 hover:text-green-600 rounded" title={comment.resolved ? "Unresolve" : "Resolve"}>
+                                                     <button onClick={() => handleResolveComment(comment.id)} className="p-1 hover:bg-green-50 text-slate-400 hover:text-green-600 rounded" title={comment.resolved ? "Unresolve" : "Resolve"} aria-label={comment.resolved ? "Unresolve comment" : "Resolve comment"}>
                                                          <Check size={14} />
                                                      </button>
-                                                     <button onClick={() => handleDeleteComment(comment.id)} className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded" title="Delete">
+                                                     <button onClick={() => handleDeleteComment(comment.id)} className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded" title="Delete" aria-label="Delete comment">
                                                          <X size={14} />
                                                      </button>
                                                 </div>
@@ -420,7 +434,7 @@ const SmartEditor: React.FC = () => {
                                 {selectedTextForComment && (
                                     <div className="mb-2 text-xs text-slate-500 flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
                                         <Quote size={12}/> Quoting selection
-                                        <button onClick={() => setSelectedTextForComment('')} className="ml-auto"><X size={12}/></button>
+                                        <button onClick={() => setSelectedTextForComment('')} className="ml-auto" aria-label="Clear quote"><X size={12}/></button>
                                     </div>
                                 )}
                                 <div className="relative">
@@ -432,8 +446,9 @@ const SmartEditor: React.FC = () => {
                                         disabled={!currentDoc}
                                         className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 pr-10 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
                                         rows={2}
+                                        aria-label="Comment Input"
                                     />
-                                    <button onClick={handleAddComment} disabled={!newComment.trim() || !currentDoc} className="absolute right-2 bottom-2 p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                                    <button onClick={handleAddComment} disabled={!newComment.trim() || !currentDoc} aria-label="Send Comment" className="absolute right-2 bottom-2 p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
                                         <Send size={16} />
                                     </button>
                                 </div>
@@ -447,7 +462,7 @@ const SmartEditor: React.FC = () => {
             <Modal
                 isOpen={isHistoryOpen}
                 onClose={() => setIsHistoryOpen(false)}
-                title="Version History"
+                title={t('dashboard.smart.history')}
             >
                 <div className="space-y-4">
                     {!currentDoc?.versions || currentDoc.versions.length === 0 ? (
@@ -467,7 +482,7 @@ const SmartEditor: React.FC = () => {
                                     icon={RotateCcw} 
                                     onClick={() => restoreVersion(ver.content)}
                                 >
-                                    Restore
+                                    {t('dashboard.restore')}
                                 </Button>
                             </div>
                         ))

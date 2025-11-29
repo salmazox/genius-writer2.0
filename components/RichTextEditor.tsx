@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { 
     Bold, Italic, Underline, List, ListOrdered, Undo, Redo, Sparkles, Loader2, 
@@ -273,6 +274,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                 : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
             }`}
             title={title}
+            aria-label={title}
         >
             <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
         </button>
@@ -282,18 +284,21 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
         options, 
         onChange, 
         defaultValue, 
-        width = "w-24"
+        width = "w-24",
+        label
     }: { 
         options: {name: string, value: string}[], 
         onChange: (val: string) => void, 
         defaultValue?: string,
-        width?: string 
+        width?: string,
+        label: string
     }) => (
         <div className={`relative ${width}`}>
             <select
                 className="w-full bg-transparent text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-md py-1 pl-2 pr-4 appearance-none focus:outline-none hover:border-indigo-300 transition-colors cursor-pointer"
                 onChange={(e) => onChange(e.target.value)}
                 value={defaultValue}
+                aria-label={label}
                 onMouseDown={(e) => e.stopPropagation()} // Allow clicking select without losing editor focus logic issues
             >
                 {options.map(opt => <option key={opt.value} value={opt.value}>{opt.name}</option>)}
@@ -333,12 +338,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                             {/* Font Controls */}
                             <div className="flex gap-1 items-center">
                                 <ToolbarSelect 
+                                    label="Font Family"
                                     options={FONTS} 
                                     onChange={(val) => exec('fontName', val)} 
                                     defaultValue="Inter"
                                     width="w-24"
                                 />
                                 <ToolbarSelect 
+                                    label="Font Size"
                                     options={SIZES} 
                                     onChange={(val) => exec('fontSize', val)} 
                                     defaultValue="3"
@@ -387,6 +394,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                                     onMouseDown={(e) => { e.preventDefault(); handleRefine("Fix spelling and grammar"); }}
                                     className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-md text-xs font-bold transition-all hover:shadow-md"
                                     title="AI Magic Fix"
+                                    aria-label="AI Magic Fix"
                                     disabled={isRefining}
                                 >
                                     {isRefining ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
@@ -404,6 +412,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                             <input
                                 autoFocus
                                 type="text"
+                                aria-label={inputMode === 'link' ? "Link URL" : "Image URL"}
                                 className="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white placeholder-slate-400"
                                 placeholder={inputMode === 'link' ? "https://example.com" : "https://example.com/image.png"}
                                 value={inputValue}
@@ -417,6 +426,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
                                     onMouseDown={(e) => { e.preventDefault(); triggerFileUpload(); }} 
                                     className="p-1.5 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 dark:text-slate-400 rounded-md transition-colors" 
                                     title="Upload Local Image"
+                                    aria-label="Upload Local Image"
                                 >
                                     <Upload size={18} />
                                 </button>
@@ -424,15 +434,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
 
                             <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
 
-                            <button onMouseDown={(e) => { e.preventDefault(); applyInput(); }} className="p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"><Check size={18}/></button>
-                            <button onMouseDown={(e) => { e.preventDefault(); closeInput(); }} className="p-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-md transition-colors"><X size={18}/></button>
+                            <button onMouseDown={(e) => { e.preventDefault(); applyInput(); }} aria-label="Confirm" className="p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"><Check size={18}/></button>
+                            <button onMouseDown={(e) => { e.preventDefault(); closeInput(); }} aria-label="Cancel" className="p-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-md transition-colors"><X size={18}/></button>
                         </div>
                     )}
                 </div>
             )}
 
             {/* Editor Area */}
-            <div
+            <div 
                 ref={editorRef}
                 contentEditable
                 onInput={handleInput}

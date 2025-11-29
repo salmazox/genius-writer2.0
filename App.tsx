@@ -1,3 +1,4 @@
+
 import React, { Suspense, useState } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -43,7 +44,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
       {!isDashboard && !isAuth && !is404 && <Navbar />}
       {isDashboard && !isAuth && <Navbar />} 
-      <main className={`flex-grow ${isDashboard ? 'h-[calc(100dvh-64px)] overflow-hidden' : ''}`}>
+      <main id="main-content" className={`flex-grow ${isDashboard ? 'h-[calc(100dvh-64px)] overflow-hidden' : ''}`}>
         <ErrorBoundary>
           {children}
         </ErrorBoundary>

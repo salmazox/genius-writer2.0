@@ -61,7 +61,12 @@ const CvBuilder: React.FC = () => {
     const importInputRef = useRef<HTMLInputElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    const debouncedCvData = useDebounce(cvData, 1500);
+    // Debounce for Auto-Save (Longer delay)
+    const debouncedCvDataForSave = useDebounce(cvData, 1500);
+    
+    // Debounce for Preview Rendering (Shorter delay for responsiveness)
+    const previewCvData = useDebounce(cvData, 200);
+
     const isPro = user.plan !== 'free';
 
     // Swipe handlers for mobile
@@ -92,15 +97,15 @@ const CvBuilder: React.FC = () => {
 
     // Auto-Save
     useEffect(() => {
-        if (JSON.stringify(debouncedCvData) === JSON.stringify(INITIAL_CV)) return;
+        if (JSON.stringify(debouncedCvDataForSave) === JSON.stringify(INITIAL_CV)) return;
         
         const saveDraft = () => {
             setIsAutoSaving(true);
-            localStorage.setItem('cv_draft', JSON.stringify(debouncedCvData));
+            localStorage.setItem('cv_draft', JSON.stringify(debouncedCvDataForSave));
             setTimeout(() => setIsAutoSaving(false), 500);
         };
         saveDraft();
-    }, [debouncedCvData]);
+    }, [debouncedCvDataForSave]);
 
     const handleSaveDocument = () => {
         const content = viewMode === 'cv' ? JSON.stringify(cvData) : coverLetterContent;
@@ -141,9 +146,9 @@ const CvBuilder: React.FC = () => {
                 }));
                 
                 showToast("Resume parsed successfully!", "success");
-            } catch (err) {
+            } catch (err: any) {
                 console.error(err);
-                showToast("Failed to parse resume. Try a clearer image.", "error");
+                showToast(err.message || "Failed to parse resume.", "error");
             } finally {
                 setIsImporting(false);
             }
@@ -203,7 +208,7 @@ const CvBuilder: React.FC = () => {
             
             showToast("Description generated!", "success");
         } catch (e: any) { 
-            if (e.name !== 'AbortError') showToast("Failed to generate", "error"); 
+            if (e.name !== 'AbortError') showToast(e.message || "Failed to generate", "error"); 
         } finally { 
             if (abortControllerRef.current === controller) {
                 setIsLoading(false); 
@@ -225,7 +230,7 @@ const CvBuilder: React.FC = () => {
             setAtsAnalysis(result);
             showToast("Analysis Complete", "success");
         } catch(e: any) { 
-            if (e.name !== 'AbortError') showToast("Analysis Failed", "error"); 
+            if (e.name !== 'AbortError') showToast(e.message || "Analysis Failed", "error"); 
         } finally { 
             if (abortControllerRef.current === controller) {
                 setIsLoading(false);
@@ -243,8 +248,8 @@ const CvBuilder: React.FC = () => {
             const letter = await generateCoverLetter(cvData, jobDescription);
             setCoverLetterContent(letter);
             showToast("Cover Letter Generated!", "success");
-        } catch (e) {
-            showToast("Failed to generate cover letter", "error");
+        } catch (e: any) {
+            showToast(e.message || "Failed to generate cover letter", "error");
         } finally {
             setIsGeneratingLetter(false);
         }
@@ -381,7 +386,8 @@ const CvBuilder: React.FC = () => {
                             {/* Watermark Container */}
                             <div className="relative">
                                 {!isPro && <Watermark />}
-                                <CvPreview cvData={cvData} previewRef={cvPreviewRef} />
+                                {/* Pass debounced preview data to prevent typing lag */}
+                                <CvPreview cvData={previewCvData} previewRef={cvPreviewRef} />
                             </div>
                         </div>
                     </div>

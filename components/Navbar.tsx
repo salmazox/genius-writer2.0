@@ -20,6 +20,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
@@ -105,7 +106,7 @@ const Navbar: React.FC = () => {
             
             <button
               onClick={() => setIsOpen(!isOpen)}
-              aria-label="Toggle menu"
+              aria-label={isOpen ? "Close menu" : "Open menu"}
               className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 focus:outline-none"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -136,6 +137,7 @@ const Navbar: React.FC = () => {
              <div className="flex items-center gap-4 px-3 py-4 border-t border-slate-100 dark:border-slate-800">
               <button 
                 onClick={() => setLanguage('en')}
+                aria-label="Switch to English"
                 className={`text-sm font-bold ${language === 'en' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`}
               >
                 English
@@ -143,6 +145,7 @@ const Navbar: React.FC = () => {
                <div className="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
               <button 
                 onClick={() => setLanguage('de')}
+                aria-label="Switch to German"
                 className={`text-sm font-bold ${language === 'de' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`}
               >
                 Deutsch

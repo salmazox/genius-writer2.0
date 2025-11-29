@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Menu, X, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder, Trash2, Plus, Tag, MoveRight, Star, Copy, RefreshCw, Share2 } from 'lucide-react';
+import { Menu, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder } from 'lucide-react';
 import { ToolType, SavedDocument, Folder as FolderType } from '../types';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { useToast } from '../contexts/ToastContext';
@@ -13,6 +13,7 @@ import { Input } from '../components/ui/Forms';
 import { OnboardingTour } from '../components/OnboardingTour';
 import { useDebounce } from '../hooks/useDebounce';
 import { useUser } from '../contexts/UserContext';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 // Import refactored features
 import CvBuilder from '../features/CvBuilder';
@@ -20,12 +21,15 @@ import Translator from '../features/Translator';
 import GenericTool from '../features/GenericTool';
 import SmartEditor from '../features/SmartEditor';
 
+// Import New Dashboard Components
+import { DashboardLibrary } from '../components/dashboard/DashboardLibrary';
+import { DashboardDocuments, SortOrder } from '../components/dashboard/DashboardDocuments';
+
 const Dashboard: React.FC = () => {
   const { t } = useThemeLanguage();
   const { showToast } = useToast();
   const { user, toggleFavoriteTool } = useUser();
   
-  // Load tools from config
   const TOOLS = getTools(t);
 
   // Core State
@@ -33,9 +37,10 @@ const Dashboard: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchQuery = useDebounce(searchQuery, 300); // Debounce search by 300ms
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const [viewMode, setViewMode] = useState<'library' | 'documents' | 'trash'>('library');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
   
   // Data State
   const [savedDocs, setSavedDocs] = useState<SavedDocument[]>([]);
@@ -54,7 +59,6 @@ const Dashboard: React.FC = () => {
 
   const activeTool = activeToolId ? TOOLS.find(t => t.id === activeToolId) : null;
 
-  // Initial Onboarding Check
   useEffect(() => {
       const hasCompletedOnboarding = localStorage.getItem('genius_writer_onboarding_complete');
       if (!hasCompletedOnboarding) {
@@ -67,7 +71,6 @@ const Dashboard: React.FC = () => {
       setShowOnboarding(false);
   };
 
-  // Refresh Data
   const refreshData = () => {
       setSavedDocs(documentService.getAll());
       setFolders(documentService.getFolders());
@@ -77,9 +80,8 @@ const Dashboard: React.FC = () => {
       if (viewMode === 'documents' || viewMode === 'trash') {
           refreshData();
       }
-  }, [viewMode, docToShare]); // Re-fetch when share modal closes to get updated share settings
+  }, [viewMode, docToShare]);
 
-  // Extract all unique tags (exclude trashed docs tags)
   const allTags = useMemo(() => {
       const tags = new Set<string>();
       savedDocs
@@ -96,7 +98,6 @@ const Dashboard: React.FC = () => {
       );
   };
 
-  // Filter tools based on search query
   const filteredTools = useMemo(() => {
     if (!debouncedSearchQuery.trim()) return TOOLS;
     const query = debouncedSearchQuery.toLowerCase();
@@ -107,28 +108,23 @@ const Dashboard: React.FC = () => {
     );
   }, [TOOLS, debouncedSearchQuery]);
 
-  // Filter Docs based on search (title + content), folder, tags, and trash status
   const filteredDocs = useMemo(() => {
       let docs = savedDocs;
       
-      // Filter by Trash Status
       if (viewMode === 'trash') {
           docs = docs.filter(d => d.deletedAt !== undefined);
       } else {
           docs = docs.filter(d => d.deletedAt === undefined);
       }
 
-      // Folder Filter (only in Documents view)
       if (viewMode === 'documents' && activeFolderId) {
           docs = docs.filter(d => d.folderId === activeFolderId);
       }
 
-      // Tag Filter
       if (selectedTags.length > 0) {
           docs = docs.filter(d => d.tags && d.tags.some(t => selectedTags.includes(t)));
       }
 
-      // Search Filter (Title OR Content)
       if (debouncedSearchQuery.trim()) {
           const q = debouncedSearchQuery.toLowerCase();
           docs = docs.filter(d => 
@@ -137,11 +133,17 @@ const Dashboard: React.FC = () => {
           );
       }
 
-      // Sort by last modified desc
-      return docs.sort((a, b) => b.lastModified - a.lastModified);
-  }, [savedDocs, activeFolderId, selectedTags, debouncedSearchQuery, viewMode]);
+      // Sort
+      return docs.sort((a, b) => {
+          if (sortOrder === 'newest') return b.lastModified - a.lastModified;
+          if (sortOrder === 'oldest') return a.lastModified - b.lastModified;
+          if (sortOrder === 'az') return a.title.localeCompare(b.title);
+          if (sortOrder === 'za') return b.title.localeCompare(a.title);
+          return 0;
+      });
+  }, [savedDocs, activeFolderId, selectedTags, debouncedSearchQuery, viewMode, sortOrder]);
 
-  // --- Actions ---
+  // --- Handlers ---
 
   const handleCreateFolder = () => {
       if (!newFolderName.trim()) return;
@@ -154,9 +156,16 @@ const Dashboard: React.FC = () => {
 
   const handleDeleteDoc = (id: string, e: React.MouseEvent) => {
       e.stopPropagation();
-      documentService.delete(id); // Soft delete
+      documentService.delete(id);
       refreshData();
-      showToast('Moved to Trash', 'info');
+      showToast('Moved to Trash', 'info', {
+          label: 'Undo',
+          onClick: () => {
+              documentService.restore(id);
+              refreshData();
+              showToast('Restored from Trash', 'success');
+          }
+      });
   };
 
   const handleRestoreDoc = (id: string, e: React.MouseEvent) => {
@@ -202,9 +211,8 @@ const Dashboard: React.FC = () => {
   };
 
   const handleOpenDoc = (doc: SavedDocument) => {
-      if (viewMode === 'trash') return; // Cannot open trashed docs
+      if (viewMode === 'trash') return;
 
-      // Inject into legacy drafts
       if (doc.templateId === ToolType.CV_BUILDER) {
           localStorage.setItem('cv_draft', doc.content);
       } else if (doc.templateId === ToolType.SMART_EDITOR) {
@@ -212,269 +220,12 @@ const Dashboard: React.FC = () => {
           localStorage.setItem('smart_editor_title', doc.title);
       } else {
            localStorage.setItem(`draft_${doc.templateId}`, JSON.stringify({
-              formValues: {}, // Inputs lost on restore of generic doc, only content remains
+              formValues: {}, 
               documentContent: doc.content,
               lastSaved: Date.now()
           }));
       }
       setActiveToolId(doc.templateId);
-  };
-
-  // --- Subcomponents ---
-
-  const ToolGridItem: React.FC<{ tool: any, onClick: () => void }> = ({ tool, onClick }) => {
-      const Icon = IconMap[tool.icon] || FileText;
-      const isFav = user.favorites?.includes(tool.id);
-
-      return (
-        <div className="relative group h-full">
-            <button 
-                onClick={onClick}
-                className="w-full flex flex-col items-start p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:shadow-lg hover:-translate-y-1 hover:border-indigo-500/50 transition-all duration-300 text-left h-full"
-            >
-                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors mb-4">
-                    <Icon size={24} />
-                </div>
-                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors pr-6">{tool.name}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{tool.description}</p>
-            </button>
-            <button 
-                onClick={(e) => { e.stopPropagation(); toggleFavoriteTool(tool.id); }}
-                className={`absolute top-4 right-4 p-2 rounded-full transition-all ${isFav ? 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 opacity-100' : 'text-slate-300 hover:text-yellow-500 opacity-0 group-hover:opacity-100'}`}
-                title={isFav ? "Remove from favorites" : "Add to favorites"}
-            >
-                <Star size={18} fill={isFav ? "currentColor" : "none"} />
-            </button>
-        </div>
-      );
-  };
-
-  const ToolList = () => {
-    const categories = Array.from(new Set(filteredTools.map(t => t.category)));
-    const favoriteTools = TOOLS.filter(t => user.favorites?.includes(t.id));
-
-    if (filteredTools.length === 0) {
-        return <div className="p-8 text-center text-slate-500">No tools found matching "{debouncedSearchQuery}"</div>;
-    }
-
-    return (
-       <div className="space-y-10 pb-10 animate-in slide-in-from-bottom-4 duration-500">
-           
-        {/* Favorites Section */}
-        {favoriteTools.length > 0 && !debouncedSearchQuery && (
-            <div className="bg-indigo-50/50 dark:bg-indigo-900/10 p-6 rounded-3xl border border-indigo-100 dark:border-indigo-900/20">
-                <h3 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <Star size={14} fill="currentColor" /> Your Favorites
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {favoriteTools.map(tool => (
-                        <ToolGridItem 
-                            key={tool.id} 
-                            tool={tool} 
-                            onClick={() => setActiveToolId(tool.id)} 
-                        />
-                    ))}
-                </div>
-            </div>
-        )}
-
-       {categories.map(category => {
-           const categoryTools = filteredTools.filter(t => t.category === category);
-           if (categoryTools.length === 0) return null;
-           
-           return (
-               <div key={category}>
-                   <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-                        {category}
-                   </h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                       {categoryTools.map(tool => (
-                           <ToolGridItem 
-                                key={tool.id} 
-                                tool={tool} 
-                                onClick={() => setActiveToolId(tool.id)} 
-                           />
-                       ))}
-                   </div>
-               </div>
-           );
-       })}
-       </div>
-    );
-  };
-
-  const DocumentsList = () => {
-      // If no docs at all in system (and not in trash view)
-      if (savedDocs.length === 0 && viewMode !== 'trash') {
-          return (
-              <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
-                  <Folder size={48} className="mx-auto text-slate-300 mb-4" />
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">No documents yet</h3>
-                  <p className="text-slate-500 mb-6">Create content with a tool and save it to see it here.</p>
-                  <Button onClick={() => setViewMode('library')}>Go to Library</Button>
-              </div>
-          );
-      }
-
-      return (
-          <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-200px)]">
-              {/* Folders & Tags Sidebar */}
-              <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1">
-                  
-                  {/* Folders */}
-                  <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                      <div className="flex justify-between items-center mb-4">
-                          <h3 className="font-bold text-slate-900 dark:text-white text-sm">Folders</h3>
-                          <button onClick={() => setIsNewFolderModalOpen(true)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"><Plus size={16} className="text-indigo-600"/></button>
-                      </div>
-                      <div className="space-y-1">
-                          <button 
-                             onClick={() => { setViewMode('documents'); setActiveFolderId(undefined); }}
-                             className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-between group ${viewMode === 'documents' && activeFolderId === undefined ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                          >
-                              <span className="flex items-center gap-2"><Grid size={16}/> All Documents</span>
-                              <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 rounded-full">{savedDocs.filter(d => !d.deletedAt).length}</span>
-                          </button>
-                          {folders.map(folder => (
-                              <button 
-                                  key={folder.id}
-                                  onClick={() => { setViewMode('documents'); setActiveFolderId(folder.id); }}
-                                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-between group ${viewMode === 'documents' && activeFolderId === folder.id ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                              >
-                                  <span className="flex items-center gap-2 truncate"><Folder size={16}/> {folder.name}</span>
-                                  <div className="flex items-center gap-2">
-                                     <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 rounded-full">{savedDocs.filter(d => d.folderId === folder.id && !d.deletedAt).length}</span>
-                                     <span onClick={(e) => handleDeleteFolder(folder.id, e)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500"><X size={12}/></span>
-                                  </div>
-                              </button>
-                          ))}
-                          
-                          <div className="my-2 border-t border-slate-100 dark:border-slate-800"></div>
-                          
-                          <button 
-                             onClick={() => setViewMode('trash')}
-                             className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-between group ${viewMode === 'trash' ? 'bg-red-50 dark:bg-red-900/20 text-red-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                          >
-                              <span className="flex items-center gap-2"><Trash2 size={16}/> Trash</span>
-                              <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 rounded-full">{savedDocs.filter(d => d.deletedAt).length}</span>
-                          </button>
-                      </div>
-                  </div>
-
-                  {/* Tags */}
-                  {allTags.length > 0 && viewMode !== 'trash' && (
-                      <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-                          <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-4">Filter by Tags</h3>
-                          <div className="flex flex-wrap gap-2">
-                              {allTags.map(tag => (
-                                  <button 
-                                      key={tag}
-                                      onClick={() => toggleTag(tag)}
-                                      className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${selectedTags.includes(tag) ? 'bg-indigo-100 border-indigo-200 text-indigo-700 dark:bg-indigo-900/40 dark:border-indigo-800 dark:text-indigo-300' : 'bg-slate-50 border-slate-100 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-slate-300'}`}
-                                  >
-                                      {tag}
-                                  </button>
-                              ))}
-                          </div>
-                      </div>
-                  )}
-              </div>
-
-              {/* Document Grid */}
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                  {viewMode === 'trash' && filteredDocs.length > 0 && (
-                      <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-lg text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
-                          <Trash2 size={16} /> Items in Trash are not permanently deleted yet. Restore them to edit.
-                      </div>
-                  )}
-
-                  {filteredDocs.length === 0 ? (
-                      <div className="text-center py-20 text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                          <p>{viewMode === 'trash' ? "Trash is empty" : "No documents found matching criteria."}</p>
-                      </div>
-                  ) : (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                          {filteredDocs.map(doc => (
-                              <div 
-                                key={doc.id} 
-                                onClick={() => handleOpenDoc(doc)} 
-                                className={`bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-md group relative transition-all ${viewMode === 'trash' ? 'opacity-80 hover:opacity-100' : 'cursor-pointer hover:-translate-y-1'}`}
-                              >
-                                  <div className="flex items-start justify-between mb-3">
-                                      <div className={`p-2 rounded-lg ${viewMode === 'trash' ? 'bg-red-50 dark:bg-red-900/20 text-red-500' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600'}`}>
-                                          <FileText size={20} />
-                                      </div>
-                                      
-                                      {/* Document Actions */}
-                                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          {viewMode === 'trash' ? (
-                                              <>
-                                                <button onClick={(e) => handleRestoreDoc(doc.id, e)} className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded" title="Restore">
-                                                    <RefreshCw size={16} />
-                                                </button>
-                                                <button onClick={(e) => handlePermanentDelete(doc.id, e)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete Forever">
-                                                    <X size={16} />
-                                                </button>
-                                              </>
-                                          ) : (
-                                              <>
-                                                <button onClick={(e) => { e.stopPropagation(); setDocToShare(doc); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Share">
-                                                    <Share2 size={16} />
-                                                </button>
-                                                <button onClick={(e) => { e.stopPropagation(); handleDuplicateDoc(doc.id, e); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Duplicate">
-                                                    <Copy size={16} />
-                                                </button>
-                                                <button onClick={(e) => { e.stopPropagation(); setDocToMove(doc); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Move to folder">
-                                                    <MoveRight size={16} />
-                                                </button>
-                                                <button onClick={(e) => handleDeleteDoc(doc.id, e)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded" title="Move to Trash">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                              </>
-                                          )}
-                                      </div>
-                                  </div>
-                                  <h3 className="font-bold text-slate-900 dark:text-white mb-1 truncate">{doc.title}</h3>
-                                  
-                                  {/* Content snippet for search context */}
-                                  {searchQuery && doc.content && (
-                                      <p className="text-xs text-slate-400 mb-2 italic truncate">
-                                          "...{doc.content.replace(/<[^>]*>/g, '').substring(0, 40)}..."
-                                      </p>
-                                  )}
-
-                                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-4 flex-wrap">
-                                      <span>{new Date(doc.lastModified).toLocaleDateString()}</span>
-                                      {doc.folderId && (
-                                          <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">
-                                              <Folder size={10} /> {folders.find(f => f.id === doc.folderId)?.name}
-                                          </span>
-                                      )}
-                                      {doc.tags && doc.tags.length > 0 && (
-                                          <div className="flex gap-1">
-                                              {doc.tags.slice(0, 2).map(tag => (
-                                                  <span key={tag} className="flex items-center gap-0.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded text-[10px]">
-                                                      <Tag size={8} /> {tag}
-                                                  </span>
-                                              ))}
-                                              {doc.tags.length > 2 && <span className="text-[10px] text-slate-400">+{doc.tags.length - 2}</span>}
-                                          </div>
-                                      )}
-                                  </div>
-                                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
-                                      <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-300">{doc.templateId}</span>
-                                      {viewMode !== 'trash' && (
-                                          <span className="text-indigo-600 font-bold group-hover:translate-x-1 transition-transform">Open &rarr;</span>
-                                      )}
-                                  </div>
-                              </div>
-                          ))}
-                      </div>
-                  )}
-              </div>
-          </div>
-      );
   };
 
   const SidebarToolList = () => (
@@ -558,7 +309,7 @@ const Dashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 relative h-full overflow-hidden">
-         {/* Top Bar (Mobile Only) - Only when a tool is active */}
+         {/* Top Bar (Mobile Only) */}
          {activeToolId && (
             <div className="lg:hidden h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center px-4 justify-between flex-shrink-0 z-30">
                 <button onClick={() => setIsMobileMenuOpen(true)} className="text-slate-600 dark:text-slate-300">
@@ -605,18 +356,54 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
                     
-                    {viewMode === 'library' ? <ToolList /> : <DocumentsList />}
-                </div>
-            ) : (
-                // Tool View
-                <div className="h-full flex flex-col">
-                    {activeToolId === ToolType.CV_BUILDER && <CvBuilder />}
-                    {activeToolId === ToolType.TRANSLATE && <Translator />}
-                    {activeToolId === ToolType.SMART_EDITOR && <SmartEditor />}
-                    {!isFullWidthTool(activeToolId) && activeTool && (
-                        <GenericTool tool={activeTool} />
+                    {viewMode === 'library' ? (
+                        <DashboardLibrary 
+                            tools={filteredTools} 
+                            searchQuery={debouncedSearchQuery} 
+                            onSelectTool={setActiveToolId}
+                            favoriteToolIds={user.favorites || []}
+                            onToggleFavorite={toggleFavoriteTool}
+                        />
+                    ) : (
+                        <DashboardDocuments 
+                            documents={filteredDocs}
+                            folders={folders}
+                            viewMode={viewMode === 'trash' ? 'trash' : 'documents'}
+                            activeFolderId={activeFolderId}
+                            searchQuery={debouncedSearchQuery}
+                            selectedTags={selectedTags}
+                            allTags={allTags}
+                            sortOrder={sortOrder}
+                            
+                            setViewMode={(mode) => setViewMode(mode)}
+                            setActiveFolderId={setActiveFolderId}
+                            onToggleTag={toggleTag}
+                            onCreateFolder={() => setIsNewFolderModalOpen(true)}
+                            onDeleteFolder={handleDeleteFolder}
+                            onSortChange={setSortOrder}
+                            
+                            onOpenDoc={handleOpenDoc}
+                            onShareDoc={(doc, e) => { e.stopPropagation(); setDocToShare(doc); }}
+                            onDuplicateDoc={handleDuplicateDoc}
+                            onMoveDoc={(doc, e) => { e.stopPropagation(); setDocToMove(doc); }}
+                            onDeleteDoc={handleDeleteDoc}
+                            onRestoreDoc={handleRestoreDoc}
+                            onPermanentDelete={handlePermanentDelete}
+                        />
                     )}
                 </div>
+            ) : (
+                // Tool View Wrapped in ErrorBoundary
+                <ErrorBoundary>
+                    <div className="h-full flex flex-col">
+                        {activeToolId === ToolType.CV_BUILDER && <CvBuilder />}
+                        {activeToolId === ToolType.TRANSLATE && <Translator />}
+                        {activeToolId === ToolType.SMART_EDITOR && <SmartEditor />}
+                        {!isFullWidthTool(activeToolId) && activeTool && (
+                            <GenericTool tool={activeTool} />
+                        )}
+                    </div>
+                </ErrorBoundary>
             )}
         </div>
       </main>
