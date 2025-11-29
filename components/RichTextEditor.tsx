@@ -1,13 +1,14 @@
-
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { 
-    Bold, Italic, Underline, List, Undo, Redo, Sparkles, Loader2, 
-    Image as ImageIcon, Link as LinkIcon, Heading1, Heading2, Heading3, 
-    AlignLeft, AlignCenter, AlignRight, AlignJustify, Indent, Outdent, 
-    Palette, Wand2, Type, Baseline, Mic, MicOff
+    Bold, Italic, Underline, List, ListOrdered, Undo, Redo, Sparkles, Loader2, 
+    Image as ImageIcon, Link as LinkIcon, Heading1, Heading2, Quote,
+    AlignLeft, AlignCenter, AlignRight, AlignJustify, 
+    Check, X, Wand2, Type, Strikethrough, Highlighter, Upload,
+    MoreHorizontal, ChevronDown, Paperclip
 } from 'lucide-react';
 import { refineContent } from '../services/gemini';
 import { useToast } from '../contexts/ToastContext';
+import { validateImageFile } from '../utils/security';
 
 interface RichTextEditorProps {
     value: string;
@@ -18,391 +19,463 @@ interface RichTextEditorProps {
     style?: React.CSSProperties;
 }
 
-const MAX_HISTORY = 50;
+const FONTS = [
+    { name: 'Default', value: 'Inter, sans-serif' },
+    { name: 'Serif', value: 'Merriweather, serif' },
+    { name: 'Mono', value: "'Fira Code', monospace" },
+    { name: 'Arial', value: 'Arial, Helvetica, sans-serif' },
+    { name: 'Georgia', value: 'Georgia, serif' },
+    { name: 'Times New Roman', value: "'Times New Roman', Times, serif" },
+    { name: 'Verdana', value: 'Verdana, Geneva, sans-serif' },
+];
 
-const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onChange, className, placeholder, hideToolbar = false, style }) => {
+const SIZES = [
+    { name: 'Small', value: '2' },
+    { name: 'Normal', value: '3' },
+    { name: 'Large', value: '4' },
+    { name: 'Huge', value: '5' },
+    { name: 'Giant', value: '6' },
+];
+
+const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onChange, className = '', placeholder, hideToolbar = false, style }) => {
     const editorRef = useRef<HTMLDivElement>(null);
-    const isTyping = useRef(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { showToast } = useToast();
+    const isTypingRef = useRef(false);
 
-    // History State
-    const [history, setHistory] = useState<string[]>([value]);
-    const [historyIndex, setHistoryIndex] = useState(0);
-
-    // Toolbar & Feature State
-    const [showSmartToolbar, setShowSmartToolbar] = useState(false);
-    const [toolbarPos, setToolbarPos] = useState({ top: 0, left: 0 });
+    // State for UI
+    const [activeFormats, setActiveFormats] = useState<string[]>([]);
     const [isRefining, setIsRefining] = useState(false);
-    const [selectionRange, setSelectionRange] = useState<Range | null>(null);
-    const [isListening, setIsListening] = useState(false);
-    const recognitionRef = useRef<any>(null);
+    
+    // Floating Menu State
+    const [floatingPos, setFloatingPos] = useState<{top: number} | null>(null);
+    const [selectedText, setSelectedText] = useState('');
 
-    // Sync initial value or external updates
+    // State for Link/Image Input Mode
+    const [inputMode, setInputMode] = useState<'link' | 'image' | null>(null);
+    const [inputValue, setInputValue] = useState('');
+    const [savedRange, setSavedRange] = useState<Range | null>(null);
+
+    // Sync external value changes if not typing
     useEffect(() => {
-        if (editorRef.current && !isTyping.current && editorRef.current.innerHTML !== value) {
+        if (editorRef.current && !isTypingRef.current && editorRef.current.innerHTML !== value) {
              editorRef.current.innerHTML = value;
-             addToHistory(value);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
-    const addToHistory = useCallback((newValue: string) => {
-        setHistory(prev => {
-            const newHistory = prev.slice(0, historyIndex + 1);
-            if (newHistory[newHistory.length - 1] === newValue) return prev;
+    // Handle Selection for Floating Menu & Active States
+    const handleSelectionChange = useCallback(() => {
+        const sel = window.getSelection();
+        
+        // 1. Update Active Formats (Toolbar state)
+        if (document.activeElement === editorRef.current || editorRef.current?.contains(document.activeElement)) {
+            const formats = [];
+            if (document.queryCommandState('bold')) formats.push('bold');
+            if (document.queryCommandState('italic')) formats.push('italic');
+            if (document.queryCommandState('underline')) formats.push('underline');
+            if (document.queryCommandState('strikethrough')) formats.push('strikethrough');
+            if (document.queryCommandState('insertUnorderedList')) formats.push('ul');
+            if (document.queryCommandState('insertOrderedList')) formats.push('ol');
+            if (document.queryCommandState('justifyLeft')) formats.push('left');
+            if (document.queryCommandState('justifyCenter')) formats.push('center');
+            if (document.queryCommandState('justifyRight')) formats.push('right');
             
-            const updated = [...newHistory, newValue];
-            if (updated.length > MAX_HISTORY) updated.shift();
-            return updated;
-        });
-        setHistoryIndex(prev => {
-            const newIndex = prev + 1;
-            return newIndex >= MAX_HISTORY ? MAX_HISTORY - 1 : newIndex;
-        });
-    }, [historyIndex]);
+            const parentBlock = sel?.focusNode?.parentElement;
+            if (parentBlock) {
+                const tagName = parentBlock.tagName.toLowerCase();
+                if (tagName === 'h1') formats.push('h1');
+                if (tagName === 'h2') formats.push('h2');
+                if (tagName === 'blockquote') formats.push('blockquote');
+            }
+            setActiveFormats(formats);
+        }
+
+        // 2. Handle Floating Menu Placement
+        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+            setFloatingPos(null);
+            return;
+        }
+
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        
+        // Ensure selection is inside OUR editor
+        if (editorRef.current && editorRef.current.contains(sel.anchorNode)) {
+            const text = sel.toString().trim();
+            if (text.length > 0 && rect.width > 0) {
+                // Position relative to viewport top, effectively placing it in the margin/sidebar
+                setFloatingPos({
+                    top: rect.top, 
+                });
+                setSelectedText(text);
+            } else {
+                setFloatingPos(null);
+            }
+        } else {
+            setFloatingPos(null);
+        }
+    }, []);
+
+    // Listen to selection changes globally to catch mouse up outside etc.
+    useEffect(() => {
+        document.addEventListener('selectionchange', handleSelectionChange);
+        return () => document.removeEventListener('selectionchange', handleSelectionChange);
+    }, [handleSelectionChange]);
+
+    const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
+        isTypingRef.current = true;
+        const newHTML = e.currentTarget.innerHTML;
+        onChange(newHTML);
+    }, [onChange]);
+
+    const handleBlur = () => {
+        isTypingRef.current = false;
+    };
+
+    const exec = (command: string, value: string | undefined = undefined) => {
+        document.execCommand(command, false, value);
+        editorRef.current?.focus();
+        if (editorRef.current) onChange(editorRef.current.innerHTML);
+    };
+
+    // --- Media Input Handling ---
 
     const saveSelection = () => {
         const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) return sel.getRangeAt(0);
-        return null;
-    };
-
-    const restoreSelection = (range: Range | null) => {
-        if (!range) return;
-        const sel = window.getSelection();
-        if (sel) {
-            sel.removeAllRanges();
-            sel.addRange(range);
+        if (sel && sel.rangeCount > 0) {
+            setSavedRange(sel.getRangeAt(0));
         }
     };
 
-    // --- Voice Dictation ---
-    const toggleDictation = () => {
-        if (isListening) {
-            recognitionRef.current?.stop();
-            setIsListening(false);
-            return;
-        }
-
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-            showToast("Voice dictation not supported in this browser.", "error");
-            return;
-        }
-
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'en-US';
-
-        recognition.onstart = () => {
-            setIsListening(true);
-            showToast("Listening...", "info");
-        };
-
-        recognition.onresult = (event: any) => {
-            const transcript = Array.from(event.results)
-                .map((result: any) => result[0])
-                .map((result: any) => result.transcript)
-                .join('');
-            
-            // Only update on final result to avoid cursor jumping too crazily
-            if (event.results[0].isFinal) {
-                 document.execCommand('insertText', false, transcript + ' ');
+    const restoreSelection = () => {
+        if (savedRange) {
+            const sel = window.getSelection();
+            if (sel) {
+                sel.removeAllRanges();
+                sel.addRange(savedRange);
             }
-        };
-
-        recognition.onerror = (event: any) => {
-            console.error("Speech recognition error", event.error);
-            setIsListening(false);
-        };
-
-        recognition.onend = () => {
-            setIsListening(false);
-        };
-
-        recognitionRef.current = recognition;
-        recognition.start();
+        }
     };
 
-    // --- Floating Toolbar Logic ---
-    const checkSelection = useCallback(() => {
-        const selection = window.getSelection();
-        if (!selection || selection.isCollapsed || selection.toString().trim().length === 0) {
-            setShowSmartToolbar(false);
-            return;
-        }
+    const openInput = (mode: 'link' | 'image') => {
+        saveSelection();
+        setInputMode(mode);
+        setInputValue('');
+    };
 
-        const range = selection.getRangeAt(0);
-        if (!editorRef.current?.contains(range.commonAncestorContainer)) {
-             setShowSmartToolbar(false);
-             return;
-        }
+    const closeInput = () => {
+        setInputMode(null);
+        setInputValue('');
+        setSavedRange(null);
+        editorRef.current?.focus();
+    };
 
-        setSelectionRange(range);
-        const rect = range.getBoundingClientRect();
+    const applyInput = () => {
+        restoreSelection();
+        if (inputMode === 'link') {
+            if (inputValue) exec('createLink', inputValue);
+            else exec('unlink');
+        } else if (inputMode === 'image') {
+            if (inputValue) exec('insertImage', inputValue);
+        }
+        closeInput();
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const validation = validateImageFile(file);
+            if (!validation.valid) {
+                showToast(validation.error || 'Invalid file', 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                restoreSelection(); // Ensure we insert where cursor was
+                exec('insertImage', ev.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+        // Reset
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        closeInput(); // Close input bar after upload
+    };
+
+    const triggerFileUpload = () => {
+        // We don't save selection here because we already saved it when opening the input mode
+        // or we rely on the input mode being active.
+        fileInputRef.current?.click();
+    };
+
+    // --- AI Features ---
+
+    const handleRefine = async (instruction: string, textOverride?: string) => {
+        const textToRefine = textOverride || selectedText || editorRef.current?.innerText;
         
-        setToolbarPos({
-            top: rect.top - 50,
-            left: rect.left + (rect.width / 2)
-        });
-        setShowSmartToolbar(true);
-    }, []);
-
-    const handleRefine = async (instruction: string) => {
-        let textToRefine = "";
-        let isFullDoc = false;
-
-        if (selectionRange && !selectionRange.collapsed) {
-             textToRefine = selectionRange.toString();
-        } else if (editorRef.current) {
-             textToRefine = editorRef.current.innerText; 
-             isFullDoc = true;
-        }
-
         if (!textToRefine) {
-            showToast("No text to refine", "error");
+            showToast("No text selected to refine", "error");
             return;
         }
-        
+
         setIsRefining(true);
-        
         try {
             const refined = await refineContent(textToRefine, instruction);
             
-            if (!isFullDoc && selectionRange) {
+            // If we have a saved range or active selection, replace it
+            if (textOverride && savedRange) {
+                // Restore range to replace specifically the selected text
                 const sel = window.getSelection();
                 sel?.removeAllRanges();
-                sel?.addRange(selectionRange);
+                sel?.addRange(savedRange);
                 document.execCommand('insertText', false, refined);
-            } else if (isFullDoc && editorRef.current) {
-                editorRef.current.innerText = refined; 
+            } else if (selectedText) {
+                document.execCommand('insertText', false, refined);
+            } else if (editorRef.current) {
+                editorRef.current.innerText = refined;
             }
             
-            if (editorRef.current) {
-                const newVal = editorRef.current.innerHTML;
-                onChange(newVal);
-                addToHistory(newVal);
-            }
-            
-            setShowSmartToolbar(false);
+            if (editorRef.current) onChange(editorRef.current.innerHTML);
             showToast("Text refined!", "success");
+            setFloatingPos(null); // Close menu
         } catch (e) {
-            console.error("Refinement failed", e);
-            showToast("AI Refinement failed", "error");
+            showToast("Refinement failed", "error");
         } finally {
             setIsRefining(false);
         }
     };
 
-    const handleUndo = useCallback(() => {
-        if (historyIndex > 0) {
-            const newIndex = historyIndex - 1;
-            const previousValue = history[newIndex];
-            setHistoryIndex(newIndex);
-            if (editorRef.current) editorRef.current.innerHTML = previousValue;
-            onChange(previousValue);
-        }
-    }, [history, historyIndex, onChange]);
+    // --- Components ---
 
-    const handleRedo = useCallback(() => {
-        if (historyIndex < history.length - 1) {
-            const newIndex = historyIndex + 1;
-            const nextValue = history[newIndex];
-            setHistoryIndex(newIndex);
-            if (editorRef.current) editorRef.current.innerHTML = nextValue;
-            onChange(nextValue);
-        }
-    }, [history, historyIndex, onChange]);
-
-    const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
-        isTyping.current = true;
-        const newHTML = e.currentTarget.innerHTML;
-        
-        // Slash Command Detection (Basic)
-        const selection = window.getSelection();
-        if (selection && selection.focusNode?.textContent?.endsWith('/')) {
-             // In a real app, you'd trigger a popup menu here. 
-             // For now, we'll just log it or show a toast as "detected"
-             // console.log("Slash command triggered");
-        }
-
-        if (newHTML !== value) {
-            onChange(newHTML);
-        }
-    }, [onChange, value]);
-    
-    const handleBlur = useCallback(() => {
-        isTyping.current = false;
-        addToHistory(value);
-    }, [addToHistory, value]);
-
-    const exec = useCallback((command: string, val: string | undefined = undefined) => {
-        document.execCommand(command, false, val);
-        editorRef.current?.focus();
-        if (editorRef.current) {
-             const newVal = editorRef.current.innerHTML;
-             onChange(newVal);
-             addToHistory(newVal);
-        }
-    }, [addToHistory, onChange]);
-
-    const handleInsertImage = () => {
-        const currentRange = saveSelection();
-        setTimeout(() => {
-            const url = prompt("Enter Image URL (e.g. https://example.com/image.png)");
-            restoreSelection(currentRange);
-            if(url) exec('insertImage', url);
-        }, 0);
-    };
-
-    const handleInsertLink = () => {
-        const currentRange = saveSelection();
-        setTimeout(() => {
-            const url = prompt("Enter URL (e.g. https://google.com)");
-            restoreSelection(currentRange);
-            if(url) exec('createLink', url);
-        }, 0);
-    };
-
-    const ToolbarButton = ({ onClick, icon: Icon, title, active = false }: { onClick: () => void, icon: any, title: string, active?: boolean }) => (
-        <button 
-            onClick={onClick} 
-            className={`p-1.5 rounded transition-colors ${active ? 'bg-indigo-100 text-indigo-700' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+    const ToolbarButton = ({ 
+        icon: Icon, 
+        command, 
+        arg, 
+        isActive, 
+        title,
+        onClick 
+    }: { 
+        icon: any, 
+        command?: string, 
+        arg?: string, 
+        isActive?: boolean, 
+        title: string,
+        onClick?: () => void
+    }) => (
+        <button
+            onMouseDown={(e) => {
+                e.preventDefault(); // Prevent focus loss
+                if (onClick) onClick();
+                else if (command) exec(command, arg);
+            }}
+            className={`p-1.5 rounded-lg transition-all duration-200 flex items-center justify-center ${
+                isActive 
+                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' 
+                : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
+            }`}
             title={title}
         >
-            <Icon size={16} />
+            <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
         </button>
     );
 
-    const Divider = () => <div className="w-px h-5 bg-slate-300 dark:bg-slate-700 mx-1" />;
+    const ToolbarSelect = ({ 
+        options, 
+        onChange, 
+        defaultValue, 
+        width = "w-24"
+    }: { 
+        options: {name: string, value: string}[], 
+        onChange: (val: string) => void, 
+        defaultValue?: string,
+        width?: string 
+    }) => (
+        <div className={`relative ${width}`}>
+            <select
+                className="w-full bg-transparent text-xs font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-md py-1 pl-2 pr-4 appearance-none focus:outline-none hover:border-indigo-300 transition-colors cursor-pointer"
+                onChange={(e) => onChange(e.target.value)}
+                value={defaultValue}
+                onMouseDown={(e) => e.stopPropagation()} // Allow clicking select without losing editor focus logic issues
+            >
+                {options.map(opt => <option key={opt.value} value={opt.value}>{opt.name}</option>)}
+            </select>
+            <ChevronDown size={12} className="absolute right-1 top-1.5 text-slate-400 pointer-events-none" />
+        </div>
+    );
+
+    const Divider = () => <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1 self-center" />;
 
     return (
-        <div className={`relative ${className} flex flex-col`} style={style}>
-            {showSmartToolbar && (
-                <div 
-                    className="fixed z-[9999] transform -translate-x-1/2 bg-slate-900 text-white rounded-lg shadow-2xl border border-slate-700 p-1.5 flex items-center gap-1 animate-in zoom-in-95 duration-200"
-                    style={{ top: toolbarPos.top, left: toolbarPos.left }}
-                >
-                    {isRefining ? (
-                        <div className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium">
-                            <Loader2 size={14} className="animate-spin text-indigo-400" />
-                            Refining...
+        <div className={`flex flex-col relative group ${className}`} style={style}>
+            
+            {/* Hidden File Input */}
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/png, image/jpeg, image/gif, image/webp" 
+                onChange={handleFileUpload} 
+            />
+
+            {!hideToolbar && (
+                <div className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 p-1.5 rounded-t-xl select-none shadow-sm transition-all">
+                    
+                    {/* Main Toolbar */}
+                    {!inputMode ? (
+                        <div className="flex flex-wrap items-center gap-1">
+                            {/* Undo/Redo */}
+                            <div className="flex gap-0.5 mr-1">
+                                <ToolbarButton icon={Undo} command="undo" title="Undo" />
+                                <ToolbarButton icon={Redo} command="redo" title="Redo" />
+                            </div>
+                            
+                            <Divider />
+
+                            {/* Font Controls */}
+                            <div className="flex gap-1 items-center">
+                                <ToolbarSelect 
+                                    options={FONTS} 
+                                    onChange={(val) => exec('fontName', val)} 
+                                    defaultValue="Inter"
+                                    width="w-24"
+                                />
+                                <ToolbarSelect 
+                                    options={SIZES} 
+                                    onChange={(val) => exec('fontSize', val)} 
+                                    defaultValue="3"
+                                    width="w-16"
+                                />
+                            </div>
+
+                            <Divider />
+
+                            {/* Typography */}
+                            <div className="flex gap-0.5">
+                                <ToolbarButton icon={Bold} command="bold" isActive={activeFormats.includes('bold')} title="Bold" />
+                                <ToolbarButton icon={Italic} command="italic" isActive={activeFormats.includes('italic')} title="Italic" />
+                                <ToolbarButton icon={Underline} command="underline" isActive={activeFormats.includes('underline')} title="Underline" />
+                                <ToolbarButton icon={Strikethrough} command="strikethrough" isActive={activeFormats.includes('strikethrough')} title="Strikethrough" />
+                            </div>
+
+                            <Divider />
+
+                            {/* Alignment */}
+                            <div className="flex gap-0.5 hidden sm:flex">
+                                <ToolbarButton icon={AlignLeft} command="justifyLeft" isActive={activeFormats.includes('left')} title="Align Left" />
+                                <ToolbarButton icon={AlignCenter} command="justifyCenter" isActive={activeFormats.includes('center')} title="Align Center" />
+                                <ToolbarButton icon={AlignRight} command="justifyRight" isActive={activeFormats.includes('right')} title="Align Right" />
+                            </div>
+
+                            <Divider />
+
+                            {/* Lists */}
+                            <div className="flex gap-0.5 hidden sm:flex">
+                                <ToolbarButton icon={List} command="insertUnorderedList" isActive={activeFormats.includes('ul')} title="Bullet List" />
+                                <ToolbarButton icon={ListOrdered} command="insertOrderedList" isActive={activeFormats.includes('ol')} title="Numbered List" />
+                            </div>
+
+                            <Divider />
+
+                            {/* Inserts */}
+                            <div className="flex gap-0.5">
+                                <ToolbarButton icon={LinkIcon} onClick={() => openInput('link')} title="Insert Link" />
+                                <ToolbarButton icon={ImageIcon} onClick={() => openInput('image')} title="Insert Image" />
+                            </div>
+
+                            {/* AI Action */}
+                            <div className="ml-auto flex items-center pl-2">
+                                <button
+                                    onMouseDown={(e) => { e.preventDefault(); handleRefine("Fix spelling and grammar"); }}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-md text-xs font-bold transition-all hover:shadow-md"
+                                    title="AI Magic Fix"
+                                    disabled={isRefining}
+                                >
+                                    {isRefining ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+                                    <span className="hidden md:inline">Magic Fix</span>
+                                </button>
+                            </div>
                         </div>
                     ) : (
-                        <>
-                            <div className="flex items-center gap-1 px-2 border-r border-slate-700 mr-1">
-                                <Sparkles size={14} className="text-indigo-400 fill-indigo-400" />
-                                <span className="text-xs font-bold text-indigo-400 uppercase tracking-wide">AI</span>
+                        /* Input Mode Toolbar */
+                        <div className="flex items-center gap-2 px-2 py-0.5 w-full animate-in slide-in-from-top-2 duration-200">
+                            <div className="flex items-center gap-2 text-sm font-bold text-slate-500 uppercase tracking-wide mr-2">
+                                {inputMode === 'link' ? <LinkIcon size={16}/> : <ImageIcon size={16}/>}
+                                {inputMode === 'link' ? 'Link' : 'Image'}
                             </div>
-                            <button onClick={() => handleRefine("Fix grammar and spelling")} className="px-3 py-1.5 hover:bg-slate-800 rounded text-xs font-medium transition-colors whitespace-nowrap">Fix Grammar</button>
-                            <button onClick={() => handleRefine("Make it shorter and more concise")} className="px-3 py-1.5 hover:bg-slate-800 rounded text-xs font-medium transition-colors whitespace-nowrap">Shorten</button>
-                            <button onClick={() => handleRefine("Improve wording and flow")} className="px-3 py-1.5 hover:bg-slate-800 rounded text-xs font-medium transition-colors whitespace-nowrap">Improve</button>
-                            <button onClick={() => handleRefine("Change tone to professional")} className="px-3 py-1.5 hover:bg-slate-800 rounded text-xs font-medium transition-colors whitespace-nowrap">Formal</button>
-                        </>
+                            <input
+                                autoFocus
+                                type="text"
+                                className="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-md px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-slate-900 dark:text-white placeholder-slate-400"
+                                placeholder={inputMode === 'link' ? "https://example.com" : "https://example.com/image.png"}
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') applyInput(); else if (e.key === 'Escape') closeInput(); }}
+                            />
+                            
+                            {/* NEW: Combined Upload Button for Images */}
+                            {inputMode === 'image' && (
+                                <button 
+                                    onMouseDown={(e) => { e.preventDefault(); triggerFileUpload(); }} 
+                                    className="p-1.5 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 dark:text-slate-400 rounded-md transition-colors" 
+                                    title="Upload Local Image"
+                                >
+                                    <Upload size={18} />
+                                </button>
+                            )}
+
+                            <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
+                            <button onMouseDown={(e) => { e.preventDefault(); applyInput(); }} className="p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"><Check size={18}/></button>
+                            <button onMouseDown={(e) => { e.preventDefault(); closeInput(); }} className="p-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-md transition-colors"><X size={18}/></button>
+                        </div>
                     )}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
                 </div>
             )}
 
-            {!hideToolbar && (
-                <div className="flex flex-wrap items-center gap-1 p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 sticky top-0 z-10 rounded-t-lg select-none" role="toolbar" aria-label="Text Formatting">
-                    <div className="flex gap-0.5">
-                        <ToolbarButton onClick={handleUndo} icon={Undo} title="Undo" />
-                        <ToolbarButton onClick={handleRedo} icon={Redo} title="Redo" />
-                    </div>
-                    <Divider />
-                    <div className="flex gap-1 items-center">
-                        <select onChange={(e) => exec('fontName', e.target.value)} className="h-7 text-xs border border-slate-300 dark:border-slate-700 rounded px-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 w-28 focus:outline-none focus:border-indigo-500">
-                            <option value="Inter">Inter (Default)</option>
-                            <option value="Roboto">Roboto</option>
-                            <option value="Open Sans">Open Sans</option>
-                            <option value="Lato">Lato</option>
-                            <option value="Merriweather">Merriweather</option>
-                            <option value="Playfair Display">Playfair Display</option>
-                            <option value="Fira Code">Monospace</option>
-                        </select>
-                        <select onChange={(e) => exec('fontSize', e.target.value)} className="h-7 text-xs border border-slate-300 dark:border-slate-700 rounded px-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 w-16 focus:outline-none focus:border-indigo-500">
-                            <option value="3">11pt</option>
-                            <option value="1">8pt</option>
-                            <option value="2">10pt</option>
-                            <option value="4">14pt</option>
-                            <option value="5">18pt</option>
-                            <option value="6">24pt</option>
-                            <option value="7">36pt</option>
-                        </select>
-                    </div>
-                    <Divider />
-                    <div className="flex gap-0.5">
-                        <ToolbarButton onClick={() => exec('formatBlock', 'H1')} icon={Heading1} title="Heading 1" />
-                        <ToolbarButton onClick={() => exec('formatBlock', 'H2')} icon={Heading2} title="Heading 2" />
-                        <ToolbarButton onClick={() => exec('formatBlock', 'H3')} icon={Heading3} title="Heading 3" />
-                    </div>
-                    <Divider />
-                    <div className="flex gap-0.5">
-                        <ToolbarButton onClick={() => exec('bold')} icon={Bold} title="Bold" />
-                        <ToolbarButton onClick={() => exec('italic')} icon={Italic} title="Italic" />
-                        <ToolbarButton onClick={() => exec('underline')} icon={Underline} title="Underline" />
-                        <div className="w-7 h-7 relative flex items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors ml-1">
-                            <Baseline size={16} className="text-slate-600 dark:text-slate-300 pointer-events-none" />
-                            <div className="absolute bottom-1 right-1 w-2 h-0.5 bg-red-500"></div>
-                            <input type="color" onChange={(e) => exec('foreColor', e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" title="Text Color" />
-                        </div>
-                    </div>
-                    <Divider />
-                    <div className="flex gap-0.5">
-                        <ToolbarButton onClick={() => exec('justifyLeft')} icon={AlignLeft} title="Align Left" />
-                        <ToolbarButton onClick={() => exec('justifyCenter')} icon={AlignCenter} title="Align Center" />
-                        <ToolbarButton onClick={() => exec('justifyRight')} icon={AlignRight} title="Align Right" />
-                        <ToolbarButton onClick={() => exec('justifyFull')} icon={AlignJustify} title="Justify" />
-                    </div>
-                    <Divider />
-                    <div className="flex gap-0.5">
-                        <ToolbarButton onClick={() => exec('insertUnorderedList')} icon={List} title="Bullet List" />
-                        <ToolbarButton onClick={() => exec('indent')} icon={Indent} title="Indent" />
-                        <ToolbarButton onClick={() => exec('outdent')} icon={Outdent} title="Outdent" />
-                    </div>
-                    <Divider />
-                    <div className="flex gap-0.5">
-                        <ToolbarButton onClick={handleInsertLink} icon={LinkIcon} title="Insert Link" />
-                        <ToolbarButton onClick={handleInsertImage} icon={ImageIcon} title="Insert Image" />
-                    </div>
-                    <Divider />
-                    {/* Voice & AI */}
-                    <div className="flex gap-1 ml-auto">
-                        <button 
-                            onClick={toggleDictation}
-                            className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-bold transition-colors ${isListening ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-                            title="Voice Dictation"
-                        >
-                            {isListening ? <MicOff size={14} /> : <Mic size={14} />}
-                        </button>
-                        <button 
-                            onClick={() => handleRefine("Fix any typos, grammar mistakes, and improve clarity slightly without changing the meaning.")} 
-                            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/30 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-md text-xs font-bold transition-colors"
-                            title="Auto Fix Typos & Grammar"
-                        >
-                            <Wand2 size={14} /> Magic Fix
-                        </button>
-                    </div>
-                </div>
-            )}
-            
+            {/* Editor Area */}
             <div
                 ref={editorRef}
                 contentEditable
                 onInput={handleInput}
-                onMouseUp={checkSelection}
-                onKeyUp={checkSelection}
                 onBlur={handleBlur}
-                className="flex-1 p-8 outline-none text-base leading-relaxed rich-text-content text-slate-900 dark:text-slate-100 min-h-[inherit]"
+                className="flex-1 p-6 md:p-8 outline-none text-base leading-relaxed rich-text-content text-slate-900 dark:text-slate-100 min-h-[inherit]"
                 style={style}
                 data-placeholder={placeholder}
                 aria-label="Rich Text Editor"
+                suppressContentEditableWarning={true}
             />
+            
+            {/* Placeholder Overlay */}
             {(!value && placeholder) && (
-                <div className="absolute top-[68px] left-8 text-slate-300 dark:text-slate-600 pointer-events-none select-none text-base">
+                <div className="absolute top-[60px] left-6 md:left-8 text-slate-400 pointer-events-none select-none italic">
                     {placeholder}
+                </div>
+            )}
+
+            {/* Floating AI Menu (Fixed Side Position) */}
+            {floatingPos && !inputMode && (
+                <div 
+                    className="fixed right-4 z-50 bg-white dark:bg-slate-900 text-slate-800 dark:text-white rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 gap-2 animate-in slide-in-from-right-2 duration-300 flex flex-col w-40"
+                    style={{ 
+                        top: Math.max(80, floatingPos.top - 10), 
+                    }}
+                    onMouseDown={(e) => e.preventDefault()} // Prevent losing selection
+                >
+                    <div className="px-2 pb-2 text-xs font-bold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1 flex items-center gap-2">
+                        <Sparkles size={12} className="text-indigo-600" /> AI Actions
+                    </div>
+                    
+                    {isRefining ? (
+                        <div className="flex items-center justify-center py-4 text-indigo-600">
+                            <Loader2 size={20} className="animate-spin"/>
+                        </div>
+                    ) : (
+                        <>
+                            <button onClick={() => { saveSelection(); handleRefine("Fix grammar and spelling"); }} className="text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-medium transition-colors">Fix Grammar</button>
+                            <button onClick={() => { saveSelection(); handleRefine("Make it shorter and concise"); }} className="text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-medium transition-colors">Shorten</button>
+                            <button onClick={() => { saveSelection(); handleRefine("Improve clarity and flow"); }} className="text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-medium transition-colors">Improve</button>
+                            <button onClick={() => { saveSelection(); handleRefine("Make it more professional"); }} className="text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-xs font-medium transition-colors">Professional</button>
+                        </>
+                    )}
                 </div>
             )}
         </div>

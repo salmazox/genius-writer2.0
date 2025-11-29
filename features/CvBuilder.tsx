@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2 } from 'lucide-react';
+import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { generateContent, analyzeATS, parseResume, generateCoverLetter } from '../services/gemini';
@@ -10,6 +11,8 @@ import { useDebounce } from '../hooks/useDebounce';
 import { useSwipe } from '../hooks/useSwipe';
 import { validateImageFile } from '../utils/security';
 import RichTextEditor from '../components/RichTextEditor';
+import { useUser } from '../contexts/UserContext';
+import { Watermark } from '../components/Watermark';
 
 // Sub-components
 import CvEditor from './cv/CvEditor';
@@ -38,6 +41,7 @@ const INITIAL_CV: CVData = {
 const CvBuilder: React.FC = () => {
     const { t } = useThemeLanguage();
     const { showToast } = useToast();
+    const { user } = useUser();
     
     // State
     const [viewMode, setViewMode] = useState<'cv' | 'cover_letter'>('cv');
@@ -58,6 +62,7 @@ const CvBuilder: React.FC = () => {
     const abortControllerRef = useRef<AbortController | null>(null);
 
     const debouncedCvData = useDebounce(cvData, 1500);
+    const isPro = user.plan !== 'free';
 
     // Swipe handlers for mobile
     const swipeHandlers = useSwipe({
@@ -149,6 +154,11 @@ const CvBuilder: React.FC = () => {
     // --- Actions ---
 
     const handleDownloadPDF = () => {
+        if (!isPro) {
+            showToast("Upgrade to Pro to export PDF files without watermarks.", "error");
+            return;
+        }
+
         const element = viewMode === 'cv' ? cvPreviewRef.current : coverLetterRef.current;
         if (!element) return;
 
@@ -310,8 +320,9 @@ const CvBuilder: React.FC = () => {
                      <Button size="sm" variant="secondary" onClick={handleSaveDocument} icon={Save}>
                          Save
                      </Button>
-                     <Button size="sm" variant="primary" onClick={handleDownloadPDF}>
-                         <Download size={16} className="mr-2"/> Export
+                     <Button size="sm" variant={isPro ? "primary" : "ghost"} onClick={handleDownloadPDF} disabled={!isPro && false}>
+                         {isPro ? <Download size={16} className="mr-2"/> : <Lock size={16} className="mr-2"/>}
+                         Export
                      </Button>
                 </div>
             </div>
@@ -365,9 +376,13 @@ const CvBuilder: React.FC = () => {
                     </div>
 
                     {/* Column 2: Live Preview */}
-                    <div className={`flex-1 bg-slate-100 dark:bg-slate-950 p-4 md:p-8 overflow-hidden ${mobileTab === 'editor' ? 'hidden lg:block' : 'flex flex-col'}`}>
-                        <div className="flex-1 overflow-auto flex justify-center items-start bg-slate-200/50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800">
-                            <CvPreview cvData={cvData} previewRef={cvPreviewRef} />
+                    <div className={`flex-1 bg-slate-100 dark:bg-slate-950 p-4 md:p-8 overflow-hidden min-h-0 flex flex-col ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
+                        <div className="flex-1 overflow-auto flex justify-center items-start bg-slate-200/50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 custom-scrollbar relative">
+                            {/* Watermark Container */}
+                            <div className="relative">
+                                {!isPro && <Watermark />}
+                                <CvPreview cvData={cvData} previewRef={cvPreviewRef} />
+                            </div>
                         </div>
                     </div>
 
@@ -392,8 +407,9 @@ const CvBuilder: React.FC = () => {
                              Generate Letter
                          </Button>
                     </div>
-                    <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-8 overflow-y-auto flex justify-center">
-                        <div className="w-full max-w-[210mm] bg-white dark:bg-slate-900 shadow-2xl min-h-[297mm] p-12" ref={coverLetterRef}>
+                    <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-8 overflow-y-auto flex justify-center custom-scrollbar">
+                        <div className="w-full max-w-[210mm] bg-white dark:bg-slate-900 shadow-2xl min-h-[297mm] p-12 relative" ref={coverLetterRef}>
+                             {!isPro && <Watermark />}
                              {coverLetterContent ? (
                                  <RichTextEditor value={coverLetterContent} onChange={setCoverLetterContent} className="min-h-full border-none" />
                              ) : (

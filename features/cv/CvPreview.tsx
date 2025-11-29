@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { User as UserIcon, Briefcase, Mail, Phone, MapPin, Globe, Linkedin, Calendar } from 'lucide-react';
+import { User as UserIcon, Briefcase, Mail, Phone, MapPin, Globe, Linkedin, Calendar, Award, ExternalLink } from 'lucide-react';
 import { CVData } from '../../types';
 import { sanitizeHtml } from '../../utils/security';
 
@@ -17,10 +17,15 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
     };
 
     // --- Template: Modern ---
+    // Uses float layout to keep sidebar on first page only, while main content flows naturally.
     const ModernTemplate = () => (
-        <div className="flex min-h-[29.7cm] bg-white text-slate-800 shadow-sm">
-            {/* Sidebar */}
-            <div className="w-[32%] p-8 flex flex-col text-white print:bg-[#1e3a8a] print-color-adjust-exact" style={{ backgroundColor: cvData.theme.primary }}>
+        <div className="relative bg-white text-slate-800 shadow-sm overflow-hidden" style={{ minHeight: '297mm' }}>
+            
+            {/* 1. Background Color for Sidebar (Absolute, Page 1 Height Only) */}
+            <div className="absolute top-0 left-0 w-[32%] h-[297mm] print:h-[297mm] z-0" style={{ backgroundColor: cvData.theme.primary }}></div>
+
+            {/* 2. Sidebar Content (Absolute, Page 1 Height Only) */}
+            <div className="absolute top-0 left-0 w-[32%] h-[297mm] p-8 flex flex-col text-white z-10 overflow-hidden">
                 {cvData.personal.photoBase64 && (
                     <div className="mb-8 mx-auto flex justify-center">
                         <img 
@@ -40,6 +45,7 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
                             {cvData.personal.phone && <div className="flex items-center gap-3"><Phone size={14} className="shrink-0 opacity-70"/> <span>{cvData.personal.phone}</span></div>}
                             {cvData.personal.address && <div className="flex items-start gap-3"><MapPin size={14} className="mt-0.5 shrink-0 opacity-70"/> <span>{cvData.personal.address}</span></div>}
                             {cvData.personal.linkedin && <div className="break-words flex items-start gap-3"><Linkedin size={14} className="mt-0.5 shrink-0 opacity-70"/> <span>{cvData.personal.linkedin}</span></div>}
+                            {cvData.personal.website && <div className="break-words flex items-start gap-3"><Globe size={14} className="mt-0.5 shrink-0 opacity-70"/> <span>{cvData.personal.website}</span></div>}
                         </div>
                     </div>
 
@@ -53,6 +59,22 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
                                         <div className="font-bold text-sm">{edu.degree}</div>
                                         <div className="text-xs opacity-90">{edu.school}</div>
                                         <div className="text-[10px] opacity-70 mt-1 flex items-center gap-1"><Calendar size={10}/> {edu.year}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Certifications (Sidebar) */}
+                    {cvData.certifications.length > 0 && (
+                        <div>
+                            <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-4 border-b border-white/20 pb-2 opacity-90">Certifications</h3>
+                            <div className="space-y-4">
+                                {cvData.certifications.map(cert => (
+                                    <div key={cert.id}>
+                                        <div className="font-bold text-sm">{cert.name}</div>
+                                        <div className="text-xs opacity-90">{cert.issuer} {cert.date ? `• ${cert.date}` : ''}</div>
+                                        {cert.url && <a href={cert.url} target="_blank" rel="noreferrer" className="text-[10px] underline opacity-70 hover:opacity-100 flex items-center gap-1 mt-0.5"><ExternalLink size={8} /> Credential</a>}
                                     </div>
                                 ))}
                             </div>
@@ -73,8 +95,11 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 p-8 sm:p-10 bg-white">
+            {/* 3. Invisible Spacer Float (Pushes content right on Page 1) */}
+            <div className="float-left w-[32%] h-[297mm] shape-outside-margin-box"></div>
+
+            {/* 4. Main Content (Flows around spacer) */}
+            <div className="relative p-8 sm:p-10 w-full" style={{ boxSizing: 'border-box' }}>
                 <header className="mb-10 pb-6 border-b-2 border-slate-100">
                     <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-2 leading-none break-words" style={{ color: cvData.theme.text }}>{cvData.personal.fullName || "Your Name"}</h1>
                     <p className="text-xl font-light text-slate-500 tracking-wide">{cvData.personal.jobTitle || "Job Title"}</p>
@@ -116,6 +141,8 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
                     )}
                 </div>
             </div>
+            {/* Clear fix for float */}
+            <div className="clear-both"></div>
         </div>
     );
 
@@ -178,6 +205,27 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
                                     <div className="font-bold text-lg text-slate-900 mb-1">{edu.school}</div>
                                     <div className="text-base italic text-slate-600 mb-2">{edu.degree}</div>
                                     <div className="text-xs font-sans text-slate-400 uppercase tracking-wider">{edu.year} • {edu.location}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {cvData.certifications.length > 0 && (
+                    <section>
+                        <h3 className="text-lg font-bold uppercase tracking-widest border-b border-slate-300 mb-6 pb-1 flex items-center gap-3" style={{ color: cvData.theme.text }}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Certifications
+                        </h3>
+                        <div className="space-y-4">
+                            {cvData.certifications.map(cert => (
+                                <div key={cert.id} className="break-inside-avoid">
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <h4 className="font-bold text-lg text-slate-900">{cert.name}</h4>
+                                        <span className="text-sm font-sans text-slate-500">{cert.date}</span>
+                                    </div>
+                                    <div className="text-base italic text-slate-600 mb-1">{cert.issuer}</div>
+                                    {cert.description && <p className="text-sm text-slate-700 leading-relaxed mb-1">{cert.description}</p>}
+                                    {cert.url && <a href={cert.url} className="text-xs text-indigo-600 underline">View Credential</a>}
                                 </div>
                             ))}
                         </div>
@@ -257,6 +305,21 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
                             </div>
                         </section>
                     )}
+
+                    {cvData.certifications.length > 0 && (
+                         <section>
+                            <h3 className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400 mb-6">Certifications</h3>
+                            <div className="space-y-6">
+                                {cvData.certifications.map(cert => (
+                                    <div key={cert.id} className="break-inside-avoid">
+                                        <div className="font-bold text-sm text-slate-900 mb-1">{cert.name}</div>
+                                        <div className="text-xs text-slate-500 mb-1">{cert.issuer} • {cert.date}</div>
+                                        {cert.url && <a href={cert.url} className="text-[10px] text-slate-400 underline hover:text-indigo-600 block">Link</a>}
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
                 </div>
             </div>
         </div>
@@ -270,7 +333,7 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
             */}
             <div 
                 ref={previewRef} 
-                className="bg-white shadow-xl max-w-full print:shadow-none print:w-full"
+                className="bg-white shadow-xl max-w-full print:shadow-none print:w-full overflow-hidden"
                 style={{ width: '210mm', minHeight: '297mm' }}
             >
                 {cvData.template === 'modern' && <ModernTemplate />}

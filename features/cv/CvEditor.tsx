@@ -1,11 +1,12 @@
+
 import React, { useRef, useState } from 'react';
 import { 
     ChevronRight, User as UserIcon, Briefcase, GraduationCap, Zap, 
-    XCircle, Plus, Sparkles, Loader2, X, ChevronUp, ChevronDown 
+    XCircle, Plus, Sparkles, Loader2, X, ChevronUp, ChevronDown, Award
 } from 'lucide-react';
 import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 import RichTextEditor from '../../components/RichTextEditor';
-import { CVData, CVExperience, CVEducation } from '../../types';
+import { CVData, CVExperience, CVEducation, CVCertificate } from '../../types';
 import { validateImageFile } from '../../utils/security';
 import { useToast } from '../../contexts/ToastContext';
 import { Input, Textarea, Select } from '../../components/ui/Forms';
@@ -26,7 +27,7 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Section Order State - In a real app this would be part of CVData
-    const [sections, setSections] = useState(['personal', 'experience', 'education', 'skills']);
+    const [sections, setSections] = useState(['personal', 'experience', 'education', 'certifications', 'skills']);
 
     const handleCvChange = (section: keyof CVData['personal'], value: string) => {
         setCvData(prev => ({ ...prev, personal: { ...prev.personal, [section]: value } }));
@@ -70,6 +71,11 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
     const updateEducation = (id: string, field: keyof CVEducation, value: string) => setCvData(prev => ({ ...prev, education: prev.education.map(item => item.id === id ? { ...item, [field]: value } : item) }));
     const removeEducation = (id: string) => setCvData(prev => ({ ...prev, education: prev.education.filter(item => item.id !== id) }));
     const moveEducation = (index: number, direction: 'up' | 'down') => setCvData(prev => ({ ...prev, education: moveItem(prev.education, index, direction) }));
+
+    const addCertificate = () => setCvData(prev => ({ ...prev, certifications: [...prev.certifications, { id: Date.now().toString(), name: '', issuer: '', date: '', url: '', description: '' }] }));
+    const updateCertificate = (id: string, field: keyof CVCertificate, value: string) => setCvData(prev => ({ ...prev, certifications: prev.certifications.map(item => item.id === id ? { ...item, [field]: value } : item) }));
+    const removeCertificate = (id: string) => setCvData(prev => ({ ...prev, certifications: prev.certifications.filter(item => item.id !== id) }));
+    const moveCertificate = (index: number, direction: 'up' | 'down') => setCvData(prev => ({ ...prev, certifications: moveItem(prev.certifications, index, direction) }));
 
     const addSkill = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && skillInput.trim()) {
@@ -216,6 +222,43 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                                 </div>
                             ))}
                             <Button onClick={addEducation} variant="outline" className="w-full border-dashed flex gap-2"><Plus size={14} /> Add Education</Button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        if (section === 'certifications') {
+            return (
+                <div key="certifications" className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden mb-3">
+                    <button onClick={() => setActiveAccordion(activeAccordion === 'certifications' ? '' : 'certifications')} className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <div className="flex items-center gap-3">
+                            {controls}
+                            <span className="font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2"><Award size={16}/> {t('dashboard.cv.certifications')}</span>
+                        </div>
+                        <ChevronRight size={16} className={`transition-transform ${activeAccordion === 'certifications' ? 'rotate-90' : ''}`} />
+                    </button>
+                    {activeAccordion === 'certifications' && (
+                        <div className="p-4 bg-white dark:bg-slate-900">
+                             {cvData.certifications.map((cert, idx) => (
+                                <div key={cert.id} className="mb-4 pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:mb-0 last:pb-0 relative">
+                                    <div className="absolute right-0 top-0 flex gap-1 z-10">
+                                        <button onClick={() => moveCertificate(idx, 'up')} disabled={idx === 0} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30"><ChevronUp size={16}/></button>
+                                        <button onClick={() => moveCertificate(idx, 'down')} disabled={idx === cvData.certifications.length - 1} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30"><ChevronDown size={16}/></button>
+                                        <button onClick={() => removeCertificate(cert.id)} className="p-1 text-slate-300 hover:text-red-500 ml-2"><XCircle size={16}/></button>
+                                    </div>
+                                    <div className="pt-6 space-y-2">
+                                        <Input placeholder={t('dashboard.cv.certName')} value={cert.name} onChange={e => updateCertificate(cert.id, 'name', e.target.value)} />
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <Input placeholder={t('dashboard.cv.issuer')} value={cert.issuer} onChange={e => updateCertificate(cert.id, 'issuer', e.target.value)} />
+                                            <Input placeholder="Date (e.g. 2023)" value={cert.date} onChange={e => updateCertificate(cert.id, 'date', e.target.value)} />
+                                        </div>
+                                        <Input placeholder={t('dashboard.cv.credentialUrl')} value={cert.url} onChange={e => updateCertificate(cert.id, 'url', e.target.value)} />
+                                        <Textarea placeholder="Bullet points / Description" value={cert.description} onChange={e => updateCertificate(cert.id, 'description', e.target.value)} className="h-20" />
+                                    </div>
+                                </div>
+                            ))}
+                            <Button onClick={addCertificate} variant="outline" className="w-full border-dashed flex gap-2"><Plus size={14} /> {t('dashboard.cv.addCert')}</Button>
                         </div>
                     )}
                 </div>

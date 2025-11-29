@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag } from 'lucide-react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig } from '../types';
@@ -15,6 +15,7 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { useDebounce } from '../hooks/useDebounce';
 import { useSwipe } from '../hooks/useSwipe';
 import { BrandVoiceManager } from './BrandVoiceManager';
+import { Watermark } from '../components/Watermark';
 
 interface GenericToolProps {
     tool: ToolConfig;
@@ -23,7 +24,7 @@ interface GenericToolProps {
 const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const { t } = useThemeLanguage();
     const { showToast } = useToast();
-    const { brandVoices, selectedVoiceId, setSelectedVoiceId } = useUser();
+    const { brandVoices, selectedVoiceId, setSelectedVoiceId, user } = useUser();
     
     const [formValues, setFormValues] = useState<Record<string, string>>({});
     const [documentContent, setDocumentContent] = useState<string>('');
@@ -41,6 +42,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     // Debounce state for auto-save
     const debouncedForm = useDebounce(formValues, 1000);
     const debouncedContent = useDebounce(documentContent, 1000);
+    
+    const isPro = user.plan !== 'free';
 
     // Swipe gestures
     const swipeHandlers = useSwipe({
@@ -166,6 +169,10 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     }
 
     const handleExportWord = () => {
+        if (!isPro) {
+            showToast("Upgrade to Pro to export.", "error");
+            return;
+        }
         if (!documentContent) { showToast("No content to export", "error"); return; }
         const element = previewRef.current;
         if (!element) return;
@@ -185,6 +192,10 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     };
 
     const handleDownloadPDF = () => {
+        if (!isPro) {
+            showToast("Upgrade to Pro to export.", "error");
+            return;
+        }
         if (!documentContent) { showToast("No content to export", "error"); return; }
         const element = previewRef.current;
         if (!element) return;
@@ -311,10 +322,10 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
             {/* Preview Only Area */}
             <div className={`flex-1 bg-slate-100 dark:bg-slate-950 p-4 md:p-8 overflow-hidden flex flex-col relative ${mobileTab === 'input' ? 'hidden lg:flex' : 'flex h-full'}`}>
-                <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden max-w-5xl mx-auto w-full h-full">
+                <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden max-w-5xl mx-auto w-full h-full relative">
                     
                     {/* Toolbar */}
-                    <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 bg-white dark:bg-slate-900 flex-shrink-0">
+                    <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 bg-white dark:bg-slate-900 flex-shrink-0 z-20 relative">
                         <div className="flex items-center gap-3">
                             <div className="text-sm font-bold text-slate-500 uppercase tracking-wide px-2">Output</div>
                             {documentContent && (
@@ -334,34 +345,37 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                              <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
                              <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Markdown" icon={Copy} />
                              <Button variant="ghost" size="sm" onClick={handleCopyHtml} title="Copy HTML" icon={Code} />
-                             <Button variant="ghost" size="sm" onClick={handleExportWord} title="Export as Word" icon={FileType} />
-                             <Button variant="ghost" size="sm" onClick={handleDownloadPDF} title="Export as PDF" icon={Download} />
+                             <Button variant="ghost" size="sm" onClick={handleExportWord} title="Export as Word" icon={isPro ? FileType : Lock} disabled={!isPro && false} />
+                             <Button variant="ghost" size="sm" onClick={handleDownloadPDF} title="Export as PDF" icon={isPro ? Download : Lock} disabled={!isPro && false} />
                         </div>
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar relative p-8 md:p-12">
-                        {isLoading ? (
-                            <div className="space-y-4 max-w-2xl mx-auto">
-                                <Skeleton height={40} width="60%" />
-                                <Skeleton height={20} />
-                                <Skeleton height={20} />
-                                <Skeleton height={20} width="90%" />
-                                <div className="h-8"></div>
-                                <Skeleton height={150} />
-                                <Skeleton height={20} width="40%" />
-                            </div>
-                        ) : documentContent ? (
-                            <div className="prose dark:prose-invert max-w-none prose-indigo prose-lg" ref={previewRef}>
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{documentContent}</ReactMarkdown>
-                            </div>
-                        ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                                <Sparkles size={48} className="mb-4 opacity-50" />
-                                <p className="text-sm font-medium">Ready to create.</p>
-                                <p className="text-xs mt-2 opacity-70">Fill in the details on the left to start.</p>
-                            </div>
-                        )}
+                        {!isPro && <Watermark className="z-0" />}
+                        <div className="relative z-10">
+                            {isLoading ? (
+                                <div className="space-y-4 max-w-2xl mx-auto">
+                                    <Skeleton height={40} width="60%" />
+                                    <Skeleton height={20} />
+                                    <Skeleton height={20} />
+                                    <Skeleton height={20} width="90%" />
+                                    <div className="h-8"></div>
+                                    <Skeleton height={150} />
+                                    <Skeleton height={20} width="40%" />
+                                </div>
+                            ) : documentContent ? (
+                                <div className="prose dark:prose-invert max-w-none prose-indigo prose-lg" ref={previewRef}>
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{documentContent}</ReactMarkdown>
+                                </div>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                                    <Sparkles size={48} className="mb-4 opacity-50" />
+                                    <p className="text-sm font-medium">Ready to create.</p>
+                                    <p className="text-xs mt-2 opacity-70">Fill in the details on the left to start.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

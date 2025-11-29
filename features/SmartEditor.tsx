@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, FileType, MessageCircle, User as UserIcon, Share2, Quote
+    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, FileType, MessageCircle, User as UserIcon, Share2, Quote, Lock
 } from 'lucide-react';
 import RichTextEditor from '../components/RichTextEditor';
 import { Button } from '../components/ui/Button';
@@ -15,6 +15,7 @@ import { documentService } from '../services/documentService';
 import { useToast } from '../contexts/ToastContext';
 import { ToolType, SavedDocument, Comment } from '../types';
 import { useUser } from '../contexts/UserContext';
+import { Watermark } from '../components/Watermark';
 
 interface ChatMessage {
     id: string;
@@ -51,6 +52,8 @@ const SmartEditor: React.FC = () => {
     const debouncedContent = useDebounce(content, 1000);
     const debouncedTitle = useDebounce(title, 1000);
     const chatEndRef = useRef<HTMLDivElement>(null);
+    
+    const isPro = user.plan !== 'free';
 
     // --- Load Current Doc ---
     // In a real app with routing, we'd grab ID from URL. Here we rely on the draft mechanism primarily,
@@ -210,6 +213,11 @@ const SmartEditor: React.FC = () => {
     };
 
     const handleExport = (format: 'html' | 'txt') => {
+        if (!isPro) {
+            showToast("Upgrade to Pro to export files.", "error");
+            return;
+        }
+
         const element = document.createElement("a");
         let file: Blob;
         let name = title.replace(/\s+/g, '_');
@@ -272,7 +280,7 @@ const SmartEditor: React.FC = () => {
                         
                         {/* Export Dropdown Group */}
                         <div className="relative group">
-                            <Button variant="secondary" size="sm" icon={Download}>Export</Button>
+                            <Button variant={isPro ? "secondary" : "ghost"} size="sm" icon={isPro ? Download : Lock}>Export</Button>
                             <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                                 <button onClick={() => handleExport('html')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-t-xl">HTML</button>
                                 <button onClick={() => handleExport('txt')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-b-xl">Plain Text</button>
@@ -305,10 +313,11 @@ const SmartEditor: React.FC = () => {
                                 <button onClick={() => setSelectedTextForComment('')}><X size={14}/></button>
                             </div>
                         )}
+                        {!isPro && <Watermark className="z-0" />}
                         <RichTextEditor 
                             value={content} 
                             onChange={setContent} 
-                            className="min-h-[297mm] border-none"
+                            className="min-h-[297mm] border-none z-10 relative bg-transparent"
                             placeholder="Start writing..."
                         />
                     </div>

@@ -157,9 +157,9 @@ export interface CVCertificate {
   id: string;
   name: string;
   issuer: string;
-  startDate: string;
-  endDate: string;
+  date: string;
   url?: string;
+  description?: string;
 }
 
 export interface CVLanguage {
