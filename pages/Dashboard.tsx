@@ -1,12 +1,13 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Menu, X, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder, Trash2, Plus, Tag, MoveRight, Star, Copy, RefreshCw, Archive } from 'lucide-react';
+import { Menu, X, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder, Trash2, Plus, Tag, MoveRight, Star, Copy, RefreshCw, Share2 } from 'lucide-react';
 import { ToolType, SavedDocument, Folder as FolderType } from '../types';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { getTools, IconMap } from '../config/tools';
 import { documentService } from '../services/documentService';
 import { Modal } from '../components/ui/Modal';
+import { ShareModal } from '../components/ShareModal';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Forms';
 import { OnboardingTour } from '../components/OnboardingTour';
@@ -49,6 +50,7 @@ const Dashboard: React.FC = () => {
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [docToMove, setDocToMove] = useState<SavedDocument | null>(null);
+  const [docToShare, setDocToShare] = useState<SavedDocument | null>(null);
 
   const activeTool = activeToolId ? TOOLS.find(t => t.id === activeToolId) : null;
 
@@ -75,7 +77,7 @@ const Dashboard: React.FC = () => {
       if (viewMode === 'documents' || viewMode === 'trash') {
           refreshData();
       }
-  }, [viewMode]);
+  }, [viewMode, docToShare]); // Re-fetch when share modal closes to get updated share settings
 
   // Extract all unique tags (exclude trashed docs tags)
   const allTags = useMemo(() => {
@@ -417,6 +419,9 @@ const Dashboard: React.FC = () => {
                                               </>
                                           ) : (
                                               <>
+                                                <button onClick={(e) => { e.stopPropagation(); setDocToShare(doc); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Share">
+                                                    <Share2 size={16} />
+                                                </button>
                                                 <button onClick={(e) => { e.stopPropagation(); handleDuplicateDoc(doc.id, e); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Duplicate">
                                                     <Copy size={16} />
                                                 </button>
@@ -660,6 +665,14 @@ const Dashboard: React.FC = () => {
               ))}
           </div>
       </Modal>
+
+      {docToShare && (
+          <ShareModal 
+              isOpen={!!docToShare}
+              onClose={() => setDocToShare(null)}
+              document={docToShare}
+          />
+      )}
 
     </div>
   );

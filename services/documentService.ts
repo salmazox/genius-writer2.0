@@ -1,5 +1,5 @@
 
-import { SavedDocument, ToolType, Folder } from '../types';
+import { SavedDocument, ToolType, Folder, Comment, ShareSettings } from '../types';
 
 const DOCS_STORAGE_KEY = 'genius_writer_documents';
 const FOLDERS_STORAGE_KEY = 'genius_writer_folders';
@@ -89,6 +89,7 @@ export const documentService = {
           title: `${doc.title} (Copy)`,
           lastModified: Date.now(),
           versions: [], // Don't copy history
+          comments: [], // Don't copy comments
           deletedAt: undefined
       };
       documentService.save(newDoc);
@@ -104,7 +105,13 @@ export const documentService = {
           lastModified: Date.now(),
           versions: [],
           folderId,
-          tags: tags || []
+          tags: tags || [],
+          comments: [],
+          shareSettings: {
+              isPublic: false,
+              publicPermission: 'view',
+              invitedUsers: []
+          }
       };
       documentService.save(newDoc);
       return newDoc;
@@ -114,6 +121,43 @@ export const documentService = {
       const doc = documentService.getById(docId);
       if (doc) {
           doc.folderId = folderId;
+          documentService.save(doc);
+      }
+  },
+
+  // --- Comments ---
+  addComment: (docId: string, comment: Comment): void => {
+      const doc = documentService.getById(docId);
+      if (doc) {
+          const comments = doc.comments || [];
+          doc.comments = [...comments, comment];
+          documentService.save(doc);
+      }
+  },
+
+  resolveComment: (docId: string, commentId: string): void => {
+      const doc = documentService.getById(docId);
+      if (doc && doc.comments) {
+          doc.comments = doc.comments.map(c => 
+              c.id === commentId ? { ...c, resolved: !c.resolved } : c
+          );
+          documentService.save(doc);
+      }
+  },
+
+  deleteComment: (docId: string, commentId: string): void => {
+      const doc = documentService.getById(docId);
+      if (doc && doc.comments) {
+          doc.comments = doc.comments.filter(c => c.id !== commentId);
+          documentService.save(doc);
+      }
+  },
+
+  // --- Sharing ---
+  updateShareSettings: (docId: string, settings: ShareSettings): void => {
+      const doc = documentService.getById(docId);
+      if (doc) {
+          doc.shareSettings = settings;
           documentService.save(doc);
       }
   },

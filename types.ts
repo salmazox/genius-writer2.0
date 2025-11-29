@@ -86,6 +86,23 @@ export interface Folder {
   createdAt: number;
 }
 
+export interface Comment {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  content: string;
+  timestamp: number;
+  selectedText?: string; // Context/Quote
+  resolved?: boolean;
+}
+
+export interface ShareSettings {
+  isPublic: boolean;
+  publicPermission: 'view' | 'comment' | 'edit';
+  invitedUsers: { email: string; permission: 'view' | 'comment' | 'edit' }[];
+}
+
 export interface SavedDocument {
   id: string;
   title: string;
@@ -96,6 +113,8 @@ export interface SavedDocument {
   folderId?: string; // New: Organization
   tags?: string[]; // New: Filtering
   deletedAt?: number; // New: Soft Delete
+  comments?: Comment[]; // New: Collaboration
+  shareSettings?: ShareSettings; // New: Sharing
 }
 
 export interface Collaborator {
