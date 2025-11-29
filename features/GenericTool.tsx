@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock } from 'lucide-react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ToolConfig } from '../types';
+import { ToolConfig, ToolType } from '../types';
 import { generateContent } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { useUser } from '../contexts/UserContext';
@@ -44,6 +43,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const debouncedContent = useDebounce(documentContent, 1000);
     
     const isPro = user.plan !== 'free';
+    const isImageTool = tool.id === ToolType.IMAGE_GEN;
 
     // Swipe gestures
     const swipeHandlers = useSwipe({
@@ -54,13 +54,14 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
     // Stats
     const stats = useMemo(() => {
+        if (isImageTool) return null;
         const text = documentContent.replace(/<[^>]*>/g, '');
         return {
             words: text.trim() ? text.trim().split(/\s+/).length : 0,
             chars: text.length,
             readTime: Math.ceil(text.trim().split(/\s+/).length / 200)
         };
-    }, [documentContent]);
+    }, [documentContent, isImageTool]);
 
     // Load draft on mount/tool change
     useEffect(() => {
@@ -122,7 +123,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 controller.signal
             );
             setDocumentContent(result);
-            showToast(t('dashboard.toasts.generated'), 'success');
+            showToast(isImageTool ? "Image generated successfully" : t('dashboard.toasts.generated'), 'success');
             setMobileTab('result');
         } catch (e: any) {
             if (e.name !== 'AbortError') {
@@ -147,7 +148,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         const defaultTitle = `${tool.name} - ${new Date().toLocaleDateString()}`;
         // In a real app we might prompt for title, here we default it.
         // Or we could use one of the inputs (like 'topic') as title if available.
-        const titleCandidate = formValues['topic'] || formValues['productName'] || defaultTitle;
+        const titleCandidate = formValues['topic'] || formValues['productName'] || formValues['prompt'] || defaultTitle;
         
         const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
 
@@ -214,6 +215,20 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         }
     };
 
+    const handleDownloadImage = () => {
+        if (!documentContent || !documentContent.startsWith('data:image')) {
+            showToast("No valid image to download", "error");
+            return;
+        }
+        const link = document.createElement('a');
+        link.href = documentContent;
+        link.download = `generated-image-${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast("Image downloaded", "success");
+    };
+
     return (
         <div 
             className="flex h-full flex-col lg:flex-row relative touch-pan-y"
@@ -242,7 +257,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 <div className="mb-6">
                     <div className="flex justify-between items-start mb-4">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                            <FileText size={24} />
+                            {isImageTool ? <ImageIcon size={24} /> : <FileText size={24} />}
                         </div>
                         {isAutoSaving ? (
                             <span className="text-[10px] text-slate-400 flex items-center gap-1"><Save size={10} className="animate-pulse"/> Draft Saving...</span>
@@ -256,22 +271,24 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 
                 {/* Dynamic Inputs */}
                 <div className="space-y-5 md:pb-0">
-                    <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                        <div className="flex justify-between items-center mb-2">
-                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">Brand Voice</label>
-                             <button onClick={() => setShowVoiceManager(true)} className="text-xs text-indigo-600 font-medium flex items-center gap-1 hover:underline">
-                                 <Settings2 size={12} /> Manage
-                             </button>
+                    {!isImageTool && (
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">Brand Voice</label>
+                                <button onClick={() => setShowVoiceManager(true)} className="text-xs text-indigo-600 font-medium flex items-center gap-1 hover:underline">
+                                    <Settings2 size={12} /> Manage
+                                </button>
+                            </div>
+                            <select 
+                                value={selectedVoiceId || ''}
+                                onChange={(e) => setSelectedVoiceId(e.target.value || null)}
+                                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                            >
+                                <option value="">Default AI Tone</option>
+                                {brandVoices.map(voice => <option key={voice.id} value={voice.id}>{voice.name}</option>)}
+                            </select>
                         </div>
-                        <select 
-                            value={selectedVoiceId || ''}
-                            onChange={(e) => setSelectedVoiceId(e.target.value || null)}
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                        >
-                            <option value="">Default AI Tone</option>
-                            {brandVoices.map(voice => <option key={voice.id} value={voice.id}>{voice.name}</option>)}
-                        </select>
-                    </div>
+                    )}
 
                     {tool.inputs.map((input) => (
                         <div key={input.name}>
@@ -300,19 +317,21 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                         </div>
                     ))}
                     
-                    <div>
-                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2 tracking-wide flex items-center gap-1">
-                             <Tag size={12} /> Tags
-                         </label>
-                         <input 
-                            type="text"
-                            placeholder="e.g. marketing, draft, Q4"
-                            value={tags}
-                            onChange={(e) => setTags(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 p-3 text-sm transition-all text-slate-900 dark:text-white placeholder-slate-400"
-                         />
-                         <p className="text-[10px] text-slate-400 mt-1">Comma separated</p>
-                    </div>
+                    {!isImageTool && (
+                        <div>
+                             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2 tracking-wide flex items-center gap-1">
+                                 <Tag size={12} /> Tags
+                             </label>
+                             <input 
+                                type="text"
+                                placeholder="e.g. marketing, draft, Q4"
+                                value={tags}
+                                onChange={(e) => setTags(e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 p-3 text-sm transition-all text-slate-900 dark:text-white placeholder-slate-400"
+                             />
+                             <p className="text-[10px] text-slate-400 mt-1">Comma separated</p>
+                        </div>
+                    )}
 
                     <Button onClick={handleGenerate} isLoading={isLoading} className="w-full mt-8 py-3.5">
                         {isLoading ? t('dashboard.thinking') : t('dashboard.generate')}
@@ -328,7 +347,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 bg-white dark:bg-slate-900 flex-shrink-0 z-20 relative">
                         <div className="flex items-center gap-3">
                             <div className="text-sm font-bold text-slate-500 uppercase tracking-wide px-2">Output</div>
-                            {documentContent && (
+                            {documentContent && stats && (
                                 <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">
                                     <span>{stats.words} words</span>
                                     <span>•</span>
@@ -343,31 +362,59 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                                  Save Doc
                              </Button>
                              <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
-                             <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Markdown" icon={Copy} />
-                             <Button variant="ghost" size="sm" onClick={handleCopyHtml} title="Copy HTML" icon={Code} />
-                             <Button variant="ghost" size="sm" onClick={handleExportWord} title="Export as Word" icon={isPro ? FileType : Lock} disabled={!isPro && false} />
-                             <Button variant="ghost" size="sm" onClick={handleDownloadPDF} title="Export as PDF" icon={isPro ? Download : Lock} disabled={!isPro && false} />
+                             
+                             {isImageTool ? (
+                                <Button variant="primary" size="sm" onClick={handleDownloadImage} title="Download Image" icon={Download}>
+                                    Download Image
+                                </Button>
+                             ) : (
+                                <>
+                                    <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Markdown" icon={Copy} />
+                                    <Button variant="ghost" size="sm" onClick={handleCopyHtml} title="Copy HTML" icon={Code} />
+                                    <Button variant="ghost" size="sm" onClick={handleExportWord} title="Export as Word" icon={isPro ? FileType : Lock} disabled={!isPro && false} />
+                                    <Button variant="ghost" size="sm" onClick={handleDownloadPDF} title="Export as PDF" icon={isPro ? Download : Lock} disabled={!isPro && false} />
+                                </>
+                             )}
                         </div>
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar relative p-8 md:p-12">
                         {!isPro && <Watermark className="z-0" />}
-                        <div className="relative z-10">
+                        <div className="relative z-10 h-full">
                             {isLoading ? (
                                 <div className="space-y-4 max-w-2xl mx-auto">
-                                    <Skeleton height={40} width="60%" />
-                                    <Skeleton height={20} />
-                                    <Skeleton height={20} />
-                                    <Skeleton height={20} width="90%" />
-                                    <div className="h-8"></div>
-                                    <Skeleton height={150} />
-                                    <Skeleton height={20} width="40%" />
+                                    {isImageTool ? (
+                                        <div className="flex flex-col items-center justify-center h-full">
+                                            <Skeleton height={300} width="100%" className="rounded-xl mb-4" />
+                                            <p className="text-slate-400 animate-pulse">Generating your image...</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <Skeleton height={40} width="60%" />
+                                            <Skeleton height={20} />
+                                            <Skeleton height={20} />
+                                            <Skeleton height={20} width="90%" />
+                                            <div className="h-8"></div>
+                                            <Skeleton height={150} />
+                                            <Skeleton height={20} width="40%" />
+                                        </>
+                                    )}
                                 </div>
                             ) : documentContent ? (
-                                <div className="prose dark:prose-invert max-w-none prose-indigo prose-lg" ref={previewRef}>
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{documentContent}</ReactMarkdown>
-                                </div>
+                                isImageTool ? (
+                                    <div className="flex items-center justify-center h-full">
+                                        <img 
+                                            src={documentContent} 
+                                            alt="Generated AI Art" 
+                                            className="max-w-full max-h-full rounded-lg shadow-lg object-contain"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="prose dark:prose-invert max-w-none prose-indigo prose-lg" ref={previewRef}>
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{documentContent}</ReactMarkdown>
+                                    </div>
+                                )
                             ) : (
                                 <div className="h-full flex flex-col items-center justify-center text-slate-400">
                                     <Sparkles size={48} className="mb-4 opacity-50" />

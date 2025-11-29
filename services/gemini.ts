@@ -153,7 +153,8 @@ export const generateContent = async (
         for (const part of response.candidates[0].content.parts) {
             if (part.inlineData) {
                 const base64EncodeString: string = part.inlineData.data;
-                return `![Generated Image](data:${part.inlineData.mimeType};base64,${base64EncodeString})`;
+                // Return raw Data URI for the frontend to render as <img src="...">
+                return `data:${part.inlineData.mimeType};base64,${base64EncodeString}`;
             }
         }
         return "Failed to generate image. Please try again.";
