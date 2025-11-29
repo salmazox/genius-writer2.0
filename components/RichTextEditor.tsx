@@ -1,11 +1,9 @@
-
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import { 
     Bold, Italic, Underline, List, ListOrdered, Undo, Redo, Sparkles, Loader2, 
-    Image as ImageIcon, Link as LinkIcon, Heading1, Heading2, Quote,
-    AlignLeft, AlignCenter, AlignRight, AlignJustify, 
-    Check, X, Wand2, Type, Strikethrough, Highlighter, Upload,
-    MoreHorizontal, ChevronDown, Paperclip
+    Image as ImageIcon, Link as LinkIcon, AlignLeft, AlignCenter, AlignRight, 
+    Check, X, Wand2, Strikethrough, Upload,
+    ChevronDown
 } from 'lucide-react';
 import { refineContent } from '../services/gemini';
 import { useToast } from '../contexts/ToastContext';
@@ -18,6 +16,7 @@ interface RichTextEditorProps {
     placeholder?: string;
     hideToolbar?: boolean;
     style?: React.CSSProperties;
+    showStats?: boolean;
 }
 
 const FONTS = [
@@ -38,7 +37,7 @@ const SIZES = [
     { name: 'Giant', value: '6' },
 ];
 
-const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onChange, className = '', placeholder, hideToolbar = false, style }) => {
+const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onChange, className = '', placeholder, hideToolbar = false, style, showStats = false }) => {
     const editorRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { showToast } = useToast();
@@ -63,6 +62,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
              editorRef.current.innerHTML = value;
         }
     }, [value]);
+
+    // Calculate Stats
+    const stats = useMemo(() => {
+        if (!showStats) return null;
+        const text = value.replace(/<[^>]*>/g, '');
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        const chars = text.length;
+        const readTime = Math.ceil(words / 200);
+        return { words, chars, readTime };
+    }, [value, showStats]);
 
     // Handle Selection for Floating Menu & Active States
     const handleSelectionChange = useCallback(() => {
@@ -458,6 +467,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
             {(!value && placeholder) && (
                 <div className="absolute top-[60px] left-6 md:left-8 text-slate-400 pointer-events-none select-none italic">
                     {placeholder}
+                </div>
+            )}
+
+            {/* Integrated Stats Footer */}
+            {showStats && stats && (
+                <div className="sticky bottom-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800 px-4 py-2 flex items-center justify-end gap-3 text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 z-10">
+                    <span>{stats.words} words</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+                    <span>{stats.chars} chars</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+                    <span>~{stats.readTime} min read</span>
                 </div>
             )}
 

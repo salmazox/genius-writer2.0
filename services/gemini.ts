@@ -118,12 +118,19 @@ async function withRetry<T>(
   }
 }
 
+const checkOnline = () => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        throw new Error("No internet connection. Please check your network.");
+    }
+};
+
 export const generateContent = async (
   tool: ToolType,
   inputs: Record<string, string>,
   brandVoiceInstruction?: string,
   signal?: AbortSignal
 ): Promise<string> => {
+  checkOnline();
   
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
@@ -205,6 +212,7 @@ export const refineContent = async (
   signal?: AbortSignal
 ): Promise<string> => {
   if (!currentContent) return "";
+  checkOnline();
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   
   if (!apiLimiter.tryAcquire()) {
@@ -241,6 +249,7 @@ export const chatWithAI = async (
   context?: string,
   signal?: AbortSignal
 ): Promise<string> => {
+  checkOnline();
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
   if (!apiLimiter.tryAcquire()) {
@@ -283,6 +292,7 @@ export const generateCoverLetter = async (
   jobDescription: string,
   signal?: AbortSignal
 ): Promise<string> => {
+  checkOnline();
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
 
@@ -325,6 +335,7 @@ export const extractBrandVoice = async (
     textSample: string,
     signal?: AbortSignal
 ): Promise<{ name: string; description: string }> => {
+    checkOnline();
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
     try {
@@ -367,6 +378,7 @@ export const analyzeATS = async (
     jobDescription: string,
     signal?: AbortSignal
 ): Promise<ATSAnalysis> => {
+    checkOnline();
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
     const cvText = `
@@ -435,6 +447,7 @@ export const parseResume = async (
     base64Image: string, 
     signal?: AbortSignal
 ): Promise<Partial<CVData>> => {
+    checkOnline();
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
     // Clean base64 string
@@ -478,6 +491,7 @@ export const factCheck = async (
     content: string,
     signal?: AbortSignal
 ): Promise<string> => {
+    checkOnline();
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
     if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");

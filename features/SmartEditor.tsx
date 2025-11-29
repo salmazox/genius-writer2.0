@@ -1,7 +1,6 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
-    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, FileType, MessageCircle, User as UserIcon, Share2, Quote, Lock
+    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle
 } from 'lucide-react';
 import RichTextEditor from '../components/RichTextEditor';
 import { Button } from '../components/ui/Button';
@@ -33,7 +32,7 @@ const SmartEditor: React.FC = () => {
     const [content, setContent] = useLocalStorage<string>('smart_editor_content', '<h1>Untitled Document</h1><p>Start writing here...</p>');
     const [title, setTitle] = useLocalStorage<string>('smart_editor_title', 'Untitled Document');
     const [currentDoc, setCurrentDoc] = useState<SavedDocument | null>(null);
-    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | null>('ai'); // 'ai', 'comments', null
+    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | null>('ai');
     
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
         { id: '1', role: 'model', text: 'Hi! I am your AI writing companion. I can help you brainstorm, draft, or edit this document. What are we working on today?' }
@@ -47,6 +46,9 @@ const SmartEditor: React.FC = () => {
     const [newComment, setNewComment] = useState('');
     const [selectedTextForComment, setSelectedTextForComment] = useState('');
 
+    // SEO State
+    const [seoKeywords, setSeoKeywords] = useState('');
+    
     // Modals
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -58,18 +60,15 @@ const SmartEditor: React.FC = () => {
     const isPro = user.plan !== 'free';
 
     // --- Load Current Doc ---
-    // In a real app with routing, we'd grab ID from URL. Here we rely on the draft mechanism primarily,
-    // but try to find if this matches a saved doc.
     useEffect(() => {
         // Try to find the document in storage that matches current title/content to sync ID
-        // This is imperfect for a demo but allows features to work
         const allDocs = documentService.getAll();
         const found = allDocs.find(d => d.templateId === ToolType.SMART_EDITOR && d.title === title && d.content === content);
         if (found) {
             setCurrentDoc(found);
             if (found.comments) setComments(found.comments);
         }
-    }, []); // Run once on mount
+    }, []); 
 
     // --- Auto Save State Indicator ---
     useEffect(() => {
@@ -175,7 +174,7 @@ const SmartEditor: React.FC = () => {
 
         const comment: Comment = {
             id: Date.now().toString(),
-            userId: user.email, // using email as ID for demo
+            userId: user.email, 
             userName: user.name,
             userAvatar: user.avatar,
             content: newComment,
@@ -185,8 +184,6 @@ const SmartEditor: React.FC = () => {
         };
 
         documentService.addComment(currentDoc.id, comment);
-        
-        // Update local state
         setComments(prev => [...prev, comment]);
         setNewComment('');
         setSelectedTextForComment('');
@@ -205,7 +202,6 @@ const SmartEditor: React.FC = () => {
          setComments(prev => prev.filter(c => c.id !== commentId));
     };
 
-    // Detect selection for commenting
     const handleSelectionCheck = () => {
         const sel = window.getSelection();
         if (sel && !sel.isCollapsed) {
@@ -213,6 +209,18 @@ const SmartEditor: React.FC = () => {
             if (text.length > 0) setSelectedTextForComment(text);
         }
     };
+
+    // --- SEO Logic ---
+    const seoAnalysis = useMemo(() => {
+        if (!seoKeywords.trim()) return [];
+        const text = content.replace(/<[^>]*>/g, '').toLowerCase();
+        return seoKeywords.split(',').map(k => k.trim()).filter(Boolean).map(keyword => {
+            const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`, 'g');
+            const matches = text.match(regex);
+            const count = matches ? matches.length : 0;
+            return { keyword, count };
+        });
+    }, [content, seoKeywords]);
 
     const handleExport = (format: 'html' | 'txt') => {
         if (!isPro) {
@@ -228,7 +236,6 @@ const SmartEditor: React.FC = () => {
             file = new Blob([content], {type: 'text/html'});
             name += '.html';
         } else {
-            // Simple strip tags for TXT
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = content;
             const text = tempDiv.textContent || tempDiv.innerText || '';
@@ -293,6 +300,15 @@ const SmartEditor: React.FC = () => {
                         <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
 
                         <button 
+                            onClick={() => setActiveSidebar(activeSidebar === 'seo' ? null : 'seo')} 
+                            className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'seo' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} 
+                            title="SEO Analysis"
+                            aria-label="SEO Analysis"
+                        >
+                            <Search size={20} />
+                        </button>
+
+                        <button 
                             onClick={() => setActiveSidebar(activeSidebar === 'comments' ? null : 'comments')} 
                             className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'comments' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} 
                             title={t('dashboard.smart.comments')}
@@ -332,6 +348,7 @@ const SmartEditor: React.FC = () => {
                             onChange={setContent} 
                             className="min-h-[297mm] border-none z-10 relative bg-transparent"
                             placeholder={t('dashboard.placeholder')}
+                            showStats={true}
                         />
                     </div>
                 </div>
@@ -381,6 +398,51 @@ const SmartEditor: React.FC = () => {
                                     <button onClick={handleSendMessage} disabled={!chatInput.trim() || isChatLoading} aria-label="Send Message" className="absolute right-2 bottom-2 p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
                                         <Send size={16} />
                                     </button>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* SEO Sidebar Content */}
+                    {activeSidebar === 'seo' && (
+                        <>
+                            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
+                                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2"><Search size={16} className="text-indigo-600"/> SEO Analysis</h3>
+                                <button onClick={() => setActiveSidebar(null)} className="lg:hidden" aria-label="Close Sidebar"><X size={20} className="text-slate-400"/></button>
+                            </div>
+                            
+                            <div className="p-4 flex-1 overflow-y-auto">
+                                <div className="mb-6">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Target Keywords</label>
+                                    <textarea 
+                                        value={seoKeywords}
+                                        onChange={(e) => setSeoKeywords(e.target.value)}
+                                        placeholder="Enter keywords (comma separated)..."
+                                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-24"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1">Real-time usage tracking</p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Keyword Density</h4>
+                                    {seoAnalysis.length === 0 ? (
+                                        <div className="text-center py-4 text-slate-400 text-sm">
+                                            No keywords defined.
+                                        </div>
+                                    ) : (
+                                        seoAnalysis.map(({ keyword, count }) => (
+                                            <div key={keyword} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                                                <span className="font-medium text-slate-700 dark:text-slate-300">{keyword}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-sm font-bold ${count === 0 ? 'text-red-500' : count > 5 ? 'text-orange-500' : 'text-green-500'}`}>
+                                                        {count}x
+                                                    </span>
+                                                    {count === 0 && <AlertCircle size={14} className="text-red-500"/>}
+                                                    {count > 0 && count <= 5 && <Check size={14} className="text-green-500"/>}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         </>

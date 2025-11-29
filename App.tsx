@@ -1,5 +1,5 @@
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -10,6 +10,8 @@ import { Loader2 } from 'lucide-react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
 import { ShortcutsModal } from './components/ShortcutsModal';
+import { CommandPalette } from './components/CommandPalette';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 // Lazy load pages for performance
@@ -30,36 +32,49 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const is404 = location.pathname === '/404';
 
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
+  // Keyboard Shortcuts for global actions
   useKeyboardShortcuts([
     {
       combo: { key: '/', ctrlKey: true },
       handler: () => setIsShortcutsOpen(prev => !prev)
+    },
+    {
+      combo: { key: 'k', ctrlKey: true },
+      handler: () => setIsCommandPaletteOpen(prev => !prev)
+    },
+    {
+        combo: { key: 'k', metaKey: true }, // Mac Command+K
+        handler: () => setIsCommandPaletteOpen(prev => !prev)
     }
   ]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-slate-950 transition-colors duration-200">
+    <div className="flex flex-col min-h-screen transition-colors duration-200 relative">
       <OfflineBanner />
       <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
+      <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
+      
       {!isDashboard && !isAuth && !is404 && <Navbar />}
       {isDashboard && !isAuth && <Navbar />} 
-      <main id="main-content" className={`flex-grow ${isDashboard ? 'h-[calc(100dvh-64px)] overflow-hidden' : ''}`}>
+      
+      <main id="main-content" className={`flex-grow ${isDashboard ? 'h-[calc(100dvh-64px)] overflow-hidden' : ''} pb-16 md:pb-0`}>
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
       </main>
+      
       {!isDashboard && !isAuth && !is404 && <Footer />}
+      
+      {/* Mobile Bottom Navigation - Visible only on mobile, and not on auth pages */}
+      {!isAuth && <MobileBottomNav onOpenCommandPalette={() => setIsCommandPaletteOpen(true)} />}
     </div>
   );
 };
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // In a real app, check context auth state. 
-    // For this demo, we assume the user is "logged in" if they accessed the dashboard via AuthPage redirect
-    // or if a user object exists in local storage.
     const user = localStorage.getItem('ai_writer_user');
-    
     if (!user) {
         return <Navigate to="/login" replace />;
     }
