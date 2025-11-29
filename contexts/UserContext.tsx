@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useState } from 'react';
-import { BrandVoice, User } from '../types';
+import { BrandVoice, User, ToolType } from '../types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface UserContextType {
@@ -11,6 +12,7 @@ interface UserContextType {
   selectedVoiceId: string | null;
   setSelectedVoiceId: (id: string | null) => void;
   toggleLinkedAccount: (platform: keyof User['linkedAccounts']) => void;
+  toggleFavoriteTool: (toolId: ToolType) => void;
   logout: () => void;
 }
 
@@ -31,7 +33,8 @@ const INITIAL_USER: User = {
     twitter: false,
     linkedin: false,
     instagram: false
-  }
+  },
+  favorites: []
 };
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -62,6 +65,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   };
 
+  const toggleFavoriteTool = (toolId: ToolType) => {
+    setUser(prev => {
+        const favorites = prev.favorites || [];
+        if (favorites.includes(toolId)) {
+            return { ...prev, favorites: favorites.filter(id => id !== toolId) };
+        } else {
+            return { ...prev, favorites: [...favorites, toolId] };
+        }
+    });
+  };
+
   const logout = () => {
     if (typeof window !== 'undefined') {
         window.localStorage.removeItem('ai_writer_user');
@@ -79,6 +93,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       selectedVoiceId,
       setSelectedVoiceId,
       toggleLinkedAccount,
+      toggleFavoriteTool,
       logout
     }}>
       {children}

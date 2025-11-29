@@ -53,9 +53,46 @@ export const documentService = {
     localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(docs));
   },
 
+  // Soft Delete
   delete: (id: string): void => {
-    const docs = documentService.getAll().filter(d => d.id !== id);
-    localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(docs));
+    const docs = documentService.getAll();
+    const index = docs.findIndex(d => d.id === id);
+    if (index >= 0) {
+        docs[index].deletedAt = Date.now();
+        localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(docs));
+    }
+  },
+
+  // Restore from Trash
+  restore: (id: string): void => {
+      const docs = documentService.getAll();
+      const index = docs.findIndex(d => d.id === id);
+      if (index >= 0) {
+          docs[index].deletedAt = undefined;
+          localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(docs));
+      }
+  },
+
+  // Permanent Delete
+  hardDelete: (id: string): void => {
+      const docs = documentService.getAll().filter(d => d.id !== id);
+      localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(docs));
+  },
+
+  duplicate: (id: string): SavedDocument | null => {
+      const doc = documentService.getById(id);
+      if (!doc) return null;
+
+      const newDoc: SavedDocument = {
+          ...doc,
+          id: Date.now().toString(),
+          title: `${doc.title} (Copy)`,
+          lastModified: Date.now(),
+          versions: [], // Don't copy history
+          deletedAt: undefined
+      };
+      documentService.save(newDoc);
+      return newDoc;
   },
   
   create: (title: string, content: string, templateId: ToolType, folderId?: string, tags?: string[]): SavedDocument => {
@@ -112,5 +149,29 @@ export const documentService = {
       const docs = documentService.getAll();
       const updatedDocs = docs.map(d => d.folderId === id ? { ...d, folderId: undefined } : d);
       localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(updatedDocs));
+  },
+
+  // --- Backup & Restore ---
+  exportData: (): string => {
+      const data = {
+          documents: documentService.getAll(),
+          folders: documentService.getFolders(),
+          user: localStorage.getItem('ai_writer_user') ? JSON.parse(localStorage.getItem('ai_writer_user')!) : null,
+          exportedAt: Date.now()
+      };
+      return JSON.stringify(data, null, 2);
+  },
+
+  importData: (jsonString: string): boolean => {
+      try {
+          const data = JSON.parse(jsonString);
+          if (data.documents) localStorage.setItem(DOCS_STORAGE_KEY, JSON.stringify(data.documents));
+          if (data.folders) localStorage.setItem(FOLDERS_STORAGE_KEY, JSON.stringify(data.folders));
+          if (data.user) localStorage.setItem('ai_writer_user', JSON.stringify(data.user));
+          return true;
+      } catch (e) {
+          console.error("Import failed", e);
+          return false;
+      }
   }
 };

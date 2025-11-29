@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2 } from 'lucide-react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig } from '../types';
 import { generateContent } from '../services/gemini';
+import { documentService } from '../services/documentService';
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
@@ -29,6 +31,9 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const [mobileTab, setMobileTab] = useState<'input' | 'result'>('input');
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [showVoiceManager, setShowVoiceManager] = useState(false);
+    
+    // Tagging state
+    const [tags, setTags] = useState<string>('');
     
     const previewRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -63,9 +68,12 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     const parsed = JSON.parse(saved);
                     setFormValues(parsed.formValues || {});
                     setDocumentContent(parsed.documentContent || '');
+                    // Note: Tags are not currently auto-saved in draft to keep it simple,
+                    // but they are saved when "Saving to Documents".
                 } else {
                     setFormValues({});
                     setDocumentContent('');
+                    setTags('');
                 }
             } catch (e) {
                 console.error("Failed to load draft", e);
@@ -124,6 +132,24 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 abortControllerRef.current = null;
             }
         }
+    };
+
+    const handleSaveToDocuments = () => {
+        if (!documentContent.trim()) {
+            showToast("Nothing to save!", "error");
+            return;
+        }
+
+        // Generate a default title based on tool + date
+        const defaultTitle = `${tool.name} - ${new Date().toLocaleDateString()}`;
+        // In a real app we might prompt for title, here we default it.
+        // Or we could use one of the inputs (like 'topic') as title if available.
+        const titleCandidate = formValues['topic'] || formValues['productName'] || defaultTitle;
+        
+        const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
+
+        documentService.create(titleCandidate, documentContent, tool.id, undefined, tagList);
+        showToast("Saved to My Documents", "success");
     };
 
     const handleCopy = () => {
@@ -208,9 +234,9 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                             <FileText size={24} />
                         </div>
                         {isAutoSaving ? (
-                            <span className="text-[10px] text-slate-400 flex items-center gap-1"><Save size={10} className="animate-pulse"/> Saving...</span>
+                            <span className="text-[10px] text-slate-400 flex items-center gap-1"><Save size={10} className="animate-pulse"/> Draft Saving...</span>
                         ) : (
-                            <span className="text-[10px] text-green-500 flex items-center gap-1"><Check size={10}/> Saved</span>
+                            <span className="text-[10px] text-green-500 flex items-center gap-1"><Check size={10}/> Draft Saved</span>
                         )}
                     </div>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">{tool.name}</h2>
@@ -262,6 +288,20 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                             )}
                         </div>
                     ))}
+                    
+                    <div>
+                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2 tracking-wide flex items-center gap-1">
+                             <Tag size={12} /> Tags
+                         </label>
+                         <input 
+                            type="text"
+                            placeholder="e.g. marketing, draft, Q4"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 p-3 text-sm transition-all text-slate-900 dark:text-white placeholder-slate-400"
+                         />
+                         <p className="text-[10px] text-slate-400 mt-1">Comma separated</p>
+                    </div>
 
                     <Button onClick={handleGenerate} isLoading={isLoading} className="w-full mt-8 py-3.5">
                         {isLoading ? t('dashboard.thinking') : t('dashboard.generate')}
@@ -288,6 +328,10 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                             )}
                         </div>
                         <div className="flex items-center gap-2">
+                             <Button variant="secondary" size="sm" onClick={handleSaveToDocuments} title="Save to Documents" icon={Save}>
+                                 Save Doc
+                             </Button>
+                             <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
                              <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Markdown" icon={Copy} />
                              <Button variant="ghost" size="sm" onClick={handleCopyHtml} title="Copy HTML" icon={Code} />
                              <Button variant="ghost" size="sm" onClick={handleExportWord} title="Export as Word" icon={FileType} />

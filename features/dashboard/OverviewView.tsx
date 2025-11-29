@@ -1,25 +1,57 @@
 
-import React from 'react';
-import { BarChart2, FileText, Zap } from 'lucide-react';
-import { User } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { BarChart2, FileText, Zap, Clock } from 'lucide-react';
+import { User, SavedDocument } from '../../types';
+import { documentService } from '../../services/documentService';
+import { ToolType } from '../../types';
 
 interface OverviewViewProps {
     user: User;
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
-    const mockUsage = {
-        wordsUsed: 12500,
-        wordsLimit: 50000,
-        documents: 24,
-        imagesGenerated: 5
+    const [stats, setStats] = useState({
+        wordsUsed: 0,
+        wordsLimit: 50000, // Based on 'pro' plan mock
+        documents: 0,
+        recentDocs: [] as SavedDocument[]
+    });
+
+    useEffect(() => {
+        const docs = documentService.getAll();
+        
+        // Calculate total words (approximate)
+        const totalWords = docs.reduce((acc, doc) => {
+            const words = doc.content ? doc.content.replace(/<[^>]*>/g, '').split(/\s+/).length : 0;
+            return acc + words;
+        }, 0);
+
+        // Sort by date desc
+        const sorted = [...docs].sort((a, b) => b.lastModified - a.lastModified).slice(0, 3);
+
+        setStats({
+            wordsUsed: totalWords,
+            wordsLimit: 50000,
+            documents: docs.length,
+            recentDocs: sorted
+        });
+    }, []);
+
+    const formatRelativeTime = (timestamp: number) => {
+        const diff = Date.now() - timestamp;
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (minutes < 1) return 'Just now';
+        if (minutes < 60) return `${minutes}m ago`;
+        if (hours < 24) return `${hours}h ago`;
+        return `${days}d ago`;
     };
 
-    const recentDocs = [
-        { id: 1, title: 'Q3 Marketing Strategy', date: '2 hours ago', type: 'Blog' },
-        { id: 2, title: 'Product Launch Email', date: 'Yesterday', type: 'Email' },
-        { id: 3, title: 'Senior Developer CV', date: '3 days ago', type: 'CV' },
-    ];
+    const getToolName = (id: ToolType) => {
+        return id.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+    };
 
     return (
         <div className="space-y-8 animate-in slide-in-from-right duration-300">
@@ -33,10 +65,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
                         <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Words Generated</h3>
                     </div>
                     <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                        {(mockUsage.wordsUsed / 1000).toFixed(1)}k <span className="text-sm font-normal text-slate-400">/ {(mockUsage.wordsLimit / 1000).toFixed(0)}k</span>
+                        {(stats.wordsUsed / 1000).toFixed(1)}k <span className="text-sm font-normal text-slate-400">/ {(stats.wordsLimit / 1000).toFixed(0)}k</span>
                     </p>
                     <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-4">
-                        <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: `${(mockUsage.wordsUsed / mockUsage.wordsLimit) * 100}%` }}></div>
+                        <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: `${Math.min((stats.wordsUsed / stats.wordsLimit) * 100, 100)}%` }}></div>
                     </div>
                 </div>
 
@@ -47,7 +79,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
                         </div>
                         <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Documents Created</h3>
                     </div>
-                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{mockUsage.documents}</p>
+                    <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.documents}</p>
                 </div>
             </div>
 
@@ -55,23 +87,27 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <h3 className="font-bold text-lg text-slate-900 dark:text-white">Recent Activity</h3>
-                    <button className="text-sm text-indigo-600 font-medium hover:underline">View All</button>
                 </div>
                 <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {recentDocs.map(doc => (
-                        <div key={doc.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center justify-between group cursor-pointer">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
-                                    <FileText size={20} />
-                                </div>
-                                <div>
-                                    <h4 className="font-medium text-slate-900 dark:text-white text-sm group-hover:text-indigo-600 transition-colors">{doc.title}</h4>
-                                    <p className="text-xs text-slate-500">{doc.date} • {doc.type}</p>
+                    {stats.recentDocs.length === 0 ? (
+                        <div className="p-6 text-center text-slate-500">No documents yet. Start writing!</div>
+                    ) : (
+                        stats.recentDocs.map(doc => (
+                            <div key={doc.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center justify-between group cursor-pointer">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                                        <FileText size={20} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-medium text-slate-900 dark:text-white text-sm group-hover:text-indigo-600 transition-colors">{doc.title}</h4>
+                                        <p className="text-xs text-slate-500 flex items-center gap-2">
+                                            <Clock size={10} /> {formatRelativeTime(doc.lastModified)} • {getToolName(doc.templateId)}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            <button className="text-slate-400 hover:text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">Edit</button>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
             </div>
         </div>

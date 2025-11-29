@@ -1,16 +1,17 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Menu, X, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder, Trash2, Plus, Tag, MoreVertical, FolderPlus, MoveRight } from 'lucide-react';
+import { Menu, X, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder, Trash2, Plus, Tag, MoveRight, Star, Copy, RefreshCw, Archive } from 'lucide-react';
 import { ToolType, SavedDocument, Folder as FolderType } from '../types';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { getTools, IconMap } from '../config/tools';
-import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { documentService } from '../services/documentService';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Forms';
 import { OnboardingTour } from '../components/OnboardingTour';
+import { useDebounce } from '../hooks/useDebounce';
+import { useUser } from '../contexts/UserContext';
 
 // Import refactored features
 import CvBuilder from '../features/CvBuilder';
@@ -21,6 +22,7 @@ import SmartEditor from '../features/SmartEditor';
 const Dashboard: React.FC = () => {
   const { t } = useThemeLanguage();
   const { showToast } = useToast();
+  const { user, toggleFavoriteTool } = useUser();
   
   // Load tools from config
   const TOOLS = getTools(t);
@@ -28,8 +30,11 @@ const Dashboard: React.FC = () => {
   // Core State
   const [activeToolId, setActiveToolId] = useState<ToolType | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'library' | 'documents'>('library');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300); // Debounce search by 300ms
+
+  const [viewMode, setViewMode] = useState<'library' | 'documents' | 'trash'>('library');
   
   // Data State
   const [savedDocs, setSavedDocs] = useState<SavedDocument[]>([]);
@@ -67,28 +72,52 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
-      if (viewMode === 'documents') {
+      if (viewMode === 'documents' || viewMode === 'trash') {
           refreshData();
       }
   }, [viewMode]);
 
+  // Extract all unique tags (exclude trashed docs tags)
+  const allTags = useMemo(() => {
+      const tags = new Set<string>();
+      savedDocs
+        .filter(d => !d.deletedAt)
+        .forEach(doc => {
+            if (doc.tags) doc.tags.forEach(t => tags.add(t));
+        });
+      return Array.from(tags).sort();
+  }, [savedDocs]);
+
+  const toggleTag = (tag: string) => {
+      setSelectedTags(prev => 
+          prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+      );
+  };
+
   // Filter tools based on search query
   const filteredTools = useMemo(() => {
-    if (!searchQuery.trim()) return TOOLS;
-    const query = searchQuery.toLowerCase();
+    if (!debouncedSearchQuery.trim()) return TOOLS;
+    const query = debouncedSearchQuery.toLowerCase();
     return TOOLS.filter(tool => 
       tool.name.toLowerCase().includes(query) || 
       tool.description.toLowerCase().includes(query) ||
       tool.category.toLowerCase().includes(query)
     );
-  }, [TOOLS, searchQuery]);
+  }, [TOOLS, debouncedSearchQuery]);
 
-  // Filter Docs based on search (title + content), folder, and tags
+  // Filter Docs based on search (title + content), folder, tags, and trash status
   const filteredDocs = useMemo(() => {
       let docs = savedDocs;
       
-      // Folder Filter
-      if (activeFolderId) {
+      // Filter by Trash Status
+      if (viewMode === 'trash') {
+          docs = docs.filter(d => d.deletedAt !== undefined);
+      } else {
+          docs = docs.filter(d => d.deletedAt === undefined);
+      }
+
+      // Folder Filter (only in Documents view)
+      if (viewMode === 'documents' && activeFolderId) {
           docs = docs.filter(d => d.folderId === activeFolderId);
       }
 
@@ -98,16 +127,17 @@ const Dashboard: React.FC = () => {
       }
 
       // Search Filter (Title OR Content)
-      if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase();
+      if (debouncedSearchQuery.trim()) {
+          const q = debouncedSearchQuery.toLowerCase();
           docs = docs.filter(d => 
               d.title.toLowerCase().includes(q) || 
               (d.content && d.content.toLowerCase().includes(q))
           );
       }
 
-      return docs;
-  }, [savedDocs, activeFolderId, selectedTags, searchQuery]);
+      // Sort by last modified desc
+      return docs.sort((a, b) => b.lastModified - a.lastModified);
+  }, [savedDocs, activeFolderId, selectedTags, debouncedSearchQuery, viewMode]);
 
   // --- Actions ---
 
@@ -122,11 +152,32 @@ const Dashboard: React.FC = () => {
 
   const handleDeleteDoc = (id: string, e: React.MouseEvent) => {
       e.stopPropagation();
-      if(confirm('Are you sure you want to delete this document?')) {
-          documentService.delete(id);
+      documentService.delete(id); // Soft delete
+      refreshData();
+      showToast('Moved to Trash', 'info');
+  };
+
+  const handleRestoreDoc = (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      documentService.restore(id);
+      refreshData();
+      showToast('Document restored', 'success');
+  };
+
+  const handlePermanentDelete = (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if(confirm('Delete permanently? This cannot be undone.')) {
+          documentService.hardDelete(id);
           refreshData();
-          showToast('Document deleted', 'info');
+          showToast('Deleted forever', 'info');
       }
+  };
+
+  const handleDuplicateDoc = (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      documentService.duplicate(id);
+      refreshData();
+      showToast('Document duplicated', 'success');
   };
 
   const handleDeleteFolder = (id: string, e: React.MouseEvent) => {
@@ -149,6 +200,8 @@ const Dashboard: React.FC = () => {
   };
 
   const handleOpenDoc = (doc: SavedDocument) => {
+      if (viewMode === 'trash') return; // Cannot open trashed docs
+
       // Inject into legacy drafts
       if (doc.templateId === ToolType.CV_BUILDER) {
           localStorage.setItem('cv_draft', doc.content);
@@ -157,7 +210,7 @@ const Dashboard: React.FC = () => {
           localStorage.setItem('smart_editor_title', doc.title);
       } else {
            localStorage.setItem(`draft_${doc.templateId}`, JSON.stringify({
-              formValues: {},
+              formValues: {}, // Inputs lost on restore of generic doc, only content remains
               documentContent: doc.content,
               lastSaved: Date.now()
           }));
@@ -169,29 +222,60 @@ const Dashboard: React.FC = () => {
 
   const ToolGridItem: React.FC<{ tool: any, onClick: () => void }> = ({ tool, onClick }) => {
       const Icon = IconMap[tool.icon] || FileText;
+      const isFav = user.favorites?.includes(tool.id);
+
       return (
-        <button 
-            onClick={onClick}
-            className="flex flex-col items-start p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:shadow-lg hover:-translate-y-1 hover:border-indigo-500/50 transition-all duration-300 group text-left h-full"
-        >
-            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors mb-4">
-                <Icon size={24} />
-            </div>
-            <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{tool.name}</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{tool.description}</p>
-        </button>
+        <div className="relative group h-full">
+            <button 
+                onClick={onClick}
+                className="w-full flex flex-col items-start p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:shadow-lg hover:-translate-y-1 hover:border-indigo-500/50 transition-all duration-300 text-left h-full"
+            >
+                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors mb-4">
+                    <Icon size={24} />
+                </div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors pr-6">{tool.name}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{tool.description}</p>
+            </button>
+            <button 
+                onClick={(e) => { e.stopPropagation(); toggleFavoriteTool(tool.id); }}
+                className={`absolute top-4 right-4 p-2 rounded-full transition-all ${isFav ? 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 opacity-100' : 'text-slate-300 hover:text-yellow-500 opacity-0 group-hover:opacity-100'}`}
+                title={isFav ? "Remove from favorites" : "Add to favorites"}
+            >
+                <Star size={18} fill={isFav ? "currentColor" : "none"} />
+            </button>
+        </div>
       );
   };
 
   const ToolList = () => {
     const categories = Array.from(new Set(filteredTools.map(t => t.category)));
-    
+    const favoriteTools = TOOLS.filter(t => user.favorites?.includes(t.id));
+
     if (filteredTools.length === 0) {
-        return <div className="p-8 text-center text-slate-500">No tools found matching "{searchQuery}"</div>;
+        return <div className="p-8 text-center text-slate-500">No tools found matching "{debouncedSearchQuery}"</div>;
     }
 
     return (
-       <div className="space-y-8 pb-10 animate-in slide-in-from-bottom-4 duration-500">
+       <div className="space-y-10 pb-10 animate-in slide-in-from-bottom-4 duration-500">
+           
+        {/* Favorites Section */}
+        {favoriteTools.length > 0 && !debouncedSearchQuery && (
+            <div className="bg-indigo-50/50 dark:bg-indigo-900/10 p-6 rounded-3xl border border-indigo-100 dark:border-indigo-900/20">
+                <h3 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <Star size={14} fill="currentColor" /> Your Favorites
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {favoriteTools.map(tool => (
+                        <ToolGridItem 
+                            key={tool.id} 
+                            tool={tool} 
+                            onClick={() => setActiveToolId(tool.id)} 
+                        />
+                    ))}
+                </div>
+            </div>
+        )}
+
        {categories.map(category => {
            const categoryTools = filteredTools.filter(t => t.category === category);
            if (categoryTools.length === 0) return null;
@@ -199,7 +283,7 @@ const Dashboard: React.FC = () => {
            return (
                <div key={category}>
                    <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700"></span>
                         {category}
                    </h3>
                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -219,8 +303,8 @@ const Dashboard: React.FC = () => {
   };
 
   const DocumentsList = () => {
-      // If no docs at all in system
-      if (savedDocs.length === 0) {
+      // If no docs at all in system (and not in trash view)
+      if (savedDocs.length === 0 && viewMode !== 'trash') {
           return (
               <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
                   <Folder size={48} className="mx-auto text-slate-300 mb-4" />
@@ -233,8 +317,10 @@ const Dashboard: React.FC = () => {
 
       return (
           <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-200px)]">
-              {/* Folders Sidebar */}
-              <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4">
+              {/* Folders & Tags Sidebar */}
+              <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1">
+                  
+                  {/* Folders */}
                   <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
                       <div className="flex justify-between items-center mb-4">
                           <h3 className="font-bold text-slate-900 dark:text-white text-sm">Folders</h3>
@@ -242,50 +328,106 @@ const Dashboard: React.FC = () => {
                       </div>
                       <div className="space-y-1">
                           <button 
-                             onClick={() => setActiveFolderId(undefined)}
-                             className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-between group ${activeFolderId === undefined ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                             onClick={() => { setViewMode('documents'); setActiveFolderId(undefined); }}
+                             className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-between group ${viewMode === 'documents' && activeFolderId === undefined ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                           >
                               <span className="flex items-center gap-2"><Grid size={16}/> All Documents</span>
-                              <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 rounded-full">{savedDocs.length}</span>
+                              <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 rounded-full">{savedDocs.filter(d => !d.deletedAt).length}</span>
                           </button>
                           {folders.map(folder => (
                               <button 
                                   key={folder.id}
-                                  onClick={() => setActiveFolderId(folder.id)}
-                                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-between group ${activeFolderId === folder.id ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                                  onClick={() => { setViewMode('documents'); setActiveFolderId(folder.id); }}
+                                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-between group ${viewMode === 'documents' && activeFolderId === folder.id ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                               >
                                   <span className="flex items-center gap-2 truncate"><Folder size={16}/> {folder.name}</span>
                                   <div className="flex items-center gap-2">
-                                     <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 rounded-full">{savedDocs.filter(d => d.folderId === folder.id).length}</span>
+                                     <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 rounded-full">{savedDocs.filter(d => d.folderId === folder.id && !d.deletedAt).length}</span>
                                      <span onClick={(e) => handleDeleteFolder(folder.id, e)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500"><X size={12}/></span>
                                   </div>
                               </button>
                           ))}
+                          
+                          <div className="my-2 border-t border-slate-100 dark:border-slate-800"></div>
+                          
+                          <button 
+                             onClick={() => setViewMode('trash')}
+                             className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-between group ${viewMode === 'trash' ? 'bg-red-50 dark:bg-red-900/20 text-red-600' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                          >
+                              <span className="flex items-center gap-2"><Trash2 size={16}/> Trash</span>
+                              <span className="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 rounded-full">{savedDocs.filter(d => d.deletedAt).length}</span>
+                          </button>
                       </div>
                   </div>
+
+                  {/* Tags */}
+                  {allTags.length > 0 && viewMode !== 'trash' && (
+                      <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                          <h3 className="font-bold text-slate-900 dark:text-white text-sm mb-4">Filter by Tags</h3>
+                          <div className="flex flex-wrap gap-2">
+                              {allTags.map(tag => (
+                                  <button 
+                                      key={tag}
+                                      onClick={() => toggleTag(tag)}
+                                      className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${selectedTags.includes(tag) ? 'bg-indigo-100 border-indigo-200 text-indigo-700 dark:bg-indigo-900/40 dark:border-indigo-800 dark:text-indigo-300' : 'bg-slate-50 border-slate-100 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-slate-300'}`}
+                                  >
+                                      {tag}
+                                  </button>
+                              ))}
+                          </div>
+                      </div>
+                  )}
               </div>
 
               {/* Document Grid */}
               <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                  {viewMode === 'trash' && filteredDocs.length > 0 && (
+                      <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-lg text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+                          <Trash2 size={16} /> Items in Trash are not permanently deleted yet. Restore them to edit.
+                      </div>
+                  )}
+
                   {filteredDocs.length === 0 ? (
                       <div className="text-center py-20 text-slate-400 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                          <p>No documents found matching criteria.</p>
+                          <p>{viewMode === 'trash' ? "Trash is empty" : "No documents found matching criteria."}</p>
                       </div>
                   ) : (
                       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                           {filteredDocs.map(doc => (
-                              <div key={doc.id} onClick={() => handleOpenDoc(doc)} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-md cursor-pointer group relative transition-all hover:-translate-y-1">
+                              <div 
+                                key={doc.id} 
+                                onClick={() => handleOpenDoc(doc)} 
+                                className={`bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:shadow-md group relative transition-all ${viewMode === 'trash' ? 'opacity-80 hover:opacity-100' : 'cursor-pointer hover:-translate-y-1'}`}
+                              >
                                   <div className="flex items-start justify-between mb-3">
-                                      <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600">
+                                      <div className={`p-2 rounded-lg ${viewMode === 'trash' ? 'bg-red-50 dark:bg-red-900/20 text-red-500' : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600'}`}>
                                           <FileText size={20} />
                                       </div>
+                                      
+                                      {/* Document Actions */}
                                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <button onClick={(e) => { e.stopPropagation(); setDocToMove(doc); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Move to folder">
-                                              <MoveRight size={16} />
-                                          </button>
-                                          <button onClick={(e) => handleDeleteDoc(doc.id, e)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded" title="Delete">
-                                              <Trash2 size={16} />
-                                          </button>
+                                          {viewMode === 'trash' ? (
+                                              <>
+                                                <button onClick={(e) => handleRestoreDoc(doc.id, e)} className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded" title="Restore">
+                                                    <RefreshCw size={16} />
+                                                </button>
+                                                <button onClick={(e) => handlePermanentDelete(doc.id, e)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete Forever">
+                                                    <X size={16} />
+                                                </button>
+                                              </>
+                                          ) : (
+                                              <>
+                                                <button onClick={(e) => { e.stopPropagation(); handleDuplicateDoc(doc.id, e); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Duplicate">
+                                                    <Copy size={16} />
+                                                </button>
+                                                <button onClick={(e) => { e.stopPropagation(); setDocToMove(doc); }} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded" title="Move to folder">
+                                                    <MoveRight size={16} />
+                                                </button>
+                                                <button onClick={(e) => handleDeleteDoc(doc.id, e)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded" title="Move to Trash">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                              </>
+                                          )}
                                       </div>
                                   </div>
                                   <h3 className="font-bold text-slate-900 dark:text-white mb-1 truncate">{doc.title}</h3>
@@ -297,17 +439,29 @@ const Dashboard: React.FC = () => {
                                       </p>
                                   )}
 
-                                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
+                                  <div className="flex items-center gap-2 text-xs text-slate-500 mb-4 flex-wrap">
                                       <span>{new Date(doc.lastModified).toLocaleDateString()}</span>
                                       {doc.folderId && (
                                           <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">
                                               <Folder size={10} /> {folders.find(f => f.id === doc.folderId)?.name}
                                           </span>
                                       )}
+                                      {doc.tags && doc.tags.length > 0 && (
+                                          <div className="flex gap-1">
+                                              {doc.tags.slice(0, 2).map(tag => (
+                                                  <span key={tag} className="flex items-center gap-0.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded text-[10px]">
+                                                      <Tag size={8} /> {tag}
+                                                  </span>
+                                              ))}
+                                              {doc.tags.length > 2 && <span className="text-[10px] text-slate-400">+{doc.tags.length - 2}</span>}
+                                          </div>
+                                      )}
                                   </div>
                                   <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
                                       <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-300">{doc.templateId}</span>
-                                      <span className="text-indigo-600 font-bold group-hover:translate-x-1 transition-transform">Open &rarr;</span>
+                                      {viewMode !== 'trash' && (
+                                          <span className="text-indigo-600 font-bold group-hover:translate-x-1 transition-transform">Open &rarr;</span>
+                                      )}
                                   </div>
                               </div>
                           ))}
@@ -439,7 +593,7 @@ const Dashboard: React.FC = () => {
                             </button>
                             <button 
                                 onClick={() => setViewMode('documents')} 
-                                className={`px-4 py-2 rounded-full font-bold text-sm transition-all ${viewMode === 'documents' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                className={`px-4 py-2 rounded-full font-bold text-sm transition-all ${viewMode === 'documents' || viewMode === 'trash' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                             >
                                 <Folder size={16} className="inline mr-2"/> My Documents
                             </button>

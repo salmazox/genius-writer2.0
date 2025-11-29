@@ -35,6 +35,7 @@ export interface User {
   avatar?: string;
   bio?: string;
   linkedAccounts: LinkedAccounts;
+  favorites: ToolType[]; // New: Tool Favorites
 }
 
 export interface Invoice {
@@ -94,6 +95,7 @@ export interface SavedDocument {
   versions: DocumentVersion[];
   folderId?: string; // New: Organization
   tags?: string[]; // New: Filtering
+  deletedAt?: number; // New: Soft Delete
 }
 
 export interface Collaborator {
