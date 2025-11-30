@@ -255,7 +255,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             </div>
 
             {/* Input Panel */}
-            <div className={`w-full lg:w-96 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 overflow-y-auto custom-scrollbar shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 flex-shrink-0 ${mobileTab === 'result' ? 'hidden lg:block' : 'flex-1 lg:block'}`}>
+            <div className={`w-full lg:w-96 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 px-6 pt-6 pb-24 lg:pb-6 overflow-y-auto custom-scrollbar shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 flex-shrink-0 ${mobileTab === 'result' ? 'hidden lg:block' : 'flex-1 lg:block'}`}>
                 <div className="mb-6">
                     <div className="flex justify-between items-start mb-4">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
@@ -381,7 +381,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar relative p-8 md:p-12">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar relative p-8 pb-24 md:p-12 md:pb-12">
                         {!isPro && <Watermark className="z-0" />}
                         <div className="relative z-10 h-full">
                             {isLoading ? (

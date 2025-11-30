@@ -359,7 +359,7 @@ const CvBuilder: React.FC = () => {
                     </div>
 
                     {/* Column 1: Interactive Form */}
-                    <div className={`w-full lg:w-[380px] xl:w-[450px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto p-4 custom-scrollbar z-10 flex-shrink-0 ${mobileTab === 'preview' ? 'hidden lg:block' : 'flex-1 lg:block'}`}>
+                    <div className={`w-full lg:w-[380px] xl:w-[450px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto p-4 pb-24 lg:pb-4 custom-scrollbar z-10 flex-shrink-0 ${mobileTab === 'preview' ? 'hidden lg:block' : 'flex-1 lg:block'}`}>
                         <div className="mb-6 space-y-4">
                             {/* Score */}
                             <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden" role="region" aria-label="Profile Strength">
@@ -399,7 +399,7 @@ const CvBuilder: React.FC = () => {
 
                     {/* Column 2: Live Preview */}
                     <div className={`flex-1 bg-slate-100 dark:bg-slate-950 p-4 md:p-8 overflow-hidden min-h-0 flex flex-col ${mobileTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
-                        <div className="flex-1 overflow-auto flex justify-center items-start bg-slate-200/50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 custom-scrollbar relative">
+                        <div className="flex-1 overflow-auto flex justify-center items-start bg-slate-200/50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 custom-scrollbar relative pb-24 lg:pb-0">
                             {/* Watermark Container */}
                             <div className="relative">
                                 {!isPro && <Watermark />}
@@ -430,7 +430,7 @@ const CvBuilder: React.FC = () => {
                              Generate Letter
                          </Button>
                     </div>
-                    <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-8 overflow-y-auto flex justify-center custom-scrollbar">
+                    <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-8 overflow-y-auto flex justify-center custom-scrollbar pb-24 lg:pb-8">
                         <div className="w-full max-w-[210mm] bg-white dark:bg-slate-900 shadow-2xl min-h-[297mm] p-12 relative" ref={coverLetterRef}>
                              {!isPro && <Watermark />}
                              {coverLetterContent ? (

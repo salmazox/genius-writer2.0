@@ -112,7 +112,7 @@ const Translator: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                <div id="translation-output" className="flex-1 text-lg md:text-xl text-slate-800 dark:text-slate-200 overflow-y-auto">
+                <div id="translation-output" className="flex-1 text-lg md:text-xl text-slate-800 dark:text-slate-200 overflow-y-auto pb-24 md:pb-0">
                     {translationOutput || <span className="text-slate-400 italic">Translation appears here...</span>}
                 </div>
             </div>
