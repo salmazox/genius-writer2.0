@@ -153,8 +153,8 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                                     <Button size="sm" variant="secondary" onClick={() => fileInputRef.current?.click()} className="text-xs">{t('dashboard.cv.uploadPhoto')}</Button>
                                     {cvData.personal.photoBase64 && (
                                         <div className="flex gap-2">
-                                            <Select label={t('dashboard.cv.shape')} value={cvData.personal.photoShape} onChange={(e) => handleCvChange('photoShape', e.target.value)} options={['circle', 'square', 'rounded']} className="text-xs py-1" />
-                                            <Select label={t('dashboard.cv.filter')} value={cvData.personal.photoFilter} onChange={(e) => handleCvChange('photoFilter', e.target.value)} options={['none', 'grayscale']} className="text-xs py-1" />
+                                            <Select label={t('dashboard.cv.shape')} value={cvData.personal.photoShape} onChange={(e) => handleCvChange('photoShape', e.target.value as 'circle' | 'square' | 'rounded')} options={['circle', 'square', 'rounded']} className="text-xs py-1" />
+                                            <Select label={t('dashboard.cv.filter')} value={cvData.personal.photoFilter} onChange={(e) => handleCvChange('photoFilter', e.target.value as 'none' | 'grayscale')} options={['none', 'grayscale']} className="text-xs py-1" />
                                         </div>
                                     )}
                                 </div>

@@ -178,12 +178,21 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             template
         };
 
+        // Convert all values to strings for API compatibility
+        const stringifiedInputs: Record<string, string> = Object.entries(inputsWithTheme).reduce(
+            (acc, [key, value]) => {
+                acc[key] = Array.isArray(value) ? JSON.stringify(value) : String(value);
+                return acc;
+            },
+            {} as Record<string, string>
+        );
+
         try {
             if (isImageTool) {
                 // Image Gen uses normal generateContent
                 const result = await generateContent(
-                    tool.id, 
-                    inputsWithTheme, 
+                    tool.id,
+                    stringifiedInputs,
                     selectedVoice ? `${selectedVoice.name}: ${selectedVoice.description}` : undefined,
                     controller.signal
                 );
@@ -193,7 +202,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 // Text tools use Streaming for faster perception
                 await generateContentStream(
                     tool.id,
-                    inputsWithTheme,
+                    stringifiedInputs,
                     (chunk) => {
                         // Clean Markdown code blocks if they slip through
                         let cleaned = chunk.replace(/```html/g, '').replace(/```/g, '');
@@ -228,8 +237,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
         // Generate a default title based on tool + date
         const defaultTitle = `${tool.name} - ${new Date().toLocaleDateString()}`;
-        const titleCandidate = formValues['topic'] || formValues['productName'] || formValues['prompt'] || formValues['invoiceNumber'] || formValues['contractType'] || defaultTitle;
-        
+        const titleCandidate = String(formValues['topic'] || formValues['productName'] || formValues['prompt'] || formValues['invoiceNumber'] || formValues['contractType'] || defaultTitle);
+
         const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
 
         documentService.create(titleCandidate, documentContent, tool.id, undefined, tagList);
@@ -567,7 +576,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                                 <Repeater
                                     label={input.label}
                                     fields={input.fields || []}
-                                    value={formValues[input.name] || []}
+                                    value={Array.isArray(formValues[input.name]) ? formValues[input.name] as any[] : []}
                                     onChange={(val) => setFormValues(prev => ({...prev, [input.name]: val}))}
                                 />
                             ) : (
