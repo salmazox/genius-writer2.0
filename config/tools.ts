@@ -71,7 +71,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       id: ToolType.INVOICE_GEN,
       name: t('features.invoice'),
       category: t('dashboard.categories.Business'),
-      description: t('features.invoiceDesc'),
+      description: t('features.invoiceDesc'), 
       icon: 'receipt',
       model: 'gemini-2.5-flash',
       inputs: [
@@ -146,7 +146,13 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
           name: 'contractType', 
           label: 'Contract Template', 
           type: 'select', 
-          options: ['General Purchase (Kaufvertrag)', 'Private Car Sale (KFZ-Kaufvertrag)', 'Freelance Service (Dienstleistungsvertrag)', 'NDA (Geheimhaltung)', 'Sublease (Untermietvertrag)'] 
+          options: ['General Purchase', 'Freelance Service Agreement', 'Non-Disclosure Agreement (NDA)', 'Employment Contract', 'Lease Agreement'] 
+        },
+        {
+          name: 'jurisdiction',
+          label: 'Applicable Law (Jurisdiction)',
+          type: 'select',
+          options: ['Germany (German Civil Code - BGB)', 'USA (General Common Law)', 'United Kingdom (English Law)', 'EU (General)', 'International (Neutral)']
         },
         {
           name: 'contractDate',
@@ -155,51 +161,45 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
         },
         { 
           name: 'partyA', 
-          label: 'Party A (Seller/Provider)', 
+          label: 'Party A (Provider/Seller)', 
           type: 'textarea', 
-          placeholder: 'Name, Address, ID Number (if applicable)' 
+          placeholder: 'Full Legal Name\nAddress\nRegistration Number' 
         },
         { 
           name: 'partyB', 
-          label: 'Party B (Buyer/Client)', 
+          label: 'Party B (Client/Buyer)', 
           type: 'textarea', 
-          placeholder: 'Name, Address' 
+          placeholder: 'Full Legal Name\nAddress' 
         },
         { 
           name: 'objectDetails', 
-          label: 'Object/Service Description', 
+          label: 'Scope of Work / Item Description', 
           type: 'textarea', 
           placeholder: 'Detailed description of the item sold or service provided.' 
         },
         {
           name: 'price',
-          label: 'Price / Fee',
+          label: 'Total Value',
           type: 'number',
           placeholder: '0.00'
         },
         {
-          name: 'vatRate',
-          label: 'VAT Rate',
+          name: 'currency',
+          label: 'Currency',
           type: 'select',
-          options: ['19%', '7%', '0% (Exempt)', '0% (Small Business)']
-        },
-        {
-          name: 'priceMode',
-          label: 'Price Mode',
-          type: 'select',
-          options: ['Net (Plus VAT)', 'Gross (Incl. VAT)']
+          options: ['EUR (€)', 'USD ($)', 'GBP (£)']
         },
         {
           name: 'paymentMethod',
           label: 'Payment Method',
           type: 'text',
-          placeholder: 'Bank Transfer, Cash, Paypal'
+          placeholder: 'Bank Transfer within 30 days'
         },
         { 
           name: 'conditions', 
-          label: 'Conditions / Warranty', 
+          label: 'Special Conditions', 
           type: 'textarea', 
-          placeholder: 'Warranty exclusion? Liability limits? Special agreements?' 
+          placeholder: 'Liability limits, Warranty specifics, Termination clauses...' 
         }
       ]
     },
