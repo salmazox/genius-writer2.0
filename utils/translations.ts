@@ -1,4 +1,5 @@
 
+
 export const translations = {
   en: {
     nav: {
@@ -11,12 +12,12 @@ export const translations = {
     },
     hero: {
       poweredBy: 'Powered by Gemini 2.5 & 3 Pro',
-      titlePart1: 'Write',
-      titleHighlight: 'Anything',
-      titlePart2: '10x Faster with AI.',
-      subtitle: 'From professional emails and engaging blog posts to perfect resumes and data insights. Your all-in-one personal AI writing assistant is here.',
-      startFree: 'Start Writing for Free',
-      viewFeatures: 'View Features',
+      titlePart1: 'Stop Paying for',
+      titleHighlight: '5 Tools.',
+      titlePart2: 'Get Everything in One AI Writer.',
+      subtitle: 'CV optimization, translation, blogs, emails, and social content. All powered by Gemini.',
+      startFree: 'Get Started Free - No Credit Card',
+      viewFeatures: 'See All 18 Tools',
       generating: 'AI GENERATING...',
     },
     landing: {
@@ -45,7 +46,7 @@ export const translations = {
     },
     features: {
       label: 'Features',
-      title: 'Everything you need to create amazing content',
+      title: 'Stop Tool Overload. Get the All-In-One Platform.',
       translate: 'Instant Translation',
       translateDesc: 'Translate documents and texts into over 30 languages with native-level nuance.',
       cv: 'CV & Resume Builder',
@@ -369,12 +370,12 @@ export const translations = {
     },
     hero: {
       poweredBy: 'Unterstützt von Gemini 2.5 & 3 Pro',
-      titlePart1: 'Schreibe',
-      titleHighlight: 'Alles',
-      titlePart2: '10x schneller mit KI.',
-      subtitle: 'Von professionellen E-Mails und ansprechenden Blogposts bis hin zu perfekten Lebensläufen und Dateneinblicken. Dein All-in-One KI-Schreibassistent ist da.',
-      startFree: 'Kostenlos starten',
-      viewFeatures: 'Funktionen ansehen',
+      titlePart1: 'Hör auf für',
+      titleHighlight: '5 Tools',
+      titlePart2: 'zu zahlen. Alles in einer Plattform.',
+      subtitle: 'CV-Optimierung, Übersetzung, Blogs, E-Mails und soziale Inhalte. Alles powered by Gemini.',
+      startFree: 'Kostenlos starten - Keine Kreditkarte',
+      viewFeatures: 'Alle 18 Tools ansehen',
       generating: 'KI GENERIERT...',
     },
     landing: {

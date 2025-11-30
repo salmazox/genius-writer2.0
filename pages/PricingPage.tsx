@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Check, X as XIcon, Star, Building, ShieldCheck, Zap, ArrowRight, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -8,9 +9,7 @@ const PricingPage: React.FC = () => {
   const { t } = useThemeLanguage();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
-  // Pricing Strategy (Updated for Profitability)
-  // Pro: €39 monthly, ~€32 yearly (average)
-  // Agency: €129 monthly, ~€109 yearly (average)
+  // Updated Pricing Strategy
   const prices = {
       pro: billingCycle === 'monthly' ? 39 : 32,
       agency: billingCycle === 'monthly' ? 129 : 109
@@ -130,8 +129,11 @@ const PricingPage: React.FC = () => {
                 <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed min-h-[40px]">{t('pricing.agencyDesc')}</p>
             </div>
             <div className="mb-8">
-              <span className="text-4xl font-extrabold text-slate-900 dark:text-white">€{prices.agency}</span>
-              <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold text-slate-900 dark:text-white">€{prices.agency}</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
+              </div>
+              {billingCycle === 'yearly' && <p className="text-xs text-green-600 font-medium mt-1">Billed €{prices.agency * 12} yearly</p>}
             </div>
              <Link to="/contact" className="block w-full py-3 px-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-center hover:border-indigo-600 hover:text-indigo-600 dark:hover:border-indigo-500 dark:hover:text-indigo-400 transition-colors mb-8">
               {t('pricing.contactSales')}
