@@ -48,7 +48,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
 
     case ToolType.DATA_ANALYSIS:
       config = {
-        modelName: 'gemini-3-pro-preview',
+        modelName: 'gemini-3-pro-preview', // Keep Pro for complex reasoning
         systemInstruction: `You are a Senior Data Analyst. Analyze the provided data or text report.
         1. Identify key trends, anomalies, and insights.
         2. If raw data is provided, summarize it.
@@ -60,7 +60,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
     // --- CV & HR TOOLS ---
     case ToolType.CV_BUILDER:
       config = {
-        modelName: 'gemini-3-pro-preview',
+        modelName: 'gemini-3-pro-preview', // Keep Pro for high quality bullets
         systemInstruction: `You are an expert Executive Career Coach and Resume Writer with 20 years of experience.
         Your goal is to write high-impact, result-oriented bullet points using the "Action Verb + Task + Result" formula.
         Rules:
@@ -81,7 +81,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
 
     case ToolType.HR_INTERVIEW_PREP:
       config = {
-        modelName: 'gemini-3-pro-preview',
+        modelName: 'gemini-2.5-flash', 
         systemInstruction: `You are a Hiring Manager. Generate a list of likely interview questions and suggested answers (STAR method) for the candidate.`,
         generatePrompt: () => `Role: ${inputs.role}\nIndustry: ${inputs.industry}\n\nProvide 5 behavioral and 5 technical questions with tips.`
       };
@@ -104,7 +104,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
     
     case ToolType.SOCIAL_LINKEDIN:
       config = {
-        modelName: 'gemini-3-pro-preview',
+        modelName: 'gemini-2.5-flash', // Optimized: Flash is sufficient for LinkedIn
         systemInstruction: `You are a LinkedIn Top Voice and Thought Leader.
         Goal: Build professional authority and network engagement.
         Structure: Hook, Meat, Takeaway, Ask.
@@ -124,7 +124,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
 
     case ToolType.BLOG_FULL:
       config = {
-        modelName: 'gemini-3-pro-preview',
+        modelName: 'gemini-2.5-flash', // Optimized: Flash is excellent for long form text generation at low cost
         systemInstruction: `You are an expert content writer. Write a comprehensive, SEO-optimized blog post. 
         Use H2 and H3 headers. Output in Markdown.`,
         generatePrompt: () => `Topic: ${inputs.topic}\nAudience: ${inputs.audience}\nTone: ${inputs.tone}\nLength: ${inputs.length}`
@@ -167,7 +167,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
     // --- STRATEGY ---
     case ToolType.STARTUP_VALIDATOR:
       config = {
-        modelName: 'gemini-3-pro-preview',
+        modelName: 'gemini-2.5-flash', // Optimized
         systemInstruction: `You are a Startup Advisor. Analyze the idea using SWOT analysis and provide critical feedback.`,
         generatePrompt: () => `Startup Idea: ${inputs.idea}\nTarget Market: ${inputs.market}`
       };

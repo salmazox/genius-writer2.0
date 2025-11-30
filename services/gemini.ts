@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { ToolType, CVData, ATSAnalysis } from "../types";
 import { getPromptConfig } from "../config/aiPrompts";
@@ -95,6 +96,71 @@ class RateLimiter {
 const apiLimiter = new RateLimiter(5, 0.5);
 
 /**
+ * Usage Tracking (Simulated Backend)
+ */
+const USAGE_KEY = 'gw_usage_tracker';
+
+interface UsageData {
+  wordsUsed: number;
+  lastReset: number;
+}
+
+const getUsageData = (): UsageData => {
+  try {
+    const data = localStorage.getItem(USAGE_KEY);
+    if (!data) return { wordsUsed: 0, lastReset: Date.now() };
+    
+    const parsed = JSON.parse(data);
+    // Reset monthly (mock logic: if last reset was > 30 days ago)
+    if (Date.now() - parsed.lastReset > 30 * 24 * 60 * 60 * 1000) {
+        return { wordsUsed: 0, lastReset: Date.now() };
+    }
+    return parsed;
+  } catch {
+    return { wordsUsed: 0, lastReset: Date.now() };
+  }
+};
+
+const LIMITS: Record<string, number> = {
+  free: 2000,
+  pro: 50000,
+  agency: 200000,
+  enterprise: Infinity
+};
+
+const checkUsageAllowance = () => {
+  let plan = 'free';
+  try {
+    const userStr = localStorage.getItem('ai_writer_user');
+    if (userStr) {
+        plan = JSON.parse(userStr).plan || 'free';
+    }
+  } catch (e) {
+    console.warn("Could not read user plan", e);
+  }
+
+  const usage = getUsageData();
+  const limit = LIMITS[plan] || LIMITS.free;
+  
+  if (usage.wordsUsed >= limit) {
+    throw new Error(`Plan limit reached (${limit.toLocaleString()} words). Please upgrade to continue.`);
+  }
+};
+
+const trackUsage = (text: string) => {
+  if (!text) return;
+  const wordCount = text.trim().split(/\s+/).length;
+  const usage = getUsageData();
+  localStorage.setItem(USAGE_KEY, JSON.stringify({
+    ...usage,
+    wordsUsed: usage.wordsUsed + wordCount
+  }));
+  
+  // Dispatch event for UI updates
+  window.dispatchEvent(new Event('usage_updated'));
+};
+
+/**
  * Retry helper with exponential backoff
  */
 async function withRetry<T>(
@@ -138,6 +204,9 @@ export const generateContent = async (
       throw new Error("Rate limit exceeded. Please wait a moment before generating again.");
   }
 
+  // Check Plan Limits
+  checkUsageAllowance();
+
   // Create a cache key based on inputs
   const cacheKey = `${tool}-${JSON.stringify(inputs)}-${brandVoiceInstruction || ''}`;
   if (requestCache.has(cacheKey)) {
@@ -161,6 +230,8 @@ export const generateContent = async (
             if (part.inlineData) {
                 const base64EncodeString: string = part.inlineData.data;
                 // Return raw Data URI for the frontend to render as <img src="...">
+                // We count images roughly as 500 words equivalent for rate limiting purposes here
+                trackUsage("image_placeholder ".repeat(500)); 
                 return `data:${part.inlineData.mimeType};base64,${base64EncodeString}`;
             }
         }
@@ -197,6 +268,9 @@ export const generateContent = async (
     // Cache the successful result
     requestCache.set(cacheKey, text);
     
+    // Track usage
+    trackUsage(text);
+
     return text;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
@@ -219,6 +293,8 @@ export const refineContent = async (
     throw new Error("Rate limit exceeded. Please wait.");
   }
 
+  checkUsageAllowance();
+
   let sysInstruct = "You are a professional editor. Improve the text based on the user's specific instruction.";
   if (brandVoiceInstruction) {
     sysInstruct += `\n\nApply the following Brand Voice/Style: ${brandVoiceInstruction}`;
@@ -235,7 +311,9 @@ export const refineContent = async (
 
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-    return response.text || currentContent;
+    const text = response.text || currentContent;
+    trackUsage(text);
+    return text;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
     console.error("Gemini Refine Error:", error);
@@ -256,6 +334,8 @@ export const chatWithAI = async (
     throw new Error("Rate limit exceeded.");
   }
 
+  checkUsageAllowance();
+
   try {
     const chatHistory = history.map(h => ({
       role: h.role,
@@ -263,7 +343,7 @@ export const chatWithAI = async (
     }));
 
     const chat = ai.chats.create({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-pro-preview', // Keep Pro for reasoning
       history: chatHistory,
       config: {
         systemInstruction: `You are a helpful writing assistant inside a document editor. 
@@ -278,7 +358,9 @@ export const chatWithAI = async (
     }, 3, 1000, signal);
 
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-    return response.text || "";
+    const text = response.text || "";
+    trackUsage(text);
+    return text;
 
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
@@ -296,6 +378,8 @@ export const generateCoverLetter = async (
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
 
+  checkUsageAllowance();
+
   const cvSummary = `
     Name: ${cvData.personal.fullName}
     Title: ${cvData.personal.jobTitle}
@@ -306,7 +390,7 @@ export const generateCoverLetter = async (
   try {
     const response = await withRetry(async () => {
       return await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-2.5-flash', // Switched to Flash for cost efficiency
         contents: `
           Write a compelling cover letter for the following applicant matching the job description.
           
@@ -323,7 +407,9 @@ export const generateCoverLetter = async (
     }, 3, 1000, signal);
 
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-    return response.text || "";
+    const text = response.text || "";
+    trackUsage(text);
+    return text;
   } catch (e) {
     if (e instanceof DOMException && e.name === "AbortError") throw e;
     console.error("Cover Letter Gen Error", e);
@@ -338,10 +424,12 @@ export const extractBrandVoice = async (
     checkOnline();
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
+    checkUsageAllowance(); 
+
     try {
         const response = await withRetry(async () => {
             return await ai.models.generateContent({
-                model: 'gemini-3-pro-preview',
+                model: 'gemini-2.5-flash', // Switched to Flash for cost efficiency
                 contents: `
                 Analyze the following text sample. Identify the Tone, Style, and Personality. 
                 
@@ -361,6 +449,7 @@ export const extractBrandVoice = async (
         if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
         const text = response.text || "{}";
+        trackUsage(text); 
         const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
         return JSON.parse(jsonStr);
     } catch (e) {
@@ -381,6 +470,8 @@ export const analyzeATS = async (
     checkOnline();
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
+    checkUsageAllowance();
+
     const cvText = `
     Name: ${cvData.personal.fullName}
     Title: ${cvData.personal.jobTitle}
@@ -395,7 +486,7 @@ export const analyzeATS = async (
     try {
         const response = await withRetry(async () => {
            return await ai.models.generateContent({
-            model: 'gemini-3-pro-preview',
+            model: 'gemini-3-pro-preview', // Keep Pro for deep reasoning
             contents: `
             You are an expert ATS (Applicant Tracking System) algorithm analyzer. 
             Analyze the following CV against the provided Job Description.
@@ -428,6 +519,7 @@ export const analyzeATS = async (
         if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
         const text = response.text || "{}";
+        trackUsage(text);
         const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
         return JSON.parse(jsonStr) as ATSAnalysis;
     } catch (e) {
@@ -449,6 +541,8 @@ export const parseResume = async (
 ): Promise<Partial<CVData>> => {
     checkOnline();
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    checkUsageAllowance();
 
     // Clean base64 string
     const cleanedBase64 = base64Image.split(',')[1] || base64Image;
@@ -478,6 +572,7 @@ export const parseResume = async (
         if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
         
         const text = response.text || "{}";
+        trackUsage(text);
         const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
         return JSON.parse(jsonStr);
     } catch (e) {
@@ -495,6 +590,8 @@ export const factCheck = async (
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
     if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
+    
+    checkUsageAllowance();
 
     try {
         const response = await withRetry(async () => {
@@ -512,7 +609,9 @@ export const factCheck = async (
         }, 3, 1000, signal);
         
         if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-        return response.text || "No response.";
+        const text = response.text || "No response.";
+        trackUsage(text);
+        return text;
     } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") throw e;
         throw e;

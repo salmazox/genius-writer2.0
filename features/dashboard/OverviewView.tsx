@@ -12,7 +12,7 @@ interface OverviewViewProps {
 export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
     const [stats, setStats] = useState({
         wordsUsed: 0,
-        wordsLimit: 50000, // Based on 'pro' plan mock
+        wordsLimit: 2000, 
         documents: 0,
         recentDocs: [] as SavedDocument[]
     });
@@ -20,22 +20,44 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
     useEffect(() => {
         const docs = documentService.getAll();
         
-        // Calculate total words (approximate)
-        const totalWords = docs.reduce((acc, doc) => {
-            const words = doc.content ? doc.content.replace(/<[^>]*>/g, '').split(/\s+/).length : 0;
-            return acc + words;
-        }, 0);
+        // Read real usage from tracker
+        let usage = { wordsUsed: 0 };
+        try {
+            const usageData = localStorage.getItem('gw_usage_tracker');
+            if (usageData) {
+                usage = JSON.parse(usageData);
+            }
+        } catch (e) {}
+
+        // Determine limit based on user plan
+        let limit = 2000;
+        if (user.plan === 'pro') limit = 50000;
+        if (user.plan === 'agency') limit = 200000;
+        if (user.plan === 'enterprise') limit = Infinity;
 
         // Sort by date desc
         const sorted = [...docs].sort((a, b) => b.lastModified - a.lastModified).slice(0, 3);
 
         setStats({
-            wordsUsed: totalWords,
-            wordsLimit: 50000,
+            wordsUsed: usage.wordsUsed,
+            wordsLimit: limit,
             documents: docs.length,
             recentDocs: sorted
         });
-    }, []);
+
+        const handleUsageUpdate = () => {
+             let updatedUsage = { wordsUsed: 0 };
+             try {
+                const u = localStorage.getItem('gw_usage_tracker');
+                if (u) updatedUsage = JSON.parse(u);
+             } catch {}
+             setStats(prev => ({ ...prev, wordsUsed: updatedUsage.wordsUsed }));
+        };
+
+        window.addEventListener('usage_updated', handleUsageUpdate);
+        return () => window.removeEventListener('usage_updated', handleUsageUpdate);
+
+    }, [user.plan]);
 
     const formatRelativeTime = (timestamp: number) => {
         const diff = Date.now() - timestamp;
@@ -65,10 +87,10 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
                         <h3 className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Words Generated</h3>
                     </div>
                     <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                        {(stats.wordsUsed / 1000).toFixed(1)}k <span className="text-sm font-normal text-slate-400">/ {(stats.wordsLimit / 1000).toFixed(0)}k</span>
+                        {(stats.wordsUsed / 1000).toFixed(1)}k <span className="text-sm font-normal text-slate-400">/ {stats.wordsLimit === Infinity ? 'Unlim' : (stats.wordsLimit / 1000).toFixed(0) + 'k'}</span>
                     </p>
                     <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-4">
-                        <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: `${Math.min((stats.wordsUsed / stats.wordsLimit) * 100, 100)}%` }}></div>
+                        <div className={`h-1.5 rounded-full ${stats.wordsUsed >= stats.wordsLimit ? 'bg-red-500' : 'bg-indigo-600'}`} style={{ width: `${Math.min((stats.wordsUsed / (stats.wordsLimit === Infinity ? 1000000 : stats.wordsLimit)) * 100, 100)}%` }}></div>
                     </div>
                 </div>
 

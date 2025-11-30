@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Check, X as XIcon, Star, Building, ShieldCheck, Zap, ArrowRight, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -7,10 +8,12 @@ const PricingPage: React.FC = () => {
   const { t } = useThemeLanguage();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
-  // Pricing Strategy (Premium)
+  // Pricing Strategy (Updated for Profitability)
+  // Pro: €39 monthly, ~€32 yearly (average)
+  // Agency: €129 monthly, ~€109 yearly (average)
   const prices = {
-      pro: billingCycle === 'monthly' ? 39 : 29,
-      agency: billingCycle === 'monthly' ? 119 : 99
+      pro: billingCycle === 'monthly' ? 39 : 32,
+      agency: billingCycle === 'monthly' ? 129 : 109
   };
 
   const FeatureItem = ({ text, included = true }: { text: string; included?: boolean }) => (
@@ -55,7 +58,7 @@ const PricingPage: React.FC = () => {
              </button>
              <span className={`text-sm font-bold flex items-center gap-2 transition-colors ${billingCycle === 'yearly' ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>
                  {t('pricing.yearly')}
-                 <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-extrabold">Save 20%</span>
+                 <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-extrabold">Save ~20%</span>
              </span>
           </div>
         </div>
@@ -160,7 +163,7 @@ const PricingPage: React.FC = () => {
             <div className="mb-8 relative z-10">
               <span className="text-4xl font-extrabold text-white">Custom</span>
             </div>
-             <Link to="/contact" className="relative z-10 block w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-center transition-colors mb-8 shadow-lg shadow-indigo-900/50">
+             <Link to="/contact" className="relative z-10 block w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-50 text-white font-bold rounded-xl text-center transition-colors mb-8 shadow-lg shadow-indigo-900/50">
               {t('pricing.contactSales')}
             </Link>
             <div className="space-y-4 flex-1 relative z-10">
@@ -213,44 +216,6 @@ const PricingPage: React.FC = () => {
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                             {[
                                 { name: 'Word Limit (Monthly)', free: '2,000', pro: '50,000', agency: '200,000', ent: 'Unlimited' },
-                                { name: 'AI Model', free: 'Gemini Flash', pro: 'Gemini Pro', agency: 'Gemini Pro', ent: 'Custom / Ultra' },
+                                { name: 'AI Model', free: 'Gemini Flash', pro: 'Gemini Pro + Flash', agency: 'Gemini Pro + Flash', ent: 'Custom / Ultra' },
                                 { name: 'Image Generation', free: false, pro: '50 / mo', agency: '200 / mo', ent: 'Unlimited' },
-                                { name: 'Brand Voices', free: '0', pro: '1', agency: 'Unlimited', ent: 'Unlimited' },
-                                { name: 'ATS Analysis', free: false, pro: true, agency: true, ent: true },
-                                { name: 'User Seats', free: '1', pro: '1', agency: '3', ent: 'Custom' },
-                                { name: 'API Access', free: false, pro: false, agency: true, ent: true },
-                                { name: 'Support', free: 'Community', pro: 'Standard', agency: 'Priority', ent: 'Dedicated Mgr' },
-                            ].map((row, i) => (
-                                <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
-                                    <td className="p-5 pl-6 font-medium text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800/50">{row.name}</td>
-                                    
-                                    {/* Cells */}
-                                    {[row.free, row.pro, row.agency, row.ent].map((cell, idx) => (
-                                        <td key={idx} className={`p-5 text-center ${idx === 1 ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}>
-                                            {typeof cell === 'boolean' ? (
-                                                cell ? <div className="flex justify-center"><CheckCircle2 size={20} className="text-green-500" /></div> : <div className="flex justify-center"><div className="w-5 h-1 bg-slate-200 dark:bg-slate-700 rounded-full"></div></div>
-                                            ) : (
-                                                <span className={`font-medium ${idx === 3 || cell === 'Unlimited' ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-300'}`}>{cell}</span>
-                                            )}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <div className="mt-12 text-center">
-                 <p className="text-slate-500 mb-4">Have specific requirements?</p>
-                 <Link to="/contact" className="inline-flex items-center gap-2 text-indigo-600 font-bold hover:underline">
-                     Contact our sales team <ArrowRight size={16} />
-                 </Link>
-            </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default PricingPage;
+                                { name: 'Brand Voices
