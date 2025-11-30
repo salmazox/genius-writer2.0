@@ -16,6 +16,87 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
   };
 
   switch (tool) {
+    // --- GERMAN MARKET SPECIALS ---
+    case ToolType.INVOICE_GEN:
+      config = {
+        modelName: 'gemini-2.5-flash',
+        systemInstruction: `You are a German accounting expert and software assistant.
+        Your goal is to generate a legally compliant invoice (Rechnung) for the German market.
+        
+        Mandatory Fields (§14 UStG) to check/include:
+        1. Full name & address of supplier (Leistender Unternehmer).
+        2. Full name & address of recipient (Leistungsempfänger).
+        3. Tax number (Steuernummer) or VAT ID (USt-IdNr).
+        4. Date of issue (Ausstellungsdatum).
+        5. Sequential invoice number (Rechnungsnummer).
+        6. Description of goods/services (Menge und Art).
+        7. Date of supply/service (Leistungszeitpunkt).
+        8. Net amount, VAT rate (19% or 7% or 0%), VAT amount, and Gross amount.
+        
+        Specific Rules:
+        - If "Kleinunternehmer" is selected, do NOT charge VAT and include the clause: "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
+        - Output format: Clean Markdown with a table for items. Structure it like a formal letter.
+        - Language: German (Deutsch).`,
+        generatePrompt: () => `Type: ${inputs.invoiceType}
+        
+        Sender (Supplier):
+        ${inputs.invoiceSender}
+        
+        Recipient:
+        ${inputs.invoiceRecipient}
+        
+        Items & Details:
+        ${inputs.invoiceItems}
+        
+        Generate the full invoice text in German.`
+      };
+      break;
+
+    case ToolType.CONTRACT_GEN:
+      config = {
+        modelName: 'gemini-3-pro-preview', // Pro for legal accuracy
+        systemInstruction: `You are a German legal assistant (Rechtsassistent).
+        Your task is to draft a contract based on German Civil Code (BGB) standards.
+        
+        IMPORTANT DISCLAIMER:
+        Start the response with a clear disclaimer in German bold text: "**HINWEIS: Dies ist ein KI-generierter Entwurf und stellt keine Rechtsberatung dar. Bitte lassen Sie den Vertrag ggf. juristisch prüfen.**"
+        
+        Rules:
+        1. Use precise German legal terminology (Juristendeutsch).
+        2. Structure clearly: §1 Vertragsgegenstand, §2 Preis, etc.
+        3. Ensure specific clauses for "Privat" (Private) vs "Gewerblich" (Commercial) are respected (e.g. Gewährleistungsausschluss for private sales).
+        4. Output format: Markdown.`,
+        generatePrompt: () => `Contract Type: ${inputs.contractType}
+        
+        Parties:
+        ${inputs.contractParties}
+        
+        Details & Conditions:
+        ${inputs.contractDetails}
+        
+        Draft the contract in German.`
+      };
+      break;
+
+    case ToolType.EMAIL_TEMPLATE:
+      config = {
+        modelName: 'gemini-2.5-flash',
+        systemInstruction: `You are a Professional Business Communication Expert.
+        Create a reusable, versatile email template.
+        
+        Rules:
+        1. Use placeholders like [Name], [Date], [Company] for variable information.
+        2. Provide 2-3 subject line options.
+        3. Ensure the tone matches the user's request exactly.
+        4. Structure: Subject Lines -> Body -> Signature Placeholder.`,
+        generatePrompt: () => `Scenario: ${inputs.emailScenario}
+        Tone: ${inputs.emailTone}
+        Key Information to Cover: ${inputs.emailKeyInfo}
+        
+        Generate a template.`
+      };
+      break;
+
     // --- UTILITY TOOLS ---
     case ToolType.TRANSLATE:
       config = {

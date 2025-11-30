@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   FileText, Globe, Image as ImageIcon, Twitter, Linkedin, Mail, PenTool, 
   Search, Tag, Briefcase, HelpCircle, Lightbulb, ShoppingBag, BarChart2,
-  Wand2, Minimize2, Edit, FileEdit
+  Wand2, Minimize2, Edit, FileEdit, Receipt, Scale
 } from 'lucide-react';
 import { ToolConfig, ToolType } from '../types';
 
@@ -25,6 +25,8 @@ export const IconMap: Record<string, React.ElementType> = {
   'wand-2': Wand2,
   'minimize-2': Minimize2,
   'file-edit': FileEdit,
+  'receipt': Receipt,
+  'scale': Scale,
 };
 
 export const getTools = (t: (key: string) => string): ToolConfig[] => [
@@ -54,6 +56,46 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       icon: 'globe', 
       model: 'gemini-2.5-flash', 
       inputs: [] 
+    },
+    {
+      id: ToolType.INVOICE_GEN,
+      name: t('features.invoice'),
+      category: t('dashboard.categories.Business'),
+      description: t('features.invoiceDesc'),
+      icon: 'receipt',
+      model: 'gemini-2.5-flash',
+      inputs: [
+        { name: 'invoiceType', label: t('dashboard.inputs.invoiceType'), type: 'select', options: ['Gewerbe (Standard)', 'Kleinunternehmer (§19 UStG)', 'Privat'] },
+        { name: 'invoiceSender', label: t('dashboard.inputs.invoiceSender'), type: 'textarea', placeholder: 'Your Name, Address, Tax ID...' },
+        { name: 'invoiceRecipient', label: t('dashboard.inputs.invoiceRecipient'), type: 'textarea', placeholder: 'Client Name, Address...' },
+        { name: 'invoiceItems', label: t('dashboard.inputs.invoiceItems'), type: 'textarea', placeholder: 'List items, qty, price here...' }
+      ]
+    },
+    {
+      id: ToolType.CONTRACT_GEN,
+      name: t('features.contract'),
+      category: t('dashboard.categories.Business'),
+      description: t('features.contractDesc'),
+      icon: 'scale',
+      model: 'gemini-3-pro-preview',
+      inputs: [
+        { name: 'contractType', label: t('dashboard.inputs.contractType'), type: 'select', options: ['Kaufvertrag (Privat)', 'Kaufvertrag (Gewerblich)', 'Dienstleistungsvertrag', 'NDA (Geheimhaltung)'] },
+        { name: 'contractParties', label: t('dashboard.inputs.contractParties'), type: 'textarea', placeholder: 'Buyer: Name, Addr / Seller: Name, Addr' },
+        { name: 'contractDetails', label: t('dashboard.inputs.contractDetails'), type: 'textarea', placeholder: 'Item/Service description, Price, Warranty, Deadlines...' }
+      ]
+    },
+    {
+      id: ToolType.EMAIL_TEMPLATE,
+      name: t('features.emailTemplate'),
+      category: t('dashboard.categories.Email'),
+      description: t('features.emailTemplateDesc'),
+      icon: 'mail',
+      model: 'gemini-2.5-flash',
+      inputs: [
+        { name: 'emailScenario', label: t('dashboard.inputs.emailScenario'), type: 'text', placeholder: 'e.g. Payment Reminder, Onboarding' },
+        { name: 'emailTone', label: t('dashboard.inputs.emailTone'), type: 'select', options: ['Professional', 'Friendly', 'Urgent/Firm', 'Formal'] },
+        { name: 'emailKeyInfo', label: t('dashboard.inputs.emailKeyInfo'), type: 'textarea', placeholder: 'Key info to include (dates, amounts, names)...' }
+      ]
     },
     { 
       id: ToolType.TEXT_POLISHER, 

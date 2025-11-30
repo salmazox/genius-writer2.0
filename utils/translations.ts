@@ -2,6 +2,9 @@
 
 
 
+
+
+
 export const translations = {
   en: {
     nav: {
@@ -19,7 +22,7 @@ export const translations = {
       titlePart2: 'Get Everything in One AI Writer.',
       subtitle: 'CV optimization, translation, blogs, emails, and social content. All powered by Gemini.',
       startFree: 'Get Started Free - No Credit Card',
-      viewFeatures: 'See All 18 Tools',
+      viewFeatures: 'See All 21 Tools',
       generating: 'AI GENERATING...',
     },
     landing: {
@@ -87,6 +90,12 @@ export const translations = {
       polisherDesc: 'Instantly refine your text to be more professional, friendly, or concise.',
       summarizer: 'Summarizer',
       summarizerDesc: 'Condense long articles, reports, or emails into clear key points.',
+      invoice: 'Invoice Generator',
+      invoiceDesc: 'Create legally compliant invoices specialized for the German market (DE).',
+      contract: 'Contract Generator',
+      contractDesc: 'Draft sales and purchase contracts for private and business use (DE).',
+      emailTemplate: 'Email Templates',
+      emailTemplateDesc: 'Professional templates for daily business communication.',
     },
     pricing: {
       label: 'Pricing',
@@ -211,6 +220,16 @@ export const translations = {
         polishGoal: 'Goal / Tone',
         textToSummarize: 'Text to Summarize',
         summaryFormat: 'Summary Format',
+        invoiceType: 'Invoice Type',
+        invoiceSender: 'Sender Details',
+        invoiceRecipient: 'Recipient Details',
+        invoiceItems: 'Items & Prices',
+        contractType: 'Contract Type',
+        contractParties: 'Contract Parties',
+        contractDetails: 'Details & Conditions',
+        emailScenario: 'Scenario',
+        emailTone: 'Tone',
+        emailKeyInfo: 'Key Information',
       },
       actions: {
         copy: 'Copy',
@@ -415,7 +434,7 @@ export const translations = {
       titlePart2: 'zu zahlen. Alles in einer Plattform.',
       subtitle: 'CV-Optimierung, Übersetzung, Blogs, E-Mails und soziale Inhalte. Alles powered by Gemini.',
       startFree: 'Kostenlos starten - Keine Kreditkarte',
-      viewFeatures: 'Alle 18 Tools ansehen',
+      viewFeatures: 'Alle 21 Tools ansehen',
       generating: 'KI GENERIERT...',
     },
     landing: {
@@ -483,6 +502,12 @@ export const translations = {
       polisherDesc: 'Verbessere deinen Text sofort, um professioneller, freundlicher oder prägnanter zu wirken.',
       summarizer: 'Zusammenfasser',
       summarizerDesc: 'Kürze lange Artikel, Berichte oder E-Mails auf die wichtigsten Punkte.',
+      invoice: 'Rechnungs-Generator',
+      invoiceDesc: 'Erstelle rechtssichere Rechnungen spezialisiert für den deutschen Markt (DE).',
+      contract: 'Vertrags-Generator',
+      contractDesc: 'Entwerfe Kauf- und Dienstleistungsverträge für Privat und Gewerbe (DE).',
+      emailTemplate: 'E-Mail Vorlagen',
+      emailTemplateDesc: 'Professionelle Vorlagen für die tägliche Geschäftskommunikation.',
     },
     pricing: {
       label: 'Preise',
@@ -607,6 +632,16 @@ export const translations = {
         polishGoal: 'Ziel / Tonfall',
         textToSummarize: 'Text zum Zusammenfassen',
         summaryFormat: 'Zusammenfassungsformat',
+        invoiceType: 'Rechnungsart',
+        invoiceSender: 'Absender (Details)',
+        invoiceRecipient: 'Empfänger (Details)',
+        invoiceItems: 'Positionen & Preise',
+        contractType: 'Vertragsart',
+        contractParties: 'Vertragsparteien',
+        contractDetails: 'Details & Konditionen',
+        emailScenario: 'Szenario',
+        emailTone: 'Tonfall',
+        emailKeyInfo: 'Wichtige Infos',
       },
       actions: {
         copy: 'Kopieren',

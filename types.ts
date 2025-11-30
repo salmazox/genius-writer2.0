@@ -20,6 +20,10 @@ export enum ToolType {
   STARTUP_VALIDATOR = 'STARTUP_VALIDATOR',
   TEXT_POLISHER = 'TEXT_POLISHER',
   SUMMARIZER = 'SUMMARIZER',
+  // German Market Specials
+  INVOICE_GEN = 'INVOICE_GEN',
+  CONTRACT_GEN = 'CONTRACT_GEN',
+  EMAIL_TEMPLATE = 'EMAIL_TEMPLATE',
 }
 
 export interface LinkedAccounts {
