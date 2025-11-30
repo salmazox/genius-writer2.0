@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 export const translations = {
   en: {
     nav: {
@@ -223,13 +217,23 @@ export const translations = {
         invoiceType: 'Invoice Type',
         invoiceSender: 'Sender Details',
         invoiceRecipient: 'Recipient Details',
+        invoiceDetails: 'Invoice Meta Data (Date, #)',
         invoiceItems: 'Items & Prices',
+        paymentTerms: 'Payment Terms',
         contractType: 'Contract Type',
         contractParties: 'Contract Parties',
         contractDetails: 'Details & Conditions',
         emailScenario: 'Scenario',
         emailTone: 'Tone',
         emailKeyInfo: 'Key Information',
+        partyA: 'Party A (Seller)',
+        partyB: 'Party B (Buyer)',
+        subjectMatter: 'Subject Matter',
+        financials: 'Financials',
+        conditions: 'Conditions',
+        emailType: 'Email Type',
+        recipientInfo: 'Recipient Info',
+        keyPoints: 'Key Points',
       },
       actions: {
         copy: 'Copy',
@@ -635,13 +639,23 @@ export const translations = {
         invoiceType: 'Rechnungsart',
         invoiceSender: 'Absender (Details)',
         invoiceRecipient: 'Empfänger (Details)',
+        invoiceDetails: 'Rechnungsdaten (Datum, Nr.)',
         invoiceItems: 'Positionen & Preise',
+        paymentTerms: 'Zahlungsbedingungen',
         contractType: 'Vertragsart',
         contractParties: 'Vertragsparteien',
         contractDetails: 'Details & Konditionen',
         emailScenario: 'Szenario',
         emailTone: 'Tonfall',
         emailKeyInfo: 'Wichtige Infos',
+        partyA: 'Partei A (Verkäufer)',
+        partyB: 'Partei B (Käufer)',
+        subjectMatter: 'Vertragsgegenstand',
+        financials: 'Finanzielles',
+        conditions: 'Konditionen',
+        emailType: 'E-Mail Typ',
+        recipientInfo: 'Empfänger Info',
+        keyPoints: 'Wichtige Punkte',
       },
       actions: {
         copy: 'Kopieren',

@@ -33,6 +33,9 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [showVoiceManager, setShowVoiceManager] = useState(false);
     
+    // Design Template State
+    const [template, setTemplate] = useState<'modern' | 'classic' | 'minimal'>('modern');
+    
     // Tagging state
     const [tags, setTags] = useState<string>('');
     
@@ -45,6 +48,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     
     const isPro = user.plan !== 'free';
     const isImageTool = tool.id === ToolType.IMAGE_GEN;
+    const hasTemplates = [ToolType.INVOICE_GEN, ToolType.CONTRACT_GEN, ToolType.EMAIL_TEMPLATE].includes(tool.id);
 
     // Swipe gestures
     const swipeHandlers = useSwipe({
@@ -73,12 +77,12 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     const parsed = JSON.parse(saved);
                     setFormValues(parsed.formValues || {});
                     setDocumentContent(parsed.documentContent || '');
-                    // Note: Tags are not currently auto-saved in draft to keep it simple,
-                    // but they are saved when "Saving to Documents".
+                    if (parsed.template) setTemplate(parsed.template);
                 } else {
                     setFormValues({});
                     setDocumentContent('');
                     setTags('');
+                    setTemplate('modern');
                 }
             } catch (e) {
                 console.error("Failed to load draft", e);
@@ -100,13 +104,14 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             localStorage.setItem(`draft_${tool.id}`, JSON.stringify({
                 formValues: debouncedForm,
                 documentContent: debouncedContent,
+                template: template,
                 lastSaved: Date.now()
             }));
             setTimeout(() => setIsAutoSaving(false), 500);
         };
 
         saveDraft();
-    }, [debouncedForm, debouncedContent, tool.id]);
+    }, [debouncedForm, debouncedContent, template, tool.id]);
 
     const handleGenerate = async () => {
         if (abortControllerRef.current) abortControllerRef.current.abort();
@@ -148,8 +153,6 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
         // Generate a default title based on tool + date
         const defaultTitle = `${tool.name} - ${new Date().toLocaleDateString()}`;
-        // In a real app we might prompt for title, here we default it.
-        // Or we could use one of the inputs (like 'topic') as title if available.
         const titleCandidate = formValues['topic'] || formValues['productName'] || formValues['prompt'] || defaultTitle;
         
         const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
@@ -202,16 +205,22 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         if (!documentContent) { showToast("No content to export", "error"); return; }
         const element = previewRef.current;
         if (!element) return;
+        
+        // For special templates (invoices/contracts), we want to capture the style
+        // We use the wrapper ID if present, otherwise fallback
+        const elementId = hasTemplates ? 'template-wrapper' : null;
+        const sourceElement = elementId ? document.getElementById(elementId) || element : element;
+
         const opt = {
-            margin: 1,
+            margin: 0.5,
             filename: `${tool.name.replace(/\s+/g, '_')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
+            html2canvas: { scale: 2, useCORS: true },
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
         if (window.html2pdf) {
             showToast("Generating PDF...", "info");
-            window.html2pdf().set(opt).from(element).save();
+            window.html2pdf().set(opt).from(sourceElement).save();
         } else {
             showToast("PDF Library not loaded.", "error");
         }
@@ -230,6 +239,53 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         document.body.removeChild(link);
         showToast("Image downloaded", "success");
     };
+
+    // --- Dynamic Template Styles ---
+    const getPreviewStyles = () => {
+        let containerClass = "bg-white dark:bg-slate-900"; // Default container
+        let proseClass = "prose-indigo prose-lg"; // Default typography
+        let wrapperClass = "p-8 md:p-12"; // Default padding
+
+        if (tool.id === ToolType.INVOICE_GEN) {
+            if (template === 'modern') {
+                containerClass = "bg-white text-slate-800 border-t-8 border-indigo-600 shadow-2xl font-sans rounded-none";
+                proseClass = "prose-indigo prose-headings:text-indigo-700 prose-th:bg-indigo-50 prose-th:p-2 prose-td:p-2 prose-img:rounded-xl";
+            } else if (template === 'classic') {
+                containerClass = "bg-[#fdfbf7] text-slate-900 border-double border-4 border-slate-300 font-serif rounded-none";
+                proseClass = "prose-slate prose-headings:font-serif prose-headings:text-center prose-headings:uppercase prose-headings:tracking-widest prose-hr:border-slate-300";
+            } else if (template === 'minimal') {
+                containerClass = "bg-white text-slate-900 border border-slate-200 font-mono text-sm rounded-none";
+                proseClass = "prose-stone prose-headings:font-normal prose-headings:uppercase prose-hr:border-black max-w-none";
+            }
+        } else if (tool.id === ToolType.CONTRACT_GEN) {
+            if (template === 'modern') {
+                containerClass = "bg-white text-slate-800 border-l-8 border-blue-600 shadow-xl font-sans rounded-r-xl";
+                proseClass = "prose-blue prose-headings:font-bold prose-headings:text-blue-900 prose-p:text-justify prose-li:marker:text-blue-500";
+            } else if (template === 'classic') {
+                containerClass = "bg-[#fffefc] text-slate-900 border-y-8 border-slate-900 font-serif shadow-sm rounded-none";
+                proseClass = "prose-slate prose-headings:font-serif prose-p:leading-loose prose-p:text-justify";
+            } else if (template === 'minimal') {
+                containerClass = "bg-white text-slate-900 font-sans border-none shadow-none";
+                proseClass = "prose-stone prose-headings:font-medium prose-p:text-slate-700";
+            }
+        } else if (tool.id === ToolType.EMAIL_TEMPLATE) {
+            wrapperClass = "p-6 md:p-8"; // Less padding for emails
+            if (template === 'modern') {
+                containerClass = "bg-white text-slate-800 rounded-xl shadow-lg border border-slate-200 font-sans overflow-hidden";
+                proseClass = "prose-indigo prose-p:my-2 prose-headings:text-lg prose-a:text-indigo-600";
+            } else if (template === 'classic') {
+                containerClass = "bg-white text-slate-900 font-serif border border-slate-200 shadow-sm rounded-none";
+                proseClass = "prose-slate prose-p:leading-normal";
+            } else if (template === 'minimal') {
+                containerClass = "bg-transparent text-slate-800 font-mono text-sm border-none shadow-none";
+                proseClass = "prose-stone prose-p:my-1";
+            }
+        }
+
+        return { containerClass, proseClass, wrapperClass };
+    };
+
+    const { containerClass, proseClass, wrapperClass } = getPreviewStyles();
 
     return (
         <div 
@@ -262,7 +318,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                             {isImageTool ? <ImageIcon size={24} /> : <FileText size={24} />}
                         </div>
                         {isAutoSaving ? (
-                            <span className="text-[10px] text-slate-400 flex items-center gap-1"><Save size={10} className="animate-pulse"/> Draft Saving...</span>
+                            <span className="text-[10px] text-slate-400 flex items-center gap-1"><Save size={10} className="animate-pulse"/> Saving...</span>
                         ) : (
                             <span className="text-[10px] text-green-500 flex items-center gap-1"><Check size={10}/> Draft Saved</span>
                         )}
@@ -273,6 +329,31 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 
                 {/* Dynamic Inputs */}
                 <div className="space-y-5 md:pb-0">
+                    
+                    {/* Template Selector for Supported Tools */}
+                    {hasTemplates && (
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 animate-in slide-in-from-right">
+                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                <Layout size={14} /> Design Style
+                            </h3>
+                            <div className="grid grid-cols-3 gap-2">
+                                {['modern', 'classic', 'minimal'].map(t => (
+                                    <button
+                                        key={t}
+                                        onClick={() => setTemplate(t as any)}
+                                        className={`px-3 py-2 text-xs font-bold rounded-lg capitalize border transition-all ${
+                                            template === t 
+                                            ? 'bg-white dark:bg-slate-700 shadow-sm border-indigo-500 text-indigo-600 dark:text-white' 
+                                            : 'border-transparent hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400'
+                                        }`}
+                                    >
+                                        {t}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {!isImageTool && (
                         <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
                             <div className="flex justify-between items-center mb-2">
@@ -343,14 +424,19 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
             {/* Preview Only Area */}
             <div className={`flex-1 bg-slate-100 dark:bg-slate-950 p-4 md:p-8 overflow-hidden flex flex-col relative ${mobileTab === 'input' ? 'hidden lg:flex' : 'flex h-full'}`}>
-                <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden max-w-5xl mx-auto w-full h-full relative">
+                {/* 
+                    Outer wrapper: This holds the whole preview panel. 
+                    If we have templates, we show the styled document inside.
+                    If not, we show the default white card.
+                */}
+                <div className={`flex-1 flex flex-col overflow-hidden max-w-5xl mx-auto w-full h-full relative ${hasTemplates ? '' : 'bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800'}`}>
                     
                     {/* Toolbar */}
-                    <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 bg-white dark:bg-slate-900 flex-shrink-0 z-20 relative">
+                    <div className={`h-14 flex items-center justify-between px-4 flex-shrink-0 z-20 relative ${hasTemplates ? 'bg-transparent mb-4' : 'border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-t-2xl'}`}>
                         <div className="flex items-center gap-3">
                             <div className="text-sm font-bold text-slate-500 uppercase tracking-wide px-2">Output</div>
                             {documentContent && stats && (
-                                <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">
+                                <div className="hidden md:flex items-center gap-2 text-xs text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">
                                     <span>{stats.words} words</span>
                                     <span>•</span>
                                     <span>{stats.chars} chars</span>
@@ -361,13 +447,13 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                         </div>
                         <div className="flex items-center gap-2">
                              <Button variant="secondary" size="sm" onClick={handleSaveToDocuments} title="Save to Documents" icon={Save}>
-                                 Save Doc
+                                 Save
                              </Button>
                              <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
                              
                              {isImageTool ? (
                                 <Button variant="primary" size="sm" onClick={handleDownloadImage} title="Download Image" icon={Download}>
-                                    Download Image
+                                    Download
                                 </Button>
                              ) : (
                                 <>
@@ -381,49 +467,72 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar relative p-8 pb-24 md:p-12 md:pb-12">
-                        {!isPro && <Watermark className="z-0" />}
-                        <div className="relative z-10 h-full">
-                            {isLoading ? (
-                                <div className="space-y-4 max-w-2xl mx-auto">
-                                    {isImageTool ? (
-                                        <div className="flex flex-col items-center justify-center h-full">
-                                            <Skeleton height={300} width="100%" className="rounded-xl mb-4" />
-                                            <p className="text-slate-400 animate-pulse">Generating your image...</p>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <Skeleton height={40} width="60%" />
-                                            <Skeleton height={20} />
-                                            <Skeleton height={20} />
-                                            <Skeleton height={20} width="90%" />
-                                            <div className="h-8"></div>
-                                            <Skeleton height={150} />
-                                            <Skeleton height={20} width="40%" />
-                                        </>
-                                    )}
-                                </div>
-                            ) : documentContent ? (
-                                isImageTool ? (
-                                    <div className="flex items-center justify-center h-full">
-                                        <img 
-                                            src={documentContent} 
-                                            alt="Generated AI Art" 
-                                            className="max-w-full max-h-full rounded-lg shadow-lg object-contain"
-                                        />
+                    <div className={`flex-1 overflow-y-auto custom-scrollbar relative ${hasTemplates ? 'flex justify-center' : 'p-8 pb-24 md:p-12 md:pb-12'}`}>
+                        
+                        {/* 
+                            This is the styled container for Templates. 
+                            It wraps the content content to apply visual styles.
+                        */}
+                        <div id="template-wrapper" className={`relative transition-all duration-500 ${hasTemplates ? `${containerClass} w-full max-w-[210mm] shadow-xl mb-20 min-h-[297mm]` : 'z-10 h-full'}`}>
+                            
+                            {/* Watermark */}
+                            {!isPro && <Watermark className="z-0" />}
+
+                            {/* Special Header for Modern Email Template */}
+                            {tool.id === ToolType.EMAIL_TEMPLATE && template === 'modern' && (
+                                <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
+                                    <div className="flex gap-1.5">
+                                        <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                                        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
                                     </div>
-                                ) : (
-                                    <div className="prose dark:prose-invert max-w-none prose-indigo prose-lg" ref={previewRef}>
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{documentContent}</ReactMarkdown>
-                                    </div>
-                                )
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                                    <Sparkles size={48} className="mb-4 opacity-50" />
-                                    <p className="text-sm font-medium">Ready to create.</p>
-                                    <p className="text-xs mt-2 opacity-70">Fill in the details on the left to start.</p>
+                                    <div className="ml-4 flex-1 bg-white border border-slate-200 rounded px-2 py-0.5 text-xs text-slate-400 font-medium text-center shadow-sm">New Message</div>
                                 </div>
                             )}
+
+                            {/* Actual Content Render */}
+                            <div className={`${wrapperClass} relative z-10 h-full`}>
+                                {isLoading ? (
+                                    <div className="space-y-4 max-w-2xl mx-auto pt-10">
+                                        {isImageTool ? (
+                                            <div className="flex flex-col items-center justify-center h-full">
+                                                <Skeleton height={300} width="100%" className="rounded-xl mb-4" />
+                                                <p className="text-slate-400 animate-pulse">Generating your image...</p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Skeleton height={40} width="60%" />
+                                                <Skeleton height={20} />
+                                                <Skeleton height={20} />
+                                                <Skeleton height={20} width="90%" />
+                                                <div className="h-8"></div>
+                                                <Skeleton height={150} />
+                                                <Skeleton height={20} width="40%" />
+                                            </>
+                                        )}
+                                    </div>
+                                ) : documentContent ? (
+                                    isImageTool ? (
+                                        <div className="flex items-center justify-center h-full">
+                                            <img 
+                                                src={documentContent} 
+                                                alt="Generated AI Art" 
+                                                className="max-w-full max-h-full rounded-lg shadow-lg object-contain"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className={`prose dark:prose-invert max-w-none ${proseClass}`} ref={previewRef}>
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{documentContent}</ReactMarkdown>
+                                        </div>
+                                    )
+                                ) : (
+                                    <div className="h-full flex flex-col items-center justify-center text-slate-400 min-h-[300px]">
+                                        <Sparkles size={48} className="mb-4 opacity-50" />
+                                        <p className="text-sm font-medium">Ready to create.</p>
+                                        <p className="text-xs mt-2 opacity-70">Fill in the details on the left to start.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

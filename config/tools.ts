@@ -65,10 +65,42 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       icon: 'receipt',
       model: 'gemini-2.5-flash',
       inputs: [
-        { name: 'invoiceType', label: t('dashboard.inputs.invoiceType'), type: 'select', options: ['Gewerbe (Standard)', 'Kleinunternehmer (§19 UStG)', 'Privat'] },
-        { name: 'invoiceSender', label: t('dashboard.inputs.invoiceSender'), type: 'textarea', placeholder: 'Your Name, Address, Tax ID...' },
-        { name: 'invoiceRecipient', label: t('dashboard.inputs.invoiceRecipient'), type: 'textarea', placeholder: 'Client Name, Address...' },
-        { name: 'invoiceItems', label: t('dashboard.inputs.invoiceItems'), type: 'textarea', placeholder: 'List items, qty, price here...' }
+        { 
+          name: 'invoiceType', 
+          label: 'Invoice Template', 
+          type: 'select', 
+          options: ['Standard Commercial (19% VAT)', 'Reduced Rate (7% VAT)', 'Small Business (Kleinunternehmer §19)', 'Private (No VAT)'] 
+        },
+        { 
+          name: 'invoiceSender', 
+          label: 'Sender Details (You)', 
+          type: 'textarea', 
+          placeholder: 'Company Name\nAddress\nTax ID (Steuernummer/USt-ID)\nIBAN / BIC\nBank Name' 
+        },
+        { 
+          name: 'invoiceRecipient', 
+          label: 'Recipient Details (Client)', 
+          type: 'textarea', 
+          placeholder: 'Client Company\nContact Person\nAddress' 
+        },
+        { 
+          name: 'invoiceDetails', 
+          label: 'Invoice Data', 
+          type: 'textarea', 
+          placeholder: 'Invoice Number: 2024-001\nInvoice Date: DD.MM.YYYY\nDelivery Date: DD.MM.YYYY' 
+        },
+        { 
+          name: 'invoiceItems', 
+          label: 'Line Items', 
+          type: 'textarea', 
+          placeholder: '- Web Design Service: 10 hrs @ 80€\n- Hosting Setup: 1 unit @ 50€' 
+        },
+        {
+          name: 'paymentTerms',
+          label: 'Payment Terms',
+          type: 'text',
+          placeholder: 'e.g. Please transfer within 14 days without deduction.'
+        }
       ]
     },
     {
@@ -79,9 +111,42 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       icon: 'scale',
       model: 'gemini-3-pro-preview',
       inputs: [
-        { name: 'contractType', label: t('dashboard.inputs.contractType'), type: 'select', options: ['Kaufvertrag (Privat)', 'Kaufvertrag (Gewerblich)', 'Dienstleistungsvertrag', 'NDA (Geheimhaltung)'] },
-        { name: 'contractParties', label: t('dashboard.inputs.contractParties'), type: 'textarea', placeholder: 'Buyer: Name, Addr / Seller: Name, Addr' },
-        { name: 'contractDetails', label: t('dashboard.inputs.contractDetails'), type: 'textarea', placeholder: 'Item/Service description, Price, Warranty, Deadlines...' }
+        { 
+          name: 'contractType', 
+          label: 'Contract Template', 
+          type: 'select', 
+          options: ['General Purchase (Kaufvertrag)', 'Private Car Sale (KFZ-Kaufvertrag)', 'Freelance Service (Dienstleistungsvertrag)', 'NDA (Geheimhaltung)', 'Sublease (Untermietvertrag)'] 
+        },
+        { 
+          name: 'partyA', 
+          label: 'Party A (Seller/Provider)', 
+          type: 'textarea', 
+          placeholder: 'Name, Address, ID Number (if applicable)' 
+        },
+        { 
+          name: 'partyB', 
+          label: 'Party B (Buyer/Client)', 
+          type: 'textarea', 
+          placeholder: 'Name, Address' 
+        },
+        { 
+          name: 'subjectMatter', 
+          label: 'Subject of Contract', 
+          type: 'textarea', 
+          placeholder: 'Detailed description of the item sold or service provided. Include condition (new/used) if applicable.' 
+        },
+        { 
+          name: 'financials', 
+          label: 'Price & Payment', 
+          type: 'textarea', 
+          placeholder: 'Total Price: €...\nPayment Method: Bank Transfer/Cash\nDue Date: ...' 
+        },
+        { 
+          name: 'conditions', 
+          label: 'Special Conditions', 
+          type: 'textarea', 
+          placeholder: 'Warranty exclusion (Gewährleistungsausschluss)? Start/End date? Liability limits?' 
+        }
       ]
     },
     {
@@ -92,9 +157,30 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       icon: 'mail',
       model: 'gemini-2.5-flash',
       inputs: [
-        { name: 'emailScenario', label: t('dashboard.inputs.emailScenario'), type: 'text', placeholder: 'e.g. Payment Reminder, Onboarding' },
-        { name: 'emailTone', label: t('dashboard.inputs.emailTone'), type: 'select', options: ['Professional', 'Friendly', 'Urgent/Firm', 'Formal'] },
-        { name: 'emailKeyInfo', label: t('dashboard.inputs.emailKeyInfo'), type: 'textarea', placeholder: 'Key info to include (dates, amounts, names)...' }
+        { 
+          name: 'emailType', 
+          label: 'Template Type', 
+          type: 'select', 
+          options: ['Cold Outreach (Sales)', 'Meeting Follow-up', 'Customer Service Response', 'Payment Reminder', 'Internal Update', 'Job Application'] 
+        },
+        { 
+          name: 'recipientInfo', 
+          label: 'Recipient Info', 
+          type: 'text', 
+          placeholder: 'Name and Role (e.g. John, Marketing Director)' 
+        },
+        { 
+          name: 'keyPoints', 
+          label: 'Key Points to Cover', 
+          type: 'textarea', 
+          placeholder: '- Thank them for the meeting\n- Attach the proposal\n- Mention the 20% discount valid until Friday' 
+        },
+        { 
+          name: 'tone', 
+          label: 'Tone', 
+          type: 'select', 
+          options: ['Professional & Formal', 'Friendly & Casual', 'Urgent & Firm', 'Empathetic', 'Direct & Concise'] 
+        }
       ]
     },
     { 
@@ -182,7 +268,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
         { name: 'product', label: t('dashboard.inputs.product'), type: 'text' },
         { name: 'offer', label: t('dashboard.inputs.offer'), type: 'text' },
         { name: 'urgency', label: t('dashboard.inputs.urgency'), type: 'select', options: ['High', 'Medium', 'Low'] }
-      ]
+      ] 
     },
     { 
       id: ToolType.BLOG_INTRO,
@@ -195,7 +281,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
         { name: 'topic', label: t('dashboard.inputs.topic'), type: 'text' },
         { name: 'tone', label: t('dashboard.inputs.tone'), type: 'select', options: ['Conversational', 'Formal', 'Excited'] },
         { name: 'hookType', label: t('dashboard.inputs.hookType'), type: 'select', options: ['Question', 'Statistic', 'Story', 'Controversial Statement'] }
-      ]
+      ] 
     },
     { 
       id: ToolType.BLOG_FULL, 
@@ -234,7 +320,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
         { name: 'topic', label: t('dashboard.inputs.topic'), type: 'text' },
         { name: 'keyword', label: t('dashboard.inputs.keyword'), type: 'text' },
         { name: 'tone', label: t('dashboard.inputs.tone'), type: 'select', options: ['Clickbait', 'Professional', 'Descriptive'] }
-      ]
+      ] 
     },
     { 
       id: ToolType.HR_JOB_DESC, 
@@ -259,7 +345,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       icon: 'help-circle',
       model: 'gemini-3-pro-preview',
       inputs: [
-        { name: 'role', label: t('dashboard.inputs.role'), type: 'text' },
+        { name: 'role', label: t('dashboard.inputs.role'), type: 'text' }, 
         { name: 'industry', label: t('dashboard.inputs.industry'), type: 'text' }
       ]
     },

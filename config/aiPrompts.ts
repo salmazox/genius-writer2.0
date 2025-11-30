@@ -33,11 +33,15 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         7. Date of supply/service (Leistungszeitpunkt).
         8. Net amount, VAT rate (19% or 7% or 0%), VAT amount, and Gross amount.
         
-        Specific Rules:
-        - If "Kleinunternehmer" is selected, do NOT charge VAT and include the clause: "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
-        - Output format: Clean Markdown with a table for items. Structure it like a formal letter.
-        - Language: German (Deutsch).`,
-        generatePrompt: () => `Type: ${inputs.invoiceType}
+        Specific Rules based on Template:
+        - "Standard Commercial": Calculate 19% VAT. Show Net, VAT, Gross.
+        - "Reduced Rate": Calculate 7% VAT. Show Net, VAT, Gross.
+        - "Small Business (Kleinunternehmer)": Do NOT charge VAT. MUST include clause: "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
+        - "Private": Simple receipt style. No VAT breakdown required, but clear total.
+        
+        Output format: Clean Markdown. Use a markdown table for the items. Structure it like a formal letter.
+        Language: German (Deutsch).`,
+        generatePrompt: () => `Selected Template: ${inputs.invoiceType}
         
         Sender (Supplier):
         ${inputs.invoiceSender}
@@ -45,10 +49,16 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         Recipient:
         ${inputs.invoiceRecipient}
         
+        Invoice Meta Data:
+        ${inputs.invoiceDetails}
+        
         Items & Details:
         ${inputs.invoiceItems}
         
-        Generate the full invoice text in German.`
+        Payment Terms:
+        ${inputs.paymentTerms}
+        
+        Generate the full professional invoice text in German.`
       };
       break;
 
@@ -64,15 +74,27 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         Rules:
         1. Use precise German legal terminology (Juristendeutsch).
         2. Structure clearly: §1 Vertragsgegenstand, §2 Preis, etc.
-        3. Ensure specific clauses for "Privat" (Private) vs "Gewerblich" (Commercial) are respected (e.g. Gewährleistungsausschluss for private sales).
+        3. Respect the specific contract type:
+           - "Kaufvertrag (Privat)": Exclude warranty if possible ("Der Verkauf erfolgt unter Ausschluss jeglicher Gewährleistung").
+           - "Dienstleistungsvertrag": Focus on scope of work and hours.
+           - "NDA": Focus on definition of confidential info and penalties.
         4. Output format: Markdown.`,
         generatePrompt: () => `Contract Type: ${inputs.contractType}
         
-        Parties:
-        ${inputs.contractParties}
+        Party A (Seller/Provider):
+        ${inputs.partyA}
         
-        Details & Conditions:
-        ${inputs.contractDetails}
+        Party B (Buyer/Client):
+        ${inputs.partyB}
+        
+        Subject Matter:
+        ${inputs.subjectMatter}
+        
+        Financials:
+        ${inputs.financials}
+        
+        Special Conditions:
+        ${inputs.conditions}
         
         Draft the contract in German.`
       };
@@ -82,18 +104,21 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
       config = {
         modelName: 'gemini-2.5-flash',
         systemInstruction: `You are a Professional Business Communication Expert.
-        Create a reusable, versatile email template.
+        Create a high-quality, effective email template based on the user's scenario.
         
         Rules:
         1. Use placeholders like [Name], [Date], [Company] for variable information.
-        2. Provide 2-3 subject line options.
+        2. Provide 2-3 subject line options at the top.
         3. Ensure the tone matches the user's request exactly.
         4. Structure: Subject Lines -> Body -> Signature Placeholder.`,
-        generatePrompt: () => `Scenario: ${inputs.emailScenario}
-        Tone: ${inputs.emailTone}
-        Key Information to Cover: ${inputs.emailKeyInfo}
+        generatePrompt: () => `Template Type: ${inputs.emailType}
+        Recipient Info: ${inputs.recipientInfo}
+        Key Points to Cover:
+        ${inputs.keyPoints}
         
-        Generate a template.`
+        Tone: ${inputs.tone}
+        
+        Generate the email template.`
       };
       break;
 
