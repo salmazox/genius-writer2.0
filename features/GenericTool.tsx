@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon } from 'lucide-react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon, Palette, PenTool, Mail } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig, ToolType } from '../types';
@@ -21,6 +21,15 @@ interface GenericToolProps {
     tool: ToolConfig;
 }
 
+const ACCENT_COLORS = [
+    { name: 'Indigo', value: '#4f46e5', twText: 'text-indigo-600', twBorder: 'border-indigo-600', twBg: 'bg-indigo-600', twRing: 'ring-indigo-600' },
+    { name: 'Emerald', value: '#059669', twText: 'text-emerald-600', twBorder: 'border-emerald-600', twBg: 'bg-emerald-600', twRing: 'ring-emerald-600' },
+    { name: 'Blue', value: '#2563eb', twText: 'text-blue-600', twBorder: 'border-blue-600', twBg: 'bg-blue-600', twRing: 'ring-blue-600' },
+    { name: 'Rose', value: '#e11d48', twText: 'text-rose-600', twBorder: 'border-rose-600', twBg: 'bg-rose-600', twRing: 'ring-rose-600' },
+    { name: 'Amber', value: '#d97706', twText: 'text-amber-600', twBorder: 'border-amber-600', twBg: 'bg-amber-600', twRing: 'ring-amber-600' },
+    { name: 'Slate', value: '#475569', twText: 'text-slate-600', twBorder: 'border-slate-600', twBg: 'bg-slate-600', twRing: 'ring-slate-600' },
+];
+
 const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const { t } = useThemeLanguage();
     const { showToast } = useToast();
@@ -35,6 +44,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     
     // Design Template State
     const [template, setTemplate] = useState<'modern' | 'classic' | 'minimal'>('modern');
+    const [accentColor, setAccentColor] = useState<string>('#4f46e5');
     
     // Tagging state
     const [tags, setTags] = useState<string>('');
@@ -78,11 +88,13 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     setFormValues(parsed.formValues || {});
                     setDocumentContent(parsed.documentContent || '');
                     if (parsed.template) setTemplate(parsed.template);
+                    if (parsed.accentColor) setAccentColor(parsed.accentColor);
                 } else {
                     setFormValues({});
                     setDocumentContent('');
                     setTags('');
                     setTemplate('modern');
+                    setAccentColor('#4f46e5');
                 }
             } catch (e) {
                 console.error("Failed to load draft", e);
@@ -105,13 +117,14 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 formValues: debouncedForm,
                 documentContent: debouncedContent,
                 template: template,
+                accentColor: accentColor,
                 lastSaved: Date.now()
             }));
             setTimeout(() => setIsAutoSaving(false), 500);
         };
 
         saveDraft();
-    }, [debouncedForm, debouncedContent, template, tool.id]);
+    }, [debouncedForm, debouncedContent, template, accentColor, tool.id]);
 
     const handleGenerate = async () => {
         if (abortControllerRef.current) abortControllerRef.current.abort();
@@ -240,52 +253,63 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         showToast("Image downloaded", "success");
     };
 
+    const insertSignature = () => {
+        const signatureBlock = `\n\n<div style="margin-top: 40px; display: flex; gap: 40px;">
+<div style="border-top: 1px solid #000; width: 200px; padding-top: 8px;">Signature (Provider)</div>
+<div style="border-top: 1px solid #000; width: 200px; padding-top: 8px;">Signature (Client)</div>
+</div>`;
+        setDocumentContent(prev => prev + signatureBlock);
+    };
+
     // --- Dynamic Template Styles ---
     const getPreviewStyles = () => {
         let containerClass = "bg-white dark:bg-slate-900"; // Default container
         let proseClass = "prose-indigo prose-lg"; // Default typography
         let wrapperClass = "p-8 md:p-12"; // Default padding
+        
+        // Find Tailwind class for accent color
+        const colorObj = ACCENT_COLORS.find(c => c.value === accentColor) || ACCENT_COLORS[0];
 
         if (tool.id === ToolType.INVOICE_GEN) {
             if (template === 'modern') {
-                containerClass = "bg-white text-slate-800 border-t-8 border-indigo-600 shadow-2xl font-sans rounded-none";
-                proseClass = "prose-indigo prose-headings:text-indigo-700 prose-th:bg-indigo-50 prose-th:p-2 prose-td:p-2 prose-img:rounded-xl";
+                containerClass = "bg-white text-slate-800 shadow-2xl font-sans rounded-none";
+                proseClass = `prose prose-slate max-w-none prose-headings:${colorObj.twText} prose-th:bg-slate-50 prose-th:p-2 prose-td:p-2 prose-img:rounded-xl`;
             } else if (template === 'classic') {
                 containerClass = "bg-[#fdfbf7] text-slate-900 border-double border-4 border-slate-300 font-serif rounded-none";
-                proseClass = "prose-slate prose-headings:font-serif prose-headings:text-center prose-headings:uppercase prose-headings:tracking-widest prose-hr:border-slate-300";
+                proseClass = "prose prose-slate max-w-none prose-headings:font-serif prose-headings:text-center prose-headings:uppercase prose-headings:tracking-widest prose-hr:border-slate-300";
             } else if (template === 'minimal') {
                 containerClass = "bg-white text-slate-900 border border-slate-200 font-mono text-sm rounded-none";
-                proseClass = "prose-stone prose-headings:font-normal prose-headings:uppercase prose-hr:border-black max-w-none";
+                proseClass = "prose prose-stone max-w-none prose-headings:font-normal prose-headings:uppercase prose-hr:border-black";
             }
         } else if (tool.id === ToolType.CONTRACT_GEN) {
             if (template === 'modern') {
-                containerClass = "bg-white text-slate-800 border-l-8 border-blue-600 shadow-xl font-sans rounded-r-xl";
-                proseClass = "prose-blue prose-headings:font-bold prose-headings:text-blue-900 prose-p:text-justify prose-li:marker:text-blue-500";
+                containerClass = `bg-white text-slate-800 border-l-8 shadow-xl font-sans rounded-r-xl`;
+                proseClass = `prose prose-slate max-w-none prose-headings:font-bold prose-headings:${colorObj.twText} prose-p:text-justify prose-li:marker:${colorObj.twText}`;
             } else if (template === 'classic') {
                 containerClass = "bg-[#fffefc] text-slate-900 border-y-8 border-slate-900 font-serif shadow-sm rounded-none";
-                proseClass = "prose-slate prose-headings:font-serif prose-p:leading-loose prose-p:text-justify";
+                proseClass = "prose prose-slate max-w-none prose-headings:font-serif prose-p:leading-loose prose-p:text-justify";
             } else if (template === 'minimal') {
                 containerClass = "bg-white text-slate-900 font-sans border-none shadow-none";
-                proseClass = "prose-stone prose-headings:font-medium prose-p:text-slate-700";
+                proseClass = "prose prose-stone max-w-none prose-headings:font-medium prose-p:text-slate-700";
             }
         } else if (tool.id === ToolType.EMAIL_TEMPLATE) {
             wrapperClass = "p-6 md:p-8"; // Less padding for emails
             if (template === 'modern') {
                 containerClass = "bg-white text-slate-800 rounded-xl shadow-lg border border-slate-200 font-sans overflow-hidden";
-                proseClass = "prose-indigo prose-p:my-2 prose-headings:text-lg prose-a:text-indigo-600";
+                proseClass = `prose prose-slate max-w-none prose-p:my-2 prose-headings:text-lg prose-a:${colorObj.twText}`;
             } else if (template === 'classic') {
                 containerClass = "bg-white text-slate-900 font-serif border border-slate-200 shadow-sm rounded-none";
-                proseClass = "prose-slate prose-p:leading-normal";
+                proseClass = "prose prose-slate max-w-none prose-p:leading-normal";
             } else if (template === 'minimal') {
                 containerClass = "bg-transparent text-slate-800 font-mono text-sm border-none shadow-none";
-                proseClass = "prose-stone prose-p:my-1";
+                proseClass = "prose prose-stone max-w-none prose-p:my-1";
             }
         }
 
-        return { containerClass, proseClass, wrapperClass };
+        return { containerClass, proseClass, wrapperClass, colorObj };
     };
 
-    const { containerClass, proseClass, wrapperClass } = getPreviewStyles();
+    const { containerClass, proseClass, wrapperClass, colorObj } = getPreviewStyles();
 
     return (
         <div 
@@ -330,26 +354,45 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 {/* Dynamic Inputs */}
                 <div className="space-y-5 md:pb-0">
                     
-                    {/* Template Selector for Supported Tools */}
+                    {/* Template & Color Selector for Supported Tools */}
                     {hasTemplates && (
-                        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 animate-in slide-in-from-right">
-                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                <Layout size={14} /> Design Style
-                            </h3>
-                            <div className="grid grid-cols-3 gap-2">
-                                {['modern', 'classic', 'minimal'].map(t => (
-                                    <button
-                                        key={t}
-                                        onClick={() => setTemplate(t as any)}
-                                        className={`px-3 py-2 text-xs font-bold rounded-lg capitalize border transition-all ${
-                                            template === t 
-                                            ? 'bg-white dark:bg-slate-700 shadow-sm border-indigo-500 text-indigo-600 dark:text-white' 
-                                            : 'border-transparent hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400'
-                                        }`}
-                                    >
-                                        {t}
-                                    </button>
-                                ))}
+                        <div className="space-y-4">
+                            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 animate-in slide-in-from-right">
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                    <Layout size={14} /> Design Style
+                                </h3>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['modern', 'classic', 'minimal'].map(t => (
+                                        <button
+                                            key={t}
+                                            onClick={() => setTemplate(t as any)}
+                                            className={`px-3 py-2 text-xs font-bold rounded-lg capitalize border transition-all ${
+                                                template === t 
+                                                ? 'bg-white dark:bg-slate-700 shadow-sm border-indigo-500 text-indigo-600 dark:text-white' 
+                                                : 'border-transparent hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400'
+                                            }`}
+                                        >
+                                            {t}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                    <Palette size={14} /> Brand Color
+                                </h3>
+                                <div className="flex flex-wrap gap-3">
+                                    {ACCENT_COLORS.map(c => (
+                                        <button
+                                            key={c.name}
+                                            onClick={() => setAccentColor(c.value)}
+                                            className={`w-8 h-8 rounded-full ${c.twBg} border-2 transition-all ${accentColor === c.value ? 'border-white dark:border-slate-900 shadow-md scale-110 ring-2 ' + c.twRing : 'border-transparent hover:scale-105 opacity-80 hover:opacity-100'}`}
+                                            title={c.name}
+                                            aria-label={`Select ${c.name} color`}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -449,6 +492,12 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                              <Button variant="secondary" size="sm" onClick={handleSaveToDocuments} title="Save to Documents" icon={Save}>
                                  Save
                              </Button>
+                             {/* Insert Signature Helper for Contracts */}
+                             {tool.id === ToolType.CONTRACT_GEN && (
+                                <Button variant="secondary" size="sm" onClick={insertSignature} title="Insert Signature Line" icon={PenTool}>
+                                    Sign Line
+                                </Button>
+                             )}
                              <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
                              
                              {isImageTool ? (
@@ -473,20 +522,56 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                             This is the styled container for Templates. 
                             It wraps the content content to apply visual styles.
                         */}
-                        <div id="template-wrapper" className={`relative transition-all duration-500 ${hasTemplates ? `${containerClass} w-full max-w-[210mm] shadow-xl mb-20 min-h-[297mm]` : 'z-10 h-full'}`}>
+                        <div 
+                            id="template-wrapper" 
+                            className={`relative transition-all duration-500 ${hasTemplates ? `${containerClass} w-full max-w-[210mm] shadow-xl mb-20 min-h-[297mm]` : 'z-10 h-full'}`}
+                            style={tool.id === ToolType.CONTRACT_GEN && template === 'modern' ? { borderLeftColor: accentColor } : {}}
+                        >
                             
                             {/* Watermark */}
                             {!isPro && <Watermark className="z-0" />}
 
-                            {/* Special Header for Modern Email Template */}
+                            {/* --- Special Header for Invoice (Modern) --- */}
+                            {tool.id === ToolType.INVOICE_GEN && template === 'modern' && (
+                                <div className={`h-4 w-full mb-8 ${colorObj.twBg}`}></div>
+                            )}
+
+                            {/* --- Special Header for Email (Modern) --- */}
                             {tool.id === ToolType.EMAIL_TEMPLATE && template === 'modern' && (
-                                <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
-                                    <div className="flex gap-1.5">
-                                        <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                                        <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                                <div className="border-b border-slate-100 bg-slate-50/50">
+                                    {/* Mac Window Controls */}
+                                    <div className="px-4 py-3 flex items-center gap-2">
+                                        <div className="flex gap-1.5">
+                                            <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                                            <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                            <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                                        </div>
                                     </div>
-                                    <div className="ml-4 flex-1 bg-white border border-slate-200 rounded px-2 py-0.5 text-xs text-slate-400 font-medium text-center shadow-sm">New Message</div>
+                                    {/* Email Metadata Simulation */}
+                                    <div className="px-6 py-2 border-t border-slate-200 bg-white">
+                                        <div className="flex gap-2 text-sm mb-1">
+                                            <span className="text-slate-400 w-12 text-right">To:</span>
+                                            <span className="text-slate-800 font-medium bg-indigo-50 px-2 rounded text-indigo-700">{formValues['recipientInfo'] || 'Recipient'}</span>
+                                        </div>
+                                        <div className="flex gap-2 text-sm mb-1">
+                                            <span className="text-slate-400 w-12 text-right">From:</span>
+                                            <span className="text-slate-600">{user.name} &lt;{user.email}&gt;</span>
+                                        </div>
+                                        <div className="flex gap-2 text-sm">
+                                            <span className="text-slate-400 w-12 text-right">Subject:</span>
+                                            <span className="text-slate-900 font-medium">{formValues['emailType'] || 'New Message'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- Special Header for Email (Classic) --- */}
+                            {tool.id === ToolType.EMAIL_TEMPLATE && template === 'classic' && (
+                                <div className="p-8 pb-0 border-b border-slate-100 mb-4">
+                                    <div className="flex items-center gap-2 text-slate-500 mb-6">
+                                        <Mail size={16} /> 
+                                        <span className="uppercase tracking-widest text-xs font-serif">Official Correspondence</span>
+                                    </div>
                                 </div>
                             )}
 
