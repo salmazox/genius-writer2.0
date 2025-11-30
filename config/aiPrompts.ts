@@ -38,20 +38,17 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         
         Output Rules:
         - Return ONLY HTML code. No markdown code blocks (no \`\`\`html).
-        - Use Tailwind CSS classes for structure (grid, flex, padding, margin).
-        - **COLOR:** Do NOT use hex codes or Tailwind color classes (like text-blue-600). Instead, use inline styles with the CSS variable: \`style="color: var(--accent-color)"\` or \`style="background-color: var(--accent-color)"\` for accents, headers, and borders.
-        - **FONTS:** Do NOT set font families. Inherit the font from the parent container.
+        - Use semantic HTML (h1, h2, h3, table, th, td, p). 
+        - Do NOT use inline styles for colors or fonts. Rely on the parent container's CSS variables.
+        - Structure:
+          - Use <h1> for "RECHNUNG".
+          - Use <table> for the item list.
+          - Align numbers to the right.
         
         Specific Rules based on Type:
         - "Standard Commercial": Calculate 19% VAT. Show Net, VAT, Gross.
         - "Reduced Rate": Calculate 7% VAT. Show Net, VAT, Gross.
-        - "Small Business (Kleinunternehmer)": Do NOT charge VAT. MUST include clause: "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
-        
-        Layout Requirements:
-        - Use a full width div container.
-        - Use a real HTML <table> for items with border-b for rows.
-        - Align numbers to the right.
-        - Make it look professional and ready to print.`,
+        - "Small Business (Kleinunternehmer)": Do NOT charge VAT. MUST include clause: "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."`,
         generatePrompt: () => `
         Generate HTML Invoice.
         
@@ -68,8 +65,8 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
 
     case ToolType.CONTRACT_GEN:
       config = {
-        modelName: 'gemini-3-pro-preview', // Pro for legal accuracy
-        systemInstruction: `You are a German legal assistant (Rechtsassistent) and frontend developer.
+        modelName: 'gemini-2.5-flash', // Switched to Flash for speed as requested
+        systemInstruction: `You are a German legal assistant (Rechtsassistent).
         Your task is to draft a contract based on German Civil Code (BGB) standards as clean HTML.
         
         IMPORTANT DISCLAIMER:
@@ -77,14 +74,13 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         
         Output Rules:
         - Return ONLY HTML code. No markdown code blocks.
-        - Use Tailwind CSS classes.
-        - **COLOR:** Use \`style="color: var(--accent-color)"\` for headers (h1, h2, h3) and key accents.
-        - **FONTS:** Do not specify font families.
+        - Use semantic tags: <h1> for Title, <h2> for Sections (§1...), <p> for paragraphs.
+        - Do NOT use inline styles.
         - Structure:
-          - Header: Title centered.
+          - Header: Title.
           - Preamble: Introduction of parties.
-          - Sections: Use <h3> for §1, §2 etc.
-          - Signatures: Use a flexbox grid for two signature lines at the bottom.`,
+          - Sections: §1, §2 etc.
+          - Signatures: Create a signature block at the bottom.`,
         generatePrompt: () => `
         Generate HTML Contract.
         Type: ${inputs.contractType}
@@ -104,14 +100,13 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         systemInstruction: `You are a Professional Business Communication Expert.
         Create a high-quality, effective email template based on the user's scenario.
         
-        Output format: HTML with Tailwind CSS.
+        Output format: HTML.
         Style: Clean, readable, email-client friendly simulation.
         
         Structure:
-        - Box for Subject Line options (bg-gray-50 p-4 mb-6 rounded).
+        - Box for Subject Line options (use a div with class 'subject-box').
         - Main Email Body.
-        - Placeholders: [Name], [Date] highlighted in yellow (bg-yellow-100).
-        - Use \`style="color: var(--accent-color)"\` for the signature name or key highlights.`,
+        - Placeholders: [Name], [Date] highlighted.`,
         generatePrompt: () => `Template Type: ${inputs.emailType}
         Recipient Info: ${inputs.recipientInfo}
         Key Points: ${inputs.keyPoints}
@@ -153,7 +148,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
 
     case ToolType.DATA_ANALYSIS:
       config = {
-        modelName: 'gemini-3-pro-preview', // Keep Pro for complex reasoning
+        modelName: 'gemini-2.5-flash', // Switched to Flash for speed
         systemInstruction: `You are a Senior Data Analyst. Analyze the provided data or text report.
         1. Identify key trends, anomalies, and insights.
         2. If raw data is provided, summarize it.

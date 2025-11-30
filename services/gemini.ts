@@ -298,6 +298,54 @@ export const generateContent = async (
   }
 };
 
+/**
+ * Streaming Generator
+ * Provides immediate feedback to the user by streaming chunks.
+ */
+export const generateContentStream = async (
+  tool: ToolType,
+  inputs: Record<string, string>,
+  onChunk: (text: string) => void,
+  brandVoiceInstruction?: string,
+  signal?: AbortSignal
+): Promise<string> => {
+  checkOnline();
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+  if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
+  checkUsageAllowance('word');
+
+  const promptConfig = getPromptConfig(tool, inputs);
+  let systemInstruction = promptConfig.systemInstruction;
+  
+  if (brandVoiceInstruction) {
+    systemInstruction += `\n\nCRITICAL BRAND VOICE INSTRUCTION: ${brandVoiceInstruction}. \nEnsure the output strictly adheres to this voice/persona.`;
+  }
+
+  let fullText = '';
+
+  try {
+    const result = await ai.models.generateContentStream({
+      model: promptConfig.modelName,
+      contents: promptConfig.generatePrompt(inputs),
+      config: { systemInstruction: systemInstruction },
+    });
+
+    for await (const chunk of result) {
+      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+      const chunkText = chunk.text || '';
+      fullText += chunkText;
+      onChunk(fullText);
+    }
+
+    trackUsage(fullText);
+    return fullText;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    console.error("Gemini Streaming Error:", error);
+    throw error;
+  }
+};
+
 export const refineContent = async (
   currentContent: string,
   instruction: string,
