@@ -38,12 +38,9 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         
         Output Rules:
         - Return ONLY HTML code. No markdown code blocks (no \`\`\`html).
-        - Use Tailwind CSS classes for styling.
-        - Use inline styles ONLY for the dynamic accent color: ${accentColor}.
-        - Font styling:
-          - If template is 'modern': Use sans-serif (font-sans), clean lines, colored headers.
-          - If template is 'classic': Use serif (font-serif), formal layout, borders.
-          - If template is 'minimal': Use mono or clean sans, black and white mostly, very simple.
+        - Use Tailwind CSS classes for structure (grid, flex, padding, margin).
+        - **COLOR:** Do NOT use hex codes or Tailwind color classes (like text-blue-600). Instead, use inline styles with the CSS variable: \`style="color: var(--accent-color)"\` or \`style="background-color: var(--accent-color)"\` for accents, headers, and borders.
+        - **FONTS:** Do NOT set font families. Inherit the font from the parent container.
         
         Specific Rules based on Type:
         - "Standard Commercial": Calculate 19% VAT. Show Net, VAT, Gross.
@@ -57,8 +54,6 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         - Make it look professional and ready to print.`,
         generatePrompt: () => `
         Generate HTML Invoice.
-        Template Style: ${template}
-        Accent Color: ${accentColor}
         
         Type: ${inputs.invoiceType}
         Sender: ${inputs.invoiceSender}
@@ -83,17 +78,13 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         Output Rules:
         - Return ONLY HTML code. No markdown code blocks.
         - Use Tailwind CSS classes.
-        - Use inline styles for the accent color: ${accentColor}.
+        - **COLOR:** Use \`style="color: var(--accent-color)"\` for headers (h1, h2, h3) and key accents.
+        - **FONTS:** Do not specify font families.
         - Structure:
-          - Header: Title centered or left aligned based on template '${template}'.
+          - Header: Title centered.
           - Preamble: Introduction of parties.
           - Sections: Use <h3> for §1, §2 etc.
-          - Signatures: Use a flexbox grid for two signature lines at the bottom.
-        
-        Layout based on Template '${template}':
-        - Modern: Bold headers in accent color, clean sans-serif.
-        - Classic: Serif font, traditional layout, justified text.
-        - Minimal: Simple, plenty of whitespace, black/dark grey text.`,
+          - Signatures: Use a flexbox grid for two signature lines at the bottom.`,
         generatePrompt: () => `
         Generate HTML Contract.
         Type: ${inputs.contractType}
@@ -119,7 +110,8 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         Structure:
         - Box for Subject Line options (bg-gray-50 p-4 mb-6 rounded).
         - Main Email Body.
-        - Placeholders: [Name], [Date] highlighted in yellow (bg-yellow-100).`,
+        - Placeholders: [Name], [Date] highlighted in yellow (bg-yellow-100).
+        - Use \`style="color: var(--accent-color)"\` for the signature name or key highlights.`,
         generatePrompt: () => `Template Type: ${inputs.emailType}
         Recipient Info: ${inputs.recipientInfo}
         Key Points: ${inputs.keyPoints}

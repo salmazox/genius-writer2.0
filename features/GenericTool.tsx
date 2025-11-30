@@ -158,10 +158,11 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         setIsLoading(true);
         const selectedVoice = brandVoices.find(v => v.id === selectedVoiceId);
         
-        // Pass design context to AI
         const inputsWithTheme = {
             ...formValues,
-            accentColor,
+            // We pass accentColor and template to prompt config, 
+            // but the new prompt design uses CSS vars so these values primarily guide defaults/structure if needed
+            accentColor, 
             template
         };
 
@@ -254,8 +255,6 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         const element = previewRef.current;
         if (!element) return;
         
-        // For special templates (invoices/contracts), we want to capture the style
-        // We use the wrapper ID if present, otherwise fallback
         const elementId = hasTemplates ? 'template-wrapper' : null;
         const sourceElement = elementId ? document.getElementById(elementId) || element : element;
 
@@ -289,7 +288,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     };
 
     const insertSignature = () => {
-        const signatureBlock = `<div style="margin-top: 40px; display: flex; gap: 40px;"><div style="border-top: 1px solid #000; width: 200px; padding-top: 8px;">Signature (Provider)</div><div style="border-top: 1px solid #000; width: 200px; padding-top: 8px;">Signature (Client)</div></div>`;
+        const signatureBlock = `<div style="margin-top: 40px; display: flex; gap: 40px;"><div style="border-top: 1px solid currentColor; width: 200px; padding-top: 8px;">Signature (Provider)</div><div style="border-top: 1px solid currentColor; width: 200px; padding-top: 8px;">Signature (Client)</div></div>`;
         setDocumentContent(prev => prev + signatureBlock);
     };
 
@@ -338,20 +337,23 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
     // --- Template Styles ---
     const getPreviewStyles = () => {
-        // Find Tailwind class for accent color
         const colorObj = ACCENT_COLORS.find(c => c.value === accentColor) || ACCENT_COLORS[0];
         
-        // For HTML output tools, we let the AI content control layout, so minimal wrapper styling.
+        // Dynamic Font Classes
+        let fontClass = 'font-sans'; // modern
+        if (template === 'classic') fontClass = 'font-serif';
+        if (template === 'minimal') fontClass = 'font-mono text-sm tracking-tight';
+
+        // Layout container styles
         if (isHtmlOutput) {
             return {
-                containerClass: "bg-white text-slate-900 shadow-xl", // Basic sheet style
-                proseClass: "", // No prose interference for custom HTML
-                wrapperClass: "p-0", // No padding, let content handle it
+                containerClass: `bg-white text-slate-900 shadow-xl ${fontClass} p-10`, 
+                proseClass: "", 
+                wrapperClass: "w-full h-full",
                 colorObj
             };
         }
 
-        // Default Markdown styling
         return {
             containerClass: "bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800",
             proseClass: "prose-indigo prose-lg",
@@ -582,10 +584,14 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                         {/* 
                             This is the styled container for Templates. 
                             It wraps the content content to apply visual styles.
+                            We apply CSS variables here so they update instantly.
                         */}
                         <div 
                             id="template-wrapper" 
                             className={`relative transition-all duration-500 ${hasTemplates ? `${containerClass} w-full max-w-[210mm] shadow-xl mb-20 min-h-[297mm]` : 'z-10 h-full'}`}
+                            style={{ 
+                                '--accent-color': accentColor,
+                            } as React.CSSProperties}
                         >
                             
                             {/* Watermark */}
