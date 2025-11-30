@@ -158,4 +158,50 @@ export interface CVEducation {
   year: string;
 }
 
-export interface CVCertificate
+export interface CVCertificate {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+  url: string;
+  description: string;
+}
+
+export interface CVLanguage {
+  id: string;
+  language: string;
+  proficiency: string;
+}
+
+export interface CVPersonal {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  website: string;
+  linkedin: string;
+  jobTitle: string;
+  summary: string;
+  photoBase64: string;
+  photoShape: 'circle' | 'square' | 'rounded';
+  photoFilter: 'none' | 'grayscale';
+}
+
+export interface CVData {
+  template: 'modern' | 'classic' | 'minimal';
+  theme: CVTheme;
+  personal: CVPersonal;
+  experience: CVExperience[];
+  education: CVEducation[];
+  skills: string[];
+  certifications: CVCertificate[];
+  languages: CVLanguage[];
+}
+
+export interface ATSAnalysis {
+  score: number;
+  missingKeywords: string[];
+  suggestions: string[];
+  summary: string;
+  improvedSummary?: string;
+}

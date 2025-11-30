@@ -17,6 +17,12 @@ import { useSwipe } from '../hooks/useSwipe';
 import { BrandVoiceManager } from './BrandVoiceManager';
 import { Watermark } from '../components/Watermark';
 
+declare global {
+  interface Window {
+    html2pdf: any;
+  }
+}
+
 interface GenericToolProps {
     tool: ToolConfig;
 }

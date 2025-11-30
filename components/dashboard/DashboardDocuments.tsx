@@ -49,9 +49,10 @@ export const DashboardDocuments: React.FC<DashboardDocumentsProps> = ({
     };
 
     return (
-        <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-200px)] animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-180px)] md:h-[calc(100vh-200px)] animate-in fade-in duration-500">
             {/* Folders & Tags Sidebar */}
-            <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1">
+            {/* Mobile: Constrained height to allow grid visibility. Desktop: Full height sidebar */}
+            <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1 max-h-[35vh] md:max-h-full border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 pb-4 md:pb-0">
                 
                 {/* Folders */}
                 <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
@@ -110,7 +111,7 @@ export const DashboardDocuments: React.FC<DashboardDocumentsProps> = ({
             </div>
 
             {/* Document Grid */}
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar pb-24 md:pb-0">
                 {/* Grid Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 px-1 gap-3">
                     <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -119,13 +120,13 @@ export const DashboardDocuments: React.FC<DashboardDocumentsProps> = ({
                     </h2>
                     
                     {!isEmpty && (
-                        <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
+                        <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm w-full sm:w-auto">
                             <span className="text-xs font-medium text-slate-500 whitespace-nowrap">{t('dashboard.sort.label')}:</span>
-                            <div className="relative">
+                            <div className="relative flex-1 sm:flex-none">
                                 <select 
                                     value={sortOrder} 
                                     onChange={(e) => onSortChange(e.target.value as SortOrder)}
-                                    className="text-sm font-semibold bg-transparent outline-none appearance-none pr-4 cursor-pointer text-slate-700 dark:text-slate-300"
+                                    className="text-sm font-semibold bg-transparent outline-none appearance-none pr-4 cursor-pointer text-slate-700 dark:text-slate-300 w-full"
                                 >
                                     <option value="newest">{t('dashboard.sort.newest')}</option>
                                     <option value="oldest">{t('dashboard.sort.oldest')}</option>
@@ -145,7 +146,7 @@ export const DashboardDocuments: React.FC<DashboardDocumentsProps> = ({
                 )}
 
                 {isEmpty ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[400px]">
+                    <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[300px] md:min-h-[400px]">
                         <div className="w-24 h-24 bg-indigo-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 relative">
                             {viewMode === 'trash' ? (
                                 <Trash2 size={40} className="text-slate-400"/>
@@ -173,7 +174,7 @@ export const DashboardDocuments: React.FC<DashboardDocumentsProps> = ({
                         )}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 pb-20">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
                         {documents.map(doc => (
                             <div 
                               key={doc.id} 
@@ -185,8 +186,8 @@ export const DashboardDocuments: React.FC<DashboardDocumentsProps> = ({
                                         <FileText size={20} />
                                     </div>
                                     
-                                    {/* Document Actions */}
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-slate-900 rounded-lg p-1 shadow-sm border border-slate-100 dark:border-slate-800 absolute top-4 right-4">
+                                    {/* Document Actions - Always visible on mobile if needed, or group hover */}
+                                    <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-white dark:bg-slate-900 rounded-lg p-1 shadow-sm border border-slate-100 dark:border-slate-800 absolute top-4 right-4">
                                         {viewMode === 'trash' ? (
                                             <>
                                               <button onClick={(e) => onRestoreDoc(doc.id, e)} className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors" title="Restore">

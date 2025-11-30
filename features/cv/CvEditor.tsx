@@ -29,7 +29,7 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
     // Section Order State - In a real app this would be part of CVData
     const [sections, setSections] = useState(['personal', 'experience', 'education', 'certifications', 'skills']);
 
-    const handleCvChange = (section: keyof CVData['personal'], value: string) => {
+    const handleCvChange = (section: keyof CVData['personal'], value: any) => {
         setCvData(prev => ({ ...prev, personal: { ...prev.personal, [section]: value } }));
     };
 

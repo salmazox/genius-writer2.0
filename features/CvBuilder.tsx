@@ -20,6 +20,12 @@ import CvEditor from './cv/CvEditor';
 import CvPreview from './cv/CvPreview';
 import CvAtsSidebar from './cv/CvAtsSidebar';
 
+declare global {
+  interface Window {
+    html2pdf: any;
+  }
+}
+
 // Professional Color Themes
 const CV_THEMES: CVTheme[] = [
     { name: 'Midnight Blue', primary: '#1e3a8a', secondary: '#eff6ff', text: '#1e293b' },
