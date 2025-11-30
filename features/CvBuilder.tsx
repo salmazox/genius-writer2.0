@@ -14,6 +14,7 @@ import RichTextEditor from '../components/RichTextEditor';
 import { useUser } from '../contexts/UserContext';
 import { Watermark } from '../components/Watermark';
 import { usePdfExport } from '../hooks/usePdfExport';
+import { useMobileTabs } from '../hooks/useMobileTabs';
 
 // Sub-components
 import CvEditor from './cv/CvEditor';
@@ -45,6 +46,7 @@ const CvBuilder: React.FC = () => {
     const { user } = useUser();
     const [searchParams, setSearchParams] = useSearchParams();
     const exportToPdf = usePdfExport();
+    const { activeTab: mobileTab, setActiveTab: setMobileTab } = useMobileTabs<'editor' | 'preview'>('editor');
     
     // State
     const [viewMode, setViewMode] = useState<'cv' | 'cover_letter'>('cv');
@@ -53,7 +55,6 @@ const CvBuilder: React.FC = () => {
     const [jobDescription, setJobDescription] = useState('');
     const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [coverLetterContent, setCoverLetterContent] = useState('');
@@ -148,10 +149,10 @@ const CvBuilder: React.FC = () => {
                     skills: parsedData.skills || []
                 }));
                 
-                showToast("Resume parsed successfully!", "success");
+                showToast(t('dashboard.toasts.importSuccess'), "success");
             } catch (err: any) {
                 console.error(err);
-                showToast(err.message || "Failed to parse resume.", "error");
+                showToast(err.message || t('dashboard.toasts.importFail'), "error");
             } finally {
                 setIsImporting(false);
             }
@@ -167,7 +168,7 @@ const CvBuilder: React.FC = () => {
 
     const handleDownloadPDF = () => {
         if (!isPro) {
-            showToast("Upgrade to Pro to export PDF files without watermarks.", "error");
+            showToast(t('dashboard.toasts.upgradePro'), "error");
             return;
         }
 
@@ -187,7 +188,7 @@ const CvBuilder: React.FC = () => {
     };
 
     const generateCvDescription = async (id: string, item: CVExperience) => {
-        if(!item || !item.title) { showToast("Please enter a Job Title first", "error"); return; }
+        if(!item || !item.title) { showToast(t('dashboard.toasts.titleMissing'), "error"); return; }
         
         if (abortControllerRef.current) abortControllerRef.current.abort();
         const controller = new AbortController();
@@ -203,7 +204,7 @@ const CvBuilder: React.FC = () => {
                 experience: prev.experience.map(e => e.id === id ? { ...e, description: result } : e) 
             }));
             
-            showToast("Description generated!", "success");
+            showToast(t('dashboard.toasts.descGenerated'), "success");
         } catch (e: any) { 
             if (e.name !== 'AbortError') showToast(e.message || "Failed to generate", "error"); 
         } finally { 
@@ -215,7 +216,7 @@ const CvBuilder: React.FC = () => {
     };
 
     const runAtsAnalysis = async () => {
-        if(!jobDescription) { showToast("Please paste a Job Description first", "error"); return; }
+        if(!jobDescription) { showToast(t('dashboard.toasts.jobDescMissing'), "error"); return; }
         
         if (abortControllerRef.current) abortControllerRef.current.abort();
         const controller = new AbortController();
@@ -225,9 +226,9 @@ const CvBuilder: React.FC = () => {
         try {
             const result = await analyzeATS(cvData, jobDescription, controller.signal);
             setAtsAnalysis(result);
-            showToast("Analysis Complete", "success");
+            showToast(t('dashboard.toasts.analysisComplete'), "success");
         } catch(e: any) { 
-            if (e.name !== 'AbortError') showToast(e.message || "Analysis Failed", "error"); 
+            if (e.name !== 'AbortError') showToast(e.message || t('dashboard.toasts.analysisFail'), "error"); 
         } finally { 
             if (abortControllerRef.current === controller) {
                 setIsLoading(false);
@@ -237,16 +238,16 @@ const CvBuilder: React.FC = () => {
     };
 
     const handleGenerateCoverLetter = async () => {
-        if (!jobDescription) { showToast("Please provide a Job Description first", "error"); return; }
-        if (!cvData.personal.fullName) { showToast("Please fill out your CV details first", "error"); return; }
+        if (!jobDescription) { showToast(t('dashboard.toasts.jobDescMissing'), "error"); return; }
+        if (!cvData.personal.fullName) { showToast(t('dashboard.toasts.cvDetailsMissing'), "error"); return; }
 
         setIsGeneratingLetter(true);
         try {
             const letter = await generateCoverLetter(cvData, jobDescription);
             setCoverLetterContent(letter);
-            showToast("Cover Letter Generated!", "success");
+            showToast(t('dashboard.toasts.coverLetterGenerated'), "success");
         } catch (e: any) {
-            showToast(e.message || "Failed to generate cover letter", "error");
+            showToast(e.message || t('dashboard.toasts.coverLetterFail'), "error");
         } finally {
             setIsGeneratingLetter(false);
         }

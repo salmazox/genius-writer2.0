@@ -18,6 +18,7 @@ import { Watermark } from '../components/Watermark';
 import { sanitizeHtml } from '../utils/security';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { usePdfExport } from '../hooks/usePdfExport';
+import { useMobileTabs } from '../hooks/useMobileTabs';
 
 interface GenericToolProps {
     tool: ToolConfig;
@@ -38,12 +39,12 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const { brandVoices, selectedVoiceId, setSelectedVoiceId, user } = useUser();
     const copyToClipboard = useCopyToClipboard();
     const exportToPdf = usePdfExport();
+    const { activeTab: mobileTab, setActiveTab: setMobileTab } = useMobileTabs<'input' | 'result'>('input');
     
     // Updated type to support nested arrays from repeater
     const [formValues, setFormValues] = useState<Record<string, any>>({});
     const [documentContent, setDocumentContent] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
-    const [mobileTab, setMobileTab] = useState<'input' | 'result'>('input');
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [showVoiceManager, setShowVoiceManager] = useState(false);
     
@@ -187,7 +188,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     controller.signal
                 );
                 setDocumentContent(result);
-                showToast("Image generated successfully", 'success');
+                showToast(t('dashboard.toasts.generated'), 'success');
             } else {
                 // Text tools use Streaming for faster perception
                 await generateContentStream(
@@ -220,7 +221,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
     const handleSaveToDocuments = () => {
         if (!documentContent.trim()) {
-            showToast("Nothing to save!", "error");
+            showToast(t('dashboard.toasts.nothingToSave'), "error");
             return;
         }
 
@@ -231,7 +232,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
 
         documentService.create(titleCandidate, documentContent, tool.id, undefined, tagList);
-        showToast("Saved to My Documents", "success");
+        showToast(t('dashboard.toasts.saved'), "success");
     };
 
     const handleCopy = () => {
@@ -245,10 +246,10 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
     const handleExportWord = () => {
         if (!isPro) {
-            showToast("Upgrade to Pro to export.", "error");
+            showToast(t('dashboard.toasts.upgradePro'), "error");
             return;
         }
-        if (!documentContent) { showToast("No content to export", "error"); return; }
+        if (!documentContent) { showToast(t('dashboard.toasts.nothingToSave'), "error"); return; }
         const element = previewRef.current;
         if (!element) return;
 
@@ -263,15 +264,15 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         fileDownload.download = `${tool.name.replace(/\s+/g, '_')}.doc`;
         fileDownload.click();
         document.body.removeChild(fileDownload);
-        showToast("Exported to Word", "success");
+        showToast(t('dashboard.toasts.exportedWord'), "success");
     };
 
     const handleDownloadPDF = () => {
         if (!isPro) {
-            showToast("Upgrade to Pro to export.", "error");
+            showToast(t('dashboard.toasts.upgradePro'), "error");
             return;
         }
-        if (!documentContent) { showToast("No content to export", "error"); return; }
+        if (!documentContent) { showToast(t('dashboard.toasts.nothingToSave'), "error"); return; }
         const element = previewRef.current;
         
         const elementId = hasTemplates ? 'template-wrapper' : null;
@@ -294,7 +295,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        showToast("Image downloaded", "success");
+        showToast(t('dashboard.toasts.downloadedImage'), "success");
     };
 
     const insertSignature = () => {
@@ -339,7 +340,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             audioSourceRef.current = source;
             setIsPlaying(true);
         } catch (e) {
-            showToast("Failed to play audio", "error");
+            showToast(t('dashboard.toasts.audioFail'), "error");
         } finally {
             setIsGeneratingAudio(false);
         }
