@@ -321,7 +321,7 @@ const LiveInterview: React.FC = () => {
             
             {/* Tech Badge */}
             <div className="absolute bottom-4 flex items-center gap-2 text-[10px] md:text-xs text-indigo-400/60 font-mono">
-                <Sparkles size={10} /> Powered by Gemini 2.5 Flash Native Audio
+                <Sparkles size={10} /> Powered by Gemini 2.0 Flash
             </div>
         </div>
     );

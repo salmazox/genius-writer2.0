@@ -37,7 +37,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.Business'), 
       description: 'A full-featured document editor with a real-time AI companion.', 
       icon: 'file-edit', 
-      model: 'gemini-3-pro-preview', 
+      model: 'gemini-2.0-flash-exp', 
       inputs: [] // Handled by custom UI
     },
     { 
@@ -46,7 +46,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.HR'), 
       description: 'Practice job interviews with a real-time AI voice coach.', 
       icon: 'mic', 
-      model: 'gemini-2.5-flash-native-audio-preview-09-2025', 
+      model: 'gemini-2.0-flash-exp', 
       inputs: [] 
     },
     { 
@@ -55,7 +55,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.Business'), 
       description: t('features.cvDesc'), 
       icon: 'file-text', 
-      model: 'gemini-3-pro-preview', 
+      model: 'gemini-2.5-pro-preview', 
       inputs: [] 
     },
     { 
@@ -140,7 +140,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.Business'),
       description: t('features.contractDesc'),
       icon: 'scale',
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-2.5-pro-preview',
       inputs: [
         { 
           name: 'contractType', 
@@ -209,7 +209,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.Email'),
       description: t('features.emailTemplateDesc'),
       icon: 'mail',
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash-exp',
       inputs: [
         { 
           name: 'emailType', 
@@ -243,7 +243,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.Utility'), 
       description: t('features.polisherDesc'), 
       icon: 'wand-2', 
-      model: 'gemini-2.5-flash', 
+      model: 'gemini-2.0-flash-exp', 
       inputs: [
         { name: 'textToPolish', label: t('dashboard.inputs.textToPolish'), type: 'textarea', placeholder: 'Paste your draft here...' },
         { name: 'polishGoal', label: t('dashboard.inputs.polishGoal'), type: 'select', options: ['Professional & Formal', 'Friendly & Casual', 'Concise & Direct', 'Persuasive', 'Grammar Fix Only'] }
@@ -279,7 +279,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.Social'), 
       description: t('features.socialDesc'), 
       icon: 'twitter', 
-      model: 'gemini-2.5-flash', 
+      model: 'gemini-2.0-flash-exp', 
       inputs: [
         { name: 'topic', label: t('dashboard.inputs.topic'), type: 'text', placeholder: 'e.g., AI trends' }, 
         { name: 'tone', label: t('dashboard.inputs.tone'), type: 'select', options: ['Witty', 'Professional', 'Controversial', 'Helpful'] }
@@ -291,7 +291,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.Social'), 
       description: 'Professional posts to grow your network.', 
       icon: 'linkedin', 
-      model: 'gemini-3-pro-preview', 
+      model: 'gemini-2.0-flash-exp', 
       inputs: [
         { name: 'topic', label: t('dashboard.inputs.topic'), type: 'text' }, 
         { name: 'audience', label: t('dashboard.inputs.audience'), type: 'text' },
@@ -343,7 +343,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.Blog'), 
       description: t('features.blogDesc'), 
       icon: 'file-text', 
-      model: 'gemini-3-pro-preview', 
+      model: 'gemini-2.5-flash', 
       inputs: [
         { name: 'topic', label: t('dashboard.inputs.topic'), type: 'text' }, 
         { name: 'audience', label: t('dashboard.inputs.audience'), type: 'text' },
@@ -397,7 +397,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.HR'), 
       description: 'Generate interview questions and answer tips.',
       icon: 'help-circle',
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-2.5-pro-preview',
       inputs: [
         { name: 'role', label: t('dashboard.inputs.role'), type: 'text' }, 
         { name: 'industry', label: t('dashboard.inputs.industry'), type: 'text' }
@@ -409,7 +409,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.Strategy'),
       description: 'SWOT analysis and feedback.',
       icon: 'lightbulb',
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-2.5-pro-preview',
       inputs: [
         { name: 'idea', label: t('dashboard.inputs.idea'), type: 'textarea' },
         { name: 'market', label: t('dashboard.inputs.market'), type: 'text' }
@@ -434,7 +434,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       category: t('dashboard.categories.Utility'), 
       description: t('features.dataDesc'), 
       icon: 'bar-chart-2', 
-      model: 'gemini-3-pro-preview', 
+      model: 'gemini-2.5-pro-preview', 
       inputs: [
         { name: 'data', label: t('dashboard.inputs.data'), type: 'textarea' }, 
         { name: 'goal', label: t('dashboard.inputs.goal'), type: 'text' }

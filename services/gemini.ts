@@ -370,7 +370,7 @@ export const refineContent = async (
   try {
     const response = await withRetry(async () => {
       return await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.0-flash-exp', // Cost Optimization: Use 2.0 Flash for simple polishing
         contents: `Original Text:\n"${currentContent}"\n\nInstruction: ${instruction}\n\nRewrite the text to follow the instruction. Return ONLY the rewritten text, no conversational filler. Keep existing HTML or Markdown formatting unless asked to change it.`,
         config: { systemInstruction: sysInstruct },
       });
@@ -410,7 +410,7 @@ export const chatWithAI = async (
     }));
 
     const chat = ai.chats.create({
-      model: 'gemini-3-pro-preview', // Keep Pro for reasoning
+      model: 'gemini-2.0-flash-exp', // Cost Optimization: Smart Editor uses 2.0 Flash
       history: chatHistory,
       config: {
         systemInstruction: `You are a helpful writing assistant inside a document editor. 
@@ -457,7 +457,7 @@ export const generateCoverLetter = async (
   try {
     const response = await withRetry(async () => {
       return await ai.models.generateContent({
-        model: 'gemini-2.5-flash', // Switched to Flash for cost efficiency
+        model: 'gemini-2.5-flash', // Keep Flash 2.5 per instruction
         contents: `
           Write a compelling cover letter for the following applicant matching the job description.
           
@@ -496,7 +496,7 @@ export const extractBrandVoice = async (
     try {
         const response = await withRetry(async () => {
             return await ai.models.generateContent({
-                model: 'gemini-2.5-flash', // Switched to Flash for cost efficiency
+                model: 'gemini-2.5-flash',
                 contents: `
                 Analyze the following text sample. Identify the Tone, Style, and Personality. 
                 
@@ -553,7 +553,7 @@ export const analyzeATS = async (
     try {
         const response = await withRetry(async () => {
            return await ai.models.generateContent({
-            model: 'gemini-3-pro-preview', // Keep Pro for deep reasoning
+            model: 'gemini-2.5-pro-preview', // Cost Optimization: Use 2.5 Pro for Reasoning
             contents: `
             You are an expert ATS (Applicant Tracking System) algorithm analyzer. 
             Analyze the following CV against the provided Job Description.
@@ -739,7 +739,7 @@ export const generateSpeech = async (
 
 export const createLiveSession = (config: any) => {
     return ai.live.connect({
-        model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+        model: 'gemini-2.0-flash-exp', // Cost Optimization: Use 2.0 Flash for Live
         ...config
     });
 };

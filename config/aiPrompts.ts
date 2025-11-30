@@ -106,7 +106,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, any>): AI
       const jurisdiction = inputs.jurisdiction || "General";
       
       config = {
-        modelName: 'gemini-2.5-flash',
+        modelName: 'gemini-2.5-pro-preview', // Cost Optimization: 2.5 Pro for Reasoning
         systemInstruction: `You are a professional Legal Assistant AI specialized in drafting contracts.
         
         JURISDICTION CONTEXT: ${jurisdiction}. 
@@ -150,7 +150,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, any>): AI
 
     case ToolType.EMAIL_TEMPLATE:
       config = {
-        modelName: 'gemini-2.5-flash',
+        modelName: 'gemini-2.0-flash-exp', // Cost Optimization: 2.0 Flash
         systemInstruction: `You are a Professional Business Communication Expert.
         Create a high-quality, effective email template based on the user's scenario.
         
@@ -186,7 +186,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, any>): AI
 
     case ToolType.TEXT_POLISHER:
       config = {
-        modelName: 'gemini-2.5-flash',
+        modelName: 'gemini-2.0-flash-exp', // Cost Optimization: 2.0 Flash
         systemInstruction: `You are an expert editor. Rewrite the text to match the requested goal/tone while fixing all grammar and clarity issues. Maintain the original meaning.`,
         generatePrompt: () => `Original Text:\n"${inputs.textToPolish}"\n\nGoal/Tone: ${inputs.polishGoal}`
       };
@@ -202,7 +202,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, any>): AI
 
     case ToolType.DATA_ANALYSIS:
       config = {
-        modelName: 'gemini-2.5-flash', // Switched to Flash for speed
+        modelName: 'gemini-2.5-pro-preview', // Cost Optimization: 2.5 Pro for Reasoning
         systemInstruction: `You are a Senior Data Analyst. Analyze the provided data or text report.
         1. Identify key trends, anomalies, and insights.
         2. If raw data is provided, summarize it.
@@ -214,7 +214,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, any>): AI
     // --- CV & HR TOOLS ---
     case ToolType.CV_BUILDER:
       config = {
-        modelName: 'gemini-3-pro-preview', // Keep Pro for high quality bullets
+        modelName: 'gemini-2.5-pro-preview', // Cost Optimization: 2.5 Pro for Reasoning
         systemInstruction: `You are an expert Executive Career Coach and Resume Writer with 20 years of experience.
         Your goal is to write high-impact, result-oriented bullet points using the "Action Verb + Task + Result" formula.
         Rules:
@@ -235,7 +235,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, any>): AI
 
     case ToolType.HR_INTERVIEW_PREP:
       config = {
-        modelName: 'gemini-2.5-flash', 
+        modelName: 'gemini-2.5-pro-preview', // Cost Optimization: 2.5 Pro for Reasoning
         systemInstruction: `You are a Hiring Manager. Generate a list of likely interview questions and suggested answers (STAR method) for the candidate.`,
         generatePrompt: () => `Role: ${inputs.role}\nIndustry: ${inputs.industry}\n\nProvide 5 behavioral and 5 technical questions with tips.`
       };
@@ -244,7 +244,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, any>): AI
     // --- SOCIAL MEDIA ---
     case ToolType.SOCIAL_TWITTER:
       config = {
-        modelName: 'gemini-2.5-flash',
+        modelName: 'gemini-2.0-flash-exp', // Cost Optimization: 2.0 Flash
         systemInstruction: `You are a viral Social Media Manager for Twitter/X.
         Your goal is to maximize engagement (likes, retweets).
         Rules:
@@ -258,7 +258,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, any>): AI
     
     case ToolType.SOCIAL_LINKEDIN:
       config = {
-        modelName: 'gemini-2.5-flash', // Optimized: Flash is sufficient for LinkedIn
+        modelName: 'gemini-2.0-flash-exp', // Cost Optimization: 2.0 Flash
         systemInstruction: `You are a LinkedIn Top Voice and Thought Leader.
         Goal: Build professional authority and network engagement.
         Structure: Hook, Meat, Takeaway, Ask.
@@ -321,7 +321,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, any>): AI
     // --- STRATEGY ---
     case ToolType.STARTUP_VALIDATOR:
       config = {
-        modelName: 'gemini-2.5-flash', // Optimized
+        modelName: 'gemini-2.5-pro-preview', // Cost Optimization: 2.5 Pro for Reasoning
         systemInstruction: `You are a Startup Advisor. Analyze the idea using SWOT analysis and provide critical feedback.`,
         generatePrompt: () => `Startup Idea: ${inputs.idea}\nTarget Market: ${inputs.market}`
       };
