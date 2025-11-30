@@ -248,8 +248,30 @@ const SmartEditor: React.FC = () => {
         let name = title.replace(/\s+/g, '_');
 
         if (format === 'html') {
-            // Enhanced HTML Export with skeleton
-            const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title></head><body style="font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">${content}</body></html>`;
+            // Enhanced HTML Export with Tailwind CDN and Styles
+            const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .prose h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 1rem; }
+        .prose h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+        .prose p { margin-bottom: 1rem; line-height: 1.75; }
+        .prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+        .prose blockquote { border-left: 4px solid #6366f1; padding-left: 1rem; font-style: italic; }
+    </style>
+</head>
+<body class="bg-white text-slate-900 p-8 md:p-12 max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8 border-b pb-4">${title}</h1>
+    <div class="prose max-w-none text-lg">
+        ${content}
+    </div>
+</body>
+</html>`;
             file = new Blob([htmlContent], {type: 'text/html'});
             name += '.html';
         } else if (format === 'doc') {

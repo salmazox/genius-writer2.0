@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { ToolType, CVData, ATSAnalysis } from "../types";
 import { getPromptConfig } from "../config/aiPrompts";
@@ -562,10 +563,23 @@ export const parseResume = async (
 
     checkUsageAllowance('word');
 
-    // Dynamically detect MIME type and extract clean base64 data
+    // Dynamically detect MIME type and extract clean base64 data to avoid API errors
+    // Default to 'image/png' if detection fails, but try to extract from string first
+    let mimeType = 'image/png';
+    let cleanedBase64 = base64Image;
+
     const matches = base64Image.match(/^data:(.+);base64,(.+)$/);
-    const mimeType = matches ? matches[1] : 'image/png'; // Default fallback
-    const cleanedBase64 = matches ? matches[2] : base64Image;
+    if (matches) {
+        mimeType = matches[1];
+        cleanedBase64 = matches[2];
+    } else {
+        // Fallback: If no "data:" prefix, assume it is raw base64. 
+        // If it has a comma but no "data:", try to split.
+        const commaIndex = base64Image.indexOf(',');
+        if (commaIndex !== -1) {
+             cleanedBase64 = base64Image.substring(commaIndex + 1);
+        }
+    }
 
     try {
         const response = await withRetry(async () => {
@@ -598,7 +612,7 @@ export const parseResume = async (
     } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") throw e;
         console.error("Resume Parsing Error", e);
-        throw new Error("Failed to parse resume");
+        throw new Error("Failed to parse resume. Ensure image is clear.");
     }
 };
 
