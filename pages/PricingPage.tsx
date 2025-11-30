@@ -218,4 +218,43 @@ const PricingPage: React.FC = () => {
                                 { name: 'Word Limit (Monthly)', free: '2,000', pro: '50,000', agency: '200,000', ent: 'Unlimited' },
                                 { name: 'AI Model', free: 'Gemini Flash', pro: 'Gemini Pro + Flash', agency: 'Gemini Pro + Flash', ent: 'Custom / Ultra' },
                                 { name: 'Image Generation', free: false, pro: '50 / mo', agency: '200 / mo', ent: 'Unlimited' },
-                                { name: 'Brand Voices
+                                { name: 'Brand Voices', free: '0', pro: '1', agency: 'Unlimited', ent: 'Unlimited' },
+                                { name: 'Team Seats', free: '1', pro: '1', agency: '3', ent: 'Unlimited' },
+                                { name: 'Support', free: 'Community', pro: 'Standard', agency: 'Priority', ent: 'Dedicated' },
+                            ].map((row, i) => (
+                                <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                    <td className="p-6 font-medium text-slate-900 dark:text-white">{row.name}</td>
+                                    <td className="p-6 text-slate-600 dark:text-slate-400 text-center">
+                                        {typeof row.free === 'boolean' ? (row.free ? <CheckCircle2 size={18} className="mx-auto text-green-500" /> : <XIcon size={18} className="mx-auto text-slate-300" />) : row.free}
+                                    </td>
+                                    <td className="p-6 text-slate-600 dark:text-slate-400 text-center font-medium text-indigo-600 dark:text-indigo-400">
+                                        {typeof row.pro === 'boolean' ? (row.pro ? <CheckCircle2 size={18} className="mx-auto text-green-500" /> : <XIcon size={18} className="mx-auto text-slate-300" />) : row.pro}
+                                    </td>
+                                    <td className="p-6 text-slate-600 dark:text-slate-400 text-center">
+                                        {typeof row.agency === 'boolean' ? (row.agency ? <CheckCircle2 size={18} className="mx-auto text-green-500" /> : <XIcon size={18} className="mx-auto text-slate-300" />) : row.agency}
+                                    </td>
+                                    <td className="p-6 text-slate-600 dark:text-slate-400 text-center">
+                                        {typeof row.ent === 'boolean' ? (row.ent ? <CheckCircle2 size={18} className="mx-auto text-green-500" /> : <XIcon size={18} className="mx-auto text-slate-300" />) : row.ent}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* FAQ CTA */}
+            <div className="text-center mt-20">
+                <p className="text-slate-600 dark:text-slate-400 mb-4">Have more questions?</p>
+                <Link to="/contact" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center justify-center gap-1">
+                    <HelpCircle size={16} /> Visit our Help Center
+                </Link>
+            </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PricingPage;

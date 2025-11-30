@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { ToolType, CVData, ATSAnalysis } from "../types";
 import { getPromptConfig } from "../config/aiPrompts";
@@ -100,35 +99,40 @@ const apiLimiter = new RateLimiter(5, 0.5);
  */
 const USAGE_KEY = 'gw_usage_tracker';
 
-interface UsageData {
+export interface UsageData {
   wordsUsed: number;
+  imagesUsed: number;
   lastReset: number;
 }
 
 const getUsageData = (): UsageData => {
   try {
     const data = localStorage.getItem(USAGE_KEY);
-    if (!data) return { wordsUsed: 0, lastReset: Date.now() };
+    if (!data) return { wordsUsed: 0, imagesUsed: 0, lastReset: Date.now() };
     
     const parsed = JSON.parse(data);
     // Reset monthly (mock logic: if last reset was > 30 days ago)
     if (Date.now() - parsed.lastReset > 30 * 24 * 60 * 60 * 1000) {
-        return { wordsUsed: 0, lastReset: Date.now() };
+        return { wordsUsed: 0, imagesUsed: 0, lastReset: Date.now() };
+    }
+    // Backward compatibility for old format without imagesUsed
+    if (parsed.imagesUsed === undefined) {
+        parsed.imagesUsed = 0;
     }
     return parsed;
   } catch {
-    return { wordsUsed: 0, lastReset: Date.now() };
+    return { wordsUsed: 0, imagesUsed: 0, lastReset: Date.now() };
   }
 };
 
-const LIMITS: Record<string, number> = {
-  free: 2000,
-  pro: 50000,
-  agency: 200000,
-  enterprise: Infinity
+export const LIMITS: Record<string, { words: number, images: number }> = {
+  free: { words: 2000, images: 0 },
+  pro: { words: 50000, images: 50 },
+  agency: { words: 200000, images: 200 },
+  enterprise: { words: Infinity, images: Infinity }
 };
 
-const checkUsageAllowance = () => {
+const checkUsageAllowance = (type: 'word' | 'image' = 'word') => {
   let plan = 'free';
   try {
     const userStr = localStorage.getItem('ai_writer_user');
@@ -142,18 +146,31 @@ const checkUsageAllowance = () => {
   const usage = getUsageData();
   const limit = LIMITS[plan] || LIMITS.free;
   
-  if (usage.wordsUsed >= limit) {
-    throw new Error(`Plan limit reached (${limit.toLocaleString()} words). Please upgrade to continue.`);
+  if (type === 'word' && usage.wordsUsed >= limit.words) {
+    throw new Error(`Word limit reached (${limit.words.toLocaleString()} words). Please upgrade to continue.`);
+  }
+
+  if (type === 'image' && usage.imagesUsed >= limit.images) {
+    throw new Error(`Image limit reached (${limit.images} images). Please upgrade to continue.`);
   }
 };
 
-const trackUsage = (text: string) => {
-  if (!text) return;
-  const wordCount = text.trim().split(/\s+/).length;
+const trackUsage = (text: string, isImage: boolean = false) => {
   const usage = getUsageData();
+  let newWords = usage.wordsUsed;
+  let newImages = usage.imagesUsed;
+
+  if (isImage) {
+      newImages += 1;
+  } else if (text) {
+      const wordCount = text.trim().split(/\s+/).length;
+      newWords += wordCount;
+  }
+
   localStorage.setItem(USAGE_KEY, JSON.stringify({
     ...usage,
-    wordsUsed: usage.wordsUsed + wordCount
+    wordsUsed: newWords,
+    imagesUsed: newImages
   }));
   
   // Dispatch event for UI updates
@@ -204,17 +221,11 @@ export const generateContent = async (
       throw new Error("Rate limit exceeded. Please wait a moment before generating again.");
   }
 
-  // Check Plan Limits
-  checkUsageAllowance();
-
-  // Create a cache key based on inputs
-  const cacheKey = `${tool}-${JSON.stringify(inputs)}-${brandVoiceInstruction || ''}`;
-  if (requestCache.has(cacheKey)) {
-    return requestCache.get(cacheKey)!;
-  }
-
   // Handle Image Gen separately
   if (tool === ToolType.IMAGE_GEN) {
+      // Check Plan Limits for Images
+      checkUsageAllowance('image');
+
       try {
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash-image',
@@ -229,9 +240,7 @@ export const generateContent = async (
         for (const part of response.candidates[0].content.parts) {
             if (part.inlineData) {
                 const base64EncodeString: string = part.inlineData.data;
-                // Return raw Data URI for the frontend to render as <img src="...">
-                // We count images roughly as 500 words equivalent for rate limiting purposes here
-                trackUsage("image_placeholder ".repeat(500)); 
+                trackUsage("image", true); 
                 return `data:${part.inlineData.mimeType};base64,${base64EncodeString}`;
             }
         }
@@ -241,6 +250,15 @@ export const generateContent = async (
         console.error("Image Gen Error", e);
         return "Error generating image.";
       }
+  }
+
+  // Check Plan Limits for Words
+  checkUsageAllowance('word');
+
+  // Create a cache key based on inputs
+  const cacheKey = `${tool}-${JSON.stringify(inputs)}-${brandVoiceInstruction || ''}`;
+  if (requestCache.has(cacheKey)) {
+    return requestCache.get(cacheKey)!;
   }
 
   // Get configuration
@@ -293,7 +311,7 @@ export const refineContent = async (
     throw new Error("Rate limit exceeded. Please wait.");
   }
 
-  checkUsageAllowance();
+  checkUsageAllowance('word');
 
   let sysInstruct = "You are a professional editor. Improve the text based on the user's specific instruction.";
   if (brandVoiceInstruction) {
@@ -334,7 +352,7 @@ export const chatWithAI = async (
     throw new Error("Rate limit exceeded.");
   }
 
-  checkUsageAllowance();
+  checkUsageAllowance('word');
 
   try {
     const chatHistory = history.map(h => ({
@@ -378,7 +396,7 @@ export const generateCoverLetter = async (
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
   if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
 
-  checkUsageAllowance();
+  checkUsageAllowance('word');
 
   const cvSummary = `
     Name: ${cvData.personal.fullName}
@@ -424,7 +442,7 @@ export const extractBrandVoice = async (
     checkOnline();
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-    checkUsageAllowance(); 
+    checkUsageAllowance('word'); 
 
     try {
         const response = await withRetry(async () => {
@@ -470,7 +488,7 @@ export const analyzeATS = async (
     checkOnline();
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-    checkUsageAllowance();
+    checkUsageAllowance('word');
 
     const cvText = `
     Name: ${cvData.personal.fullName}
@@ -542,7 +560,7 @@ export const parseResume = async (
     checkOnline();
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-    checkUsageAllowance();
+    checkUsageAllowance('word');
 
     // Clean base64 string
     const cleanedBase64 = base64Image.split(',')[1] || base64Image;
@@ -591,7 +609,7 @@ export const factCheck = async (
 
     if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
     
-    checkUsageAllowance();
+    checkUsageAllowance('word');
 
     try {
         const response = await withRetry(async () => {
