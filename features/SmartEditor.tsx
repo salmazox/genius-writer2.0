@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
-    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft
+    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
@@ -237,7 +237,7 @@ const SmartEditor: React.FC = () => {
         });
     }, [content, seoKeywords]);
 
-    const handleExport = (format: 'html' | 'txt') => {
+    const handleExport = (format: 'html' | 'txt' | 'doc') => {
         if (!isPro) {
             showToast("Upgrade to Pro to export files.", "error");
             return;
@@ -248,8 +248,17 @@ const SmartEditor: React.FC = () => {
         let name = title.replace(/\s+/g, '_');
 
         if (format === 'html') {
-            file = new Blob([content], {type: 'text/html'});
+            // Enhanced HTML Export with skeleton
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title></head><body style="font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">${content}</body></html>`;
+            file = new Blob([htmlContent], {type: 'text/html'});
             name += '.html';
+        } else if (format === 'doc') {
+             // Basic Word Export wrapper
+             const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + title + "</title></head><body>";
+             const footer = "</body></html>";
+             const sourceHTML = header + content + footer;
+             file = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+             name += '.doc';
         } else {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = content;
@@ -321,6 +330,7 @@ const SmartEditor: React.FC = () => {
                             </Button>
                             <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                                 <button onClick={() => handleExport('html')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-t-xl">HTML</button>
+                                <button onClick={() => handleExport('doc')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">Word Doc</button>
                                 <button onClick={() => handleExport('txt')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-b-xl">Plain Text</button>
                             </div>
                         </div>

@@ -562,8 +562,10 @@ export const parseResume = async (
 
     checkUsageAllowance('word');
 
-    // Clean base64 string
-    const cleanedBase64 = base64Image.split(',')[1] || base64Image;
+    // Dynamically detect MIME type and extract clean base64 data
+    const matches = base64Image.match(/^data:(.+);base64,(.+)$/);
+    const mimeType = matches ? matches[1] : 'image/png'; // Default fallback
+    const cleanedBase64 = matches ? matches[2] : base64Image;
 
     try {
         const response = await withRetry(async () => {
@@ -571,7 +573,7 @@ export const parseResume = async (
                 model: 'gemini-2.5-flash',
                 contents: {
                     parts: [
-                        { inlineData: { mimeType: 'image/png', data: cleanedBase64 } },
+                        { inlineData: { mimeType: mimeType, data: cleanedBase64 } },
                         { text: `
                             Extract resume data from this image into JSON format matching this structure:
                             {
