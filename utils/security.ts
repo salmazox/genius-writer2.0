@@ -1,3 +1,4 @@
+
 import DOMPurify from 'dompurify';
 
 /**
@@ -7,8 +8,13 @@ import DOMPurify from 'dompurify';
 export const sanitizeHtml = (html: string): string => {
   if (!html) return "";
   return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'ul', 'ol', 'li', 'br', 'u', 'span', 'div'],
-    ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style'],
+    ALLOWED_TAGS: [
+        'b', 'i', 'em', 'strong', 'a', 'p', 'ul', 'ol', 'li', 'br', 'u', 'span', 'div', 
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
+        'table', 'thead', 'tbody', 'tr', 'th', 'td', 
+        'hr', 'blockquote', 'code', 'pre'
+    ],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style', 'align', 'valign'],
   });
 };
 

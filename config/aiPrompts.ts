@@ -15,13 +15,16 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
     generatePrompt: () => inputs.content || "Hello, how can I help you today?"
   };
 
+  const accentColor = inputs.accentColor || '#4f46e5';
+  const template = inputs.template || 'modern';
+
   switch (tool) {
     // --- GERMAN MARKET SPECIALS ---
     case ToolType.INVOICE_GEN:
       config = {
         modelName: 'gemini-2.5-flash',
-        systemInstruction: `You are a German accounting expert and software assistant.
-        Your goal is to generate a legally compliant invoice (Rechnung) for the German market.
+        systemInstruction: `You are a German accounting expert and frontend developer.
+        Your goal is to generate a legally compliant invoice (Rechnung) for the German market as a beautiful HTML document.
         
         Mandatory Fields (§14 UStG) to check/include:
         1. Full name & address of supplier (Leistender Unternehmer).
@@ -33,70 +36,74 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         7. Date of supply/service (Leistungszeitpunkt).
         8. Net amount, VAT rate (19% or 7% or 0%), VAT amount, and Gross amount.
         
-        Specific Rules based on Template:
+        Output Rules:
+        - Return ONLY HTML code. No markdown code blocks (no \`\`\`html).
+        - Use Tailwind CSS classes for styling.
+        - Use inline styles ONLY for the dynamic accent color: ${accentColor}.
+        - Font styling:
+          - If template is 'modern': Use sans-serif (font-sans), clean lines, colored headers.
+          - If template is 'classic': Use serif (font-serif), formal layout, borders.
+          - If template is 'minimal': Use mono or clean sans, black and white mostly, very simple.
+        
+        Specific Rules based on Type:
         - "Standard Commercial": Calculate 19% VAT. Show Net, VAT, Gross.
         - "Reduced Rate": Calculate 7% VAT. Show Net, VAT, Gross.
         - "Small Business (Kleinunternehmer)": Do NOT charge VAT. MUST include clause: "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
-        - "Private": Simple receipt style. No VAT breakdown required, but clear total.
         
-        Output format: Clean Markdown. Use a markdown table for the items. Structure it like a formal letter.
-        Language: German (Deutsch).`,
-        generatePrompt: () => `Selected Template: ${inputs.invoiceType}
+        Layout Requirements:
+        - Use a full width div container.
+        - Use a real HTML <table> for items with border-b for rows.
+        - Align numbers to the right.
+        - Make it look professional and ready to print.`,
+        generatePrompt: () => `
+        Generate HTML Invoice.
+        Template Style: ${template}
+        Accent Color: ${accentColor}
         
-        Sender (Supplier):
-        ${inputs.invoiceSender}
+        Type: ${inputs.invoiceType}
+        Sender: ${inputs.invoiceSender}
+        Recipient: ${inputs.invoiceRecipient}
+        Meta Data: ${inputs.invoiceDetails}
+        Items: ${inputs.invoiceItems}
+        Payment Terms: ${inputs.paymentTerms}
         
-        Recipient:
-        ${inputs.invoiceRecipient}
-        
-        Invoice Meta Data:
-        ${inputs.invoiceDetails}
-        
-        Items & Details:
-        ${inputs.invoiceItems}
-        
-        Payment Terms:
-        ${inputs.paymentTerms}
-        
-        Generate the full professional invoice text in German.`
+        IMPORTANT: Return only the inner HTML structure (divs, tables) to be placed inside an A4 container. Do not include <html> or <body> tags.`
       };
       break;
 
     case ToolType.CONTRACT_GEN:
       config = {
         modelName: 'gemini-3-pro-preview', // Pro for legal accuracy
-        systemInstruction: `You are a German legal assistant (Rechtsassistent).
-        Your task is to draft a contract based on German Civil Code (BGB) standards.
+        systemInstruction: `You are a German legal assistant (Rechtsassistent) and frontend developer.
+        Your task is to draft a contract based on German Civil Code (BGB) standards as clean HTML.
         
         IMPORTANT DISCLAIMER:
-        Start the response with a clear disclaimer in German bold text: "**HINWEIS: Dies ist ein KI-generierter Entwurf und stellt keine Rechtsberatung dar. Bitte lassen Sie den Vertrag ggf. juristisch prüfen.**"
+        Start with a div containing the disclaimer: "**HINWEIS: Dies ist ein KI-generierter Entwurf und stellt keine Rechtsberatung dar.**"
         
-        Rules:
-        1. Use precise German legal terminology (Juristendeutsch).
-        2. Structure clearly: §1 Vertragsgegenstand, §2 Preis, etc.
-        3. Respect the specific contract type:
-           - "Kaufvertrag (Privat)": Exclude warranty if possible ("Der Verkauf erfolgt unter Ausschluss jeglicher Gewährleistung").
-           - "Dienstleistungsvertrag": Focus on scope of work and hours.
-           - "NDA": Focus on definition of confidential info and penalties.
-        4. Output format: Markdown.`,
-        generatePrompt: () => `Contract Type: ${inputs.contractType}
+        Output Rules:
+        - Return ONLY HTML code. No markdown code blocks.
+        - Use Tailwind CSS classes.
+        - Use inline styles for the accent color: ${accentColor}.
+        - Structure:
+          - Header: Title centered or left aligned based on template '${template}'.
+          - Preamble: Introduction of parties.
+          - Sections: Use <h3> for §1, §2 etc.
+          - Signatures: Use a flexbox grid for two signature lines at the bottom.
         
-        Party A (Seller/Provider):
-        ${inputs.partyA}
+        Layout based on Template '${template}':
+        - Modern: Bold headers in accent color, clean sans-serif.
+        - Classic: Serif font, traditional layout, justified text.
+        - Minimal: Simple, plenty of whitespace, black/dark grey text.`,
+        generatePrompt: () => `
+        Generate HTML Contract.
+        Type: ${inputs.contractType}
+        Party A: ${inputs.partyA}
+        Party B: ${inputs.partyB}
+        Subject: ${inputs.subjectMatter}
+        Financials: ${inputs.financials}
+        Conditions: ${inputs.conditions}
         
-        Party B (Buyer/Client):
-        ${inputs.partyB}
-        
-        Subject Matter:
-        ${inputs.subjectMatter}
-        
-        Financials:
-        ${inputs.financials}
-        
-        Special Conditions:
-        ${inputs.conditions}
-        
-        Draft the contract in German.`
+        IMPORTANT: Return only the inner HTML structure.`
       };
       break;
 
@@ -106,19 +113,19 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         systemInstruction: `You are a Professional Business Communication Expert.
         Create a high-quality, effective email template based on the user's scenario.
         
-        Rules:
-        1. Use placeholders like [Name], [Date], [Company] for variable information.
-        2. Provide 2-3 subject line options at the top.
-        3. Ensure the tone matches the user's request exactly.
-        4. Structure: Subject Lines -> Body -> Signature Placeholder.`,
+        Output format: HTML with Tailwind CSS.
+        Style: Clean, readable, email-client friendly simulation.
+        
+        Structure:
+        - Box for Subject Line options (bg-gray-50 p-4 mb-6 rounded).
+        - Main Email Body.
+        - Placeholders: [Name], [Date] highlighted in yellow (bg-yellow-100).`,
         generatePrompt: () => `Template Type: ${inputs.emailType}
         Recipient Info: ${inputs.recipientInfo}
-        Key Points to Cover:
-        ${inputs.keyPoints}
-        
+        Key Points: ${inputs.keyPoints}
         Tone: ${inputs.tone}
         
-        Generate the email template.`
+        Generate the email template HTML.`
       };
       break;
 

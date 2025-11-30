@@ -16,6 +16,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { useSwipe } from '../hooks/useSwipe';
 import { BrandVoiceManager } from './BrandVoiceManager';
 import { Watermark } from '../components/Watermark';
+import { sanitizeHtml } from '../utils/security';
 
 declare global {
   interface Window {
@@ -71,6 +72,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const isPro = user.plan !== 'free';
     const isImageTool = tool.id === ToolType.IMAGE_GEN;
     const hasTemplates = [ToolType.INVOICE_GEN, ToolType.CONTRACT_GEN, ToolType.EMAIL_TEMPLATE].includes(tool.id);
+    const isHtmlOutput = hasTemplates;
 
     // Swipe gestures
     const swipeHandlers = useSwipe({
@@ -156,14 +158,25 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         setIsLoading(true);
         const selectedVoice = brandVoices.find(v => v.id === selectedVoiceId);
         
+        // Pass design context to AI
+        const inputsWithTheme = {
+            ...formValues,
+            accentColor,
+            template
+        };
+
         try {
             const result = await generateContent(
                 tool.id, 
-                formValues, 
+                inputsWithTheme, 
                 selectedVoice ? `${selectedVoice.name}: ${selectedVoice.description}` : undefined,
                 controller.signal
             );
-            setDocumentContent(result);
+            
+            // Clean Markdown code blocks if they slip through
+            let cleanedResult = result.replace(/```html/g, '').replace(/```/g, '');
+            setDocumentContent(cleanedResult);
+            
             showToast(isImageTool ? "Image generated successfully" : t('dashboard.toasts.generated'), 'success');
             setMobileTab('result');
         } catch (e: any) {
@@ -199,7 +212,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const handleCopy = () => {
         if (!documentContent) return;
         navigator.clipboard.writeText(documentContent);
-        showToast("Copied Markdown", 'info');
+        showToast("Copied content", 'info');
     };
 
     const handleCopyHtml = () => {
@@ -276,10 +289,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     };
 
     const insertSignature = () => {
-        const signatureBlock = `\n\n<div style="margin-top: 40px; display: flex; gap: 40px;">
-<div style="border-top: 1px solid #000; width: 200px; padding-top: 8px;">Signature (Provider)</div>
-<div style="border-top: 1px solid #000; width: 200px; padding-top: 8px;">Signature (Client)</div>
-</div>`;
+        const signatureBlock = `<div style="margin-top: 40px; display: flex; gap: 40px;"><div style="border-top: 1px solid #000; width: 200px; padding-top: 8px;">Signature (Provider)</div><div style="border-top: 1px solid #000; width: 200px; padding-top: 8px;">Signature (Client)</div></div>`;
         setDocumentContent(prev => prev + signatureBlock);
     };
 
@@ -326,52 +336,28 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         }
     };
 
-    // --- Dynamic Template Styles ---
+    // --- Template Styles ---
     const getPreviewStyles = () => {
-        let containerClass = "bg-white dark:bg-slate-900"; // Default container
-        let proseClass = "prose-indigo prose-lg"; // Default typography
-        let wrapperClass = "p-8 md:p-12"; // Default padding
-        
         // Find Tailwind class for accent color
         const colorObj = ACCENT_COLORS.find(c => c.value === accentColor) || ACCENT_COLORS[0];
-
-        if (tool.id === ToolType.INVOICE_GEN) {
-            if (template === 'modern') {
-                containerClass = "bg-white text-slate-800 shadow-2xl font-sans rounded-none";
-                proseClass = `prose prose-slate max-w-none prose-headings:${colorObj.twText} prose-th:bg-slate-50 prose-th:p-2 prose-td:p-2 prose-img:rounded-xl`;
-            } else if (template === 'classic') {
-                containerClass = "bg-[#fdfbf7] text-slate-900 border-double border-4 border-slate-300 font-serif rounded-none";
-                proseClass = "prose prose-slate max-w-none prose-headings:font-serif prose-headings:text-center prose-headings:uppercase prose-headings:tracking-widest prose-hr:border-slate-300";
-            } else if (template === 'minimal') {
-                containerClass = "bg-white text-slate-900 border border-slate-200 font-mono text-sm rounded-none";
-                proseClass = "prose prose-stone max-w-none prose-headings:font-normal prose-headings:uppercase prose-hr:border-black";
-            }
-        } else if (tool.id === ToolType.CONTRACT_GEN) {
-            if (template === 'modern') {
-                containerClass = `bg-white text-slate-800 border-l-8 shadow-xl font-sans rounded-r-xl`;
-                proseClass = `prose prose-slate max-w-none prose-headings:font-bold prose-headings:${colorObj.twText} prose-p:text-justify prose-li:marker:${colorObj.twText}`;
-            } else if (template === 'classic') {
-                containerClass = "bg-[#fffefc] text-slate-900 border-y-8 border-slate-900 font-serif shadow-sm rounded-none";
-                proseClass = "prose prose-slate max-w-none prose-headings:font-serif prose-p:leading-loose prose-p:text-justify";
-            } else if (template === 'minimal') {
-                containerClass = "bg-white text-slate-900 font-sans border-none shadow-none";
-                proseClass = "prose prose-stone max-w-none prose-headings:font-medium prose-p:text-slate-700";
-            }
-        } else if (tool.id === ToolType.EMAIL_TEMPLATE) {
-            wrapperClass = "p-6 md:p-8"; // Less padding for emails
-            if (template === 'modern') {
-                containerClass = "bg-white text-slate-800 rounded-xl shadow-lg border border-slate-200 font-sans overflow-hidden";
-                proseClass = `prose prose-slate max-w-none prose-p:my-2 prose-headings:text-lg prose-a:${colorObj.twText}`;
-            } else if (template === 'classic') {
-                containerClass = "bg-white text-slate-900 font-serif border border-slate-200 shadow-sm rounded-none";
-                proseClass = "prose prose-slate max-w-none prose-p:leading-normal";
-            } else if (template === 'minimal') {
-                containerClass = "bg-transparent text-slate-800 font-mono text-sm border-none shadow-none";
-                proseClass = "prose prose-stone max-w-none prose-p:my-1";
-            }
+        
+        // For HTML output tools, we let the AI content control layout, so minimal wrapper styling.
+        if (isHtmlOutput) {
+            return {
+                containerClass: "bg-white text-slate-900 shadow-xl", // Basic sheet style
+                proseClass: "", // No prose interference for custom HTML
+                wrapperClass: "p-0", // No padding, let content handle it
+                colorObj
+            };
         }
 
-        return { containerClass, proseClass, wrapperClass, colorObj };
+        // Default Markdown styling
+        return {
+            containerClass: "bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800",
+            proseClass: "prose-indigo prose-lg",
+            wrapperClass: "p-8 md:p-12",
+            colorObj
+        };
     };
 
     const { containerClass, proseClass, wrapperClass, colorObj } = getPreviewStyles();
@@ -581,8 +567,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                                         className={isPlaying ? "text-red-500 animate-pulse" : ""}
                                     />
                                     <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
-                                    <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Markdown" icon={Copy} />
-                                    <Button variant="ghost" size="sm" onClick={handleCopyHtml} title="Copy HTML" icon={Code} />
+                                    <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Content" icon={Copy} />
+                                    {isHtmlOutput && <Button variant="ghost" size="sm" onClick={handleCopyHtml} title="Copy HTML" icon={Code} />}
                                     <Button variant="ghost" size="sm" onClick={handleExportWord} title="Export as Word" icon={isPro ? FileType : Lock} disabled={!isPro && false} />
                                     <Button variant="ghost" size="sm" onClick={handleDownloadPDF} title="Export as PDF" icon={isPro ? Download : Lock} disabled={!isPro && false} />
                                 </>
@@ -591,7 +577,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     </div>
 
                     {/* Content */}
-                    <div className={`flex-1 overflow-y-auto custom-scrollbar relative ${hasTemplates ? 'flex justify-center' : 'p-8 pb-24 md:p-12 md:pb-12'}`}>
+                    <div className={`flex-1 overflow-y-auto custom-scrollbar relative ${hasTemplates ? 'flex justify-center items-start' : 'p-8 pb-24 md:p-12 md:pb-12'}`}>
                         
                         {/* 
                             This is the styled container for Templates. 
@@ -600,55 +586,10 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                         <div 
                             id="template-wrapper" 
                             className={`relative transition-all duration-500 ${hasTemplates ? `${containerClass} w-full max-w-[210mm] shadow-xl mb-20 min-h-[297mm]` : 'z-10 h-full'}`}
-                            style={tool.id === ToolType.CONTRACT_GEN && template === 'modern' ? { borderLeftColor: accentColor } : {}}
                         >
                             
                             {/* Watermark */}
                             {!isPro && <Watermark className="z-0" />}
-
-                            {/* --- Special Header for Invoice (Modern) --- */}
-                            {tool.id === ToolType.INVOICE_GEN && template === 'modern' && (
-                                <div className={`h-4 w-full mb-8 ${colorObj.twBg}`}></div>
-                            )}
-
-                            {/* --- Special Header for Email (Modern) --- */}
-                            {tool.id === ToolType.EMAIL_TEMPLATE && template === 'modern' && (
-                                <div className="border-b border-slate-100 bg-slate-50/50">
-                                    {/* Mac Window Controls */}
-                                    <div className="px-4 py-3 flex items-center gap-2">
-                                        <div className="flex gap-1.5">
-                                            <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                                            <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                                            <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                                        </div>
-                                    </div>
-                                    {/* Email Metadata Simulation */}
-                                    <div className="px-6 py-2 border-t border-slate-200 bg-white">
-                                        <div className="flex gap-2 text-sm mb-1">
-                                            <span className="text-slate-400 w-12 text-right">To:</span>
-                                            <span className="text-slate-800 font-medium bg-indigo-50 px-2 rounded text-indigo-700">{formValues['recipientInfo'] || 'Recipient'}</span>
-                                        </div>
-                                        <div className="flex gap-2 text-sm mb-1">
-                                            <span className="text-slate-400 w-12 text-right">From:</span>
-                                            <span className="text-slate-600">{user.name} &lt;{user.email}&gt;</span>
-                                        </div>
-                                        <div className="flex gap-2 text-sm">
-                                            <span className="text-slate-400 w-12 text-right">Subject:</span>
-                                            <span className="text-slate-900 font-medium">{formValues['emailType'] || 'New Message'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* --- Special Header for Email (Classic) --- */}
-                            {tool.id === ToolType.EMAIL_TEMPLATE && template === 'classic' && (
-                                <div className="p-8 pb-0 border-b border-slate-100 mb-4">
-                                    <div className="flex items-center gap-2 text-slate-500 mb-6">
-                                        <Mail size={16} /> 
-                                        <span className="uppercase tracking-widest text-xs font-serif">Official Correspondence</span>
-                                    </div>
-                                </div>
-                            )}
 
                             {/* Actual Content Render */}
                             <div className={`${wrapperClass} relative z-10 h-full`}>
@@ -680,6 +621,12 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                                                 className="max-w-full max-h-full rounded-lg shadow-lg object-contain"
                                             />
                                         </div>
+                                    ) : isHtmlOutput ? (
+                                        <div 
+                                            className={`max-w-none ${proseClass} w-full h-full`} 
+                                            ref={previewRef}
+                                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(documentContent) }}
+                                        />
                                     ) : (
                                         <div className={`prose dark:prose-invert max-w-none ${proseClass}`} ref={previewRef}>
                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{documentContent}</ReactMarkdown>
