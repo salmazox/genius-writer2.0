@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Menu, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder } from 'lucide-react';
+import { Menu, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder, Mic } from 'lucide-react';
 import { ToolType, SavedDocument, Folder as FolderType } from '../types';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { useToast } from '../contexts/ToastContext';
@@ -20,6 +21,7 @@ import CvBuilder from '../features/CvBuilder';
 import Translator from '../features/Translator';
 import GenericTool from '../features/GenericTool';
 import SmartEditor from '../features/SmartEditor';
+import LiveInterview from '../features/LiveInterview'; // New Import
 
 // Import New Dashboard Components
 import { DashboardLibrary } from '../components/dashboard/DashboardLibrary';
@@ -287,7 +289,8 @@ const Dashboard: React.FC = () => {
   const isFullWidthTool = (id: ToolType) => 
     id === ToolType.TRANSLATE || 
     id === ToolType.CV_BUILDER || 
-    id === ToolType.SMART_EDITOR;
+    id === ToolType.SMART_EDITOR ||
+    id === ToolType.LIVE_INTERVIEW;
 
   return (
     <div className="flex h-full bg-slate-50 dark:bg-slate-950 overflow-hidden font-sans relative">
@@ -336,6 +339,7 @@ const Dashboard: React.FC = () => {
                     {activeToolId === ToolType.CV_BUILDER && <FileText size={20} />}
                     {activeToolId === ToolType.TRANSLATE && <Globe size={20} />}
                     {activeToolId === ToolType.SMART_EDITOR && <FileEdit size={20} />}
+                    {activeToolId === ToolType.LIVE_INTERVIEW && <Mic size={20} />}
                 </div>
             </aside>
         )
@@ -433,6 +437,7 @@ const Dashboard: React.FC = () => {
                         {activeToolId === ToolType.CV_BUILDER && <CvBuilder />}
                         {activeToolId === ToolType.TRANSLATE && <Translator />}
                         {activeToolId === ToolType.SMART_EDITOR && <SmartEditor />}
+                        {activeToolId === ToolType.LIVE_INTERVIEW && <LiveInterview />}
                         {!isFullWidthTool(activeToolId) && activeTool && (
                             <GenericTool tool={activeTool} />
                         )}

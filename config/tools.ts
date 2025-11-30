@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   FileText, Globe, Image as ImageIcon, Twitter, Linkedin, Mail, PenTool, 
   Search, Tag, Briefcase, HelpCircle, Lightbulb, ShoppingBag, BarChart2,
-  Wand2, Minimize2, Edit, FileEdit, Receipt, Scale
+  Wand2, Minimize2, Edit, FileEdit, Receipt, Scale, Mic
 } from 'lucide-react';
 import { ToolConfig, ToolType } from '../types';
 
@@ -27,6 +27,7 @@ export const IconMap: Record<string, React.ElementType> = {
   'file-edit': FileEdit,
   'receipt': Receipt,
   'scale': Scale,
+  'mic': Mic,
 };
 
 export const getTools = (t: (key: string) => string): ToolConfig[] => [
@@ -38,6 +39,15 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       icon: 'file-edit', 
       model: 'gemini-3-pro-preview', 
       inputs: [] // Handled by custom UI
+    },
+    { 
+      id: ToolType.LIVE_INTERVIEW, 
+      name: 'Live Interview Coach', 
+      category: t('dashboard.categories.HR'), 
+      description: 'Practice job interviews with a real-time AI voice coach.', 
+      icon: 'mic', 
+      model: 'gemini-2.5-flash-native-audio-preview-09-2025', 
+      inputs: [] 
     },
     { 
       id: ToolType.CV_BUILDER, 

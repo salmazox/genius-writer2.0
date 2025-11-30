@@ -17,6 +17,7 @@ export enum ToolType {
   SEO_META_TAGS = 'SEO_META_TAGS',
   HR_JOB_DESC = 'HR_JOB_DESC',
   HR_INTERVIEW_PREP = 'HR_INTERVIEW_PREP',
+  LIVE_INTERVIEW = 'LIVE_INTERVIEW', // New Live API Tool
   STARTUP_VALIDATOR = 'STARTUP_VALIDATOR',
   TEXT_POLISHER = 'TEXT_POLISHER',
   SUMMARIZER = 'SUMMARIZER',
@@ -157,54 +158,4 @@ export interface CVEducation {
   year: string;
 }
 
-export interface CVCertificate {
-  id: string;
-  name: string;
-  issuer: string;
-  date: string;
-  url?: string;
-  description?: string;
-}
-
-export interface CVLanguage {
-  id: string;
-  language: string;
-  proficiency: 'Basic' | 'Intermediate' | 'Advanced' | 'Native';
-}
-
-export interface ATSAnalysis {
-  score: number;
-  missingKeywords: string[];
-  suggestions: string[];
-  summary: string;
-  improvedSummary?: string; // New: AI rewritten summary
-}
-
-export interface CVData {
-  template: 'modern' | 'classic' | 'minimal';
-  theme: CVTheme; 
-  personal: {
-    fullName: string;
-    email: string;
-    phone: string;
-    address: string;
-    website: string;
-    linkedin: string;
-    jobTitle?: string;
-    summary: string;
-    photoBase64?: string; // Changed from URL to Base64 for uploads
-    photoShape?: 'circle' | 'square' | 'rounded';
-    photoFilter?: 'none' | 'grayscale';
-  };
-  experience: CVExperience[];
-  education: CVEducation[];
-  skills: string[];
-  certifications: CVCertificate[];
-  languages: CVLanguage[];
-}
-
-declare global {
-  interface Window {
-    html2pdf: any;
-  }
-}
+export interface CVCertificate

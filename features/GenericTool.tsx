@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon, Palette, PenTool, Mail } from 'lucide-react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon, Palette, PenTool, Mail, Volume2, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig, ToolType } from '../types';
-import { generateContent } from '../services/gemini';
+import { generateContent, generateSpeech } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../contexts/ToastContext';
@@ -42,6 +42,12 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [showVoiceManager, setShowVoiceManager] = useState(false);
     
+    // TTS State
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+    
     // Design Template State
     const [template, setTemplate] = useState<'modern' | 'classic' | 'minimal'>('modern');
     const [accentColor, setAccentColor] = useState<string>('#4f46e5');
@@ -78,6 +84,15 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         };
     }, [documentContent, isImageTool]);
 
+    // Cleanup audio on unmount
+    useEffect(() => {
+        return () => {
+            if (audioContextRef.current) {
+                audioContextRef.current.close();
+            }
+        };
+    }, []);
+
     // Load draft on mount/tool change
     useEffect(() => {
         const loadDraft = () => {
@@ -104,6 +119,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         loadDraft();
         setMobileTab('input');
         if (abortControllerRef.current) abortControllerRef.current.abort();
+        stopAudio(); // Stop any playing audio on tool switch
 
     }, [tool.id]);
 
@@ -259,6 +275,49 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 <div style="border-top: 1px solid #000; width: 200px; padding-top: 8px;">Signature (Client)</div>
 </div>`;
         setDocumentContent(prev => prev + signatureBlock);
+    };
+
+    // --- Audio Logic ---
+    const stopAudio = () => {
+        if (audioSourceRef.current) {
+            audioSourceRef.current.stop();
+            audioSourceRef.current = null;
+        }
+        setIsPlaying(false);
+    };
+
+    const handleListen = async () => {
+        if (isPlaying) {
+            stopAudio();
+            return;
+        }
+
+        if (!documentContent) return;
+        
+        // Strip markdown/HTML for TTS
+        const plainText = documentContent.replace(/<[^>]*>/g, ' ').replace(/[#*_`]/g, '');
+        if (!plainText.trim()) return;
+
+        setIsGeneratingAudio(true);
+        try {
+            const buffer = await generateSpeech(plainText);
+            const ctx = audioContextRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
+            audioContextRef.current = ctx;
+
+            const audioBuffer = await ctx.decodeAudioData(buffer);
+            const source = ctx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(ctx.destination);
+            
+            source.onended = () => setIsPlaying(false);
+            source.start();
+            audioSourceRef.current = source;
+            setIsPlaying(true);
+        } catch (e) {
+            showToast("Failed to play audio", "error");
+        } finally {
+            setIsGeneratingAudio(false);
+        }
     };
 
     // --- Dynamic Template Styles ---
@@ -506,6 +565,16 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                                 </Button>
                              ) : (
                                 <>
+                                    {/* TTS Button */}
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={handleListen} 
+                                        title={isPlaying ? "Stop" : "Read Aloud"} 
+                                        icon={isGeneratingAudio ? Sparkles : isPlaying ? Square : Volume2} 
+                                        className={isPlaying ? "text-red-500 animate-pulse" : ""}
+                                    />
+                                    <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
                                     <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Markdown" icon={Copy} />
                                     <Button variant="ghost" size="sm" onClick={handleCopyHtml} title="Copy HTML" icon={Code} />
                                     <Button variant="ghost" size="sm" onClick={handleExportWord} title="Export as Word" icon={isPro ? FileType : Lock} disabled={!isPro && false} />
