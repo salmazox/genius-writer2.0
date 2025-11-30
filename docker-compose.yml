@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # The Public Entry Point (Handles SSL/HTTPS automatically)
+  caddy:
+    image: caddy:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - webapp
+      - api
+    networks:
+      - genius-net
+
+  # The React Application (Frontend)
+  webapp:
+    build: .
+    container_name: genius-writer-web
+    restart: always
+    expose:
+      - "80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - genius-net
+
+  # The Node.js Backend API (New)
+  api:
+    build: ./backend
+    container_name: genius-writer-api
+    restart: always
+    expose:
+      - "3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/geniuswriter?schema=public
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - FRONTEND_URL=https://geniuswriter.de
+    depends_on:
+      - db
+    networks:
+      - genius-net
+
+  # The Database (New)
+  db:
+    image: postgres:15-alpine
+    container_name: genius-writer-db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=geniuswriter
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - genius-net
+
+volumes:
+  caddy_data:
+  caddy_config:
+  db_data:
+
+networks:
+  genius-net:
+    driver: bridge
