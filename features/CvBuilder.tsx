@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
@@ -289,7 +288,7 @@ const CvBuilder: React.FC = () => {
             {/* Top Toolbar */}
             <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 lg:px-6 shrink-0 z-30 shadow-sm gap-2">
                 <div className="flex items-center gap-2">
-                    {/* NEW: Back Button for Mobile */}
+                    {/* Back Button for Mobile */}
                     <button onClick={handleBack} className="lg:hidden p-2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 -ml-1">
                         <ArrowLeft size={20} />
                     </button>

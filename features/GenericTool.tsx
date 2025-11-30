@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon, Palette, PenTool, Mail, Volume2, Square, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -101,7 +100,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         };
     }, []);
 
-    // Load draft on mount/tool change
+    // Load draft on mount/tool change and cleanup abort controller
     useEffect(() => {
         const loadDraft = () => {
             try {
@@ -126,9 +125,19 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
         loadDraft();
         setMobileTab('input');
-        if (abortControllerRef.current) abortControllerRef.current.abort();
+        
+        // Clean up previous requests if any
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
         stopAudio(); // Stop any playing audio on tool switch
 
+        // Cleanup on unmount or tool change
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
     }, [tool.id]);
 
     // Auto-save effect
@@ -264,7 +273,6 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         }
         if (!documentContent) { showToast("No content to export", "error"); return; }
         const element = previewRef.current;
-        if (!element) return;
         
         const elementId = hasTemplates ? 'template-wrapper' : null;
         const sourceElement = elementId ? document.getElementById(elementId) || element : element;

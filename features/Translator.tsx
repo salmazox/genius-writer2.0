@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Copy, Loader2, ArrowDown } from 'lucide-react';
 import { generateContent } from '../services/gemini';

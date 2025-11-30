@@ -801,4 +801,51 @@ export const translations = {
         jobSeekersDesc: 'Erstelle ATS-freundliche Lebensläufe und Anschreiben, die auffallen.',
         creators: 'Content Creator',
         creatorsDesc: 'Generiere Blogposts, Skripte und Social-Media-Inhalte in Minuten.',
-        agencies:
+        agencies: 'Agenturen',
+        agenciesDesc: 'Skaliere die Content-Produktion für mehrere Kunden mit Markenstimmen.',
+      },
+      security: {
+        title: 'Sicherheit auf Unternehmensniveau',
+        desc: 'Deine Daten gehören dir. Wir nutzen Verschlüsselung auf Bankenniveau und strenge Datenschutzrichtlinien.',
+        feature1: 'SOC2 Konform',
+        feature2: 'Datenverschlüsselung',
+        feature3: 'Privater Modus',
+      }
+    },
+    footer: {
+      desc: 'Stärke deine Kreativität und Produktivität mit fortschrittlicher KI-Technologie. Schreibe schneller, besser und intelligenter.',
+      product: 'Produkt',
+      company: 'Unternehmen',
+      legal: 'Rechtliches',
+      rights: 'Alle Rechte vorbehalten.',
+      newsletter: 'Abonniere unseren Newsletter',
+      subscribe: 'Abonnieren',
+    },
+    errors: {
+        notFoundTitle: 'Seite nicht gefunden',
+        notFoundDesc: 'Entschuldigung, wir konnten die gesuchte Seite nicht finden. Vielleicht hast du dich bei der URL vertippt?',
+        goHome: 'Zurück zur Startseite',
+    },
+    legal: {
+        privacyTitle: 'Datenschutzerklärung',
+        termsTitle: 'AGB',
+        imprintTitle: 'Impressum',
+        lastUpdated: 'Zuletzt aktualisiert: 24. Oktober 2023',
+    },
+    cookies: {
+        title: 'Wir schätzen deine Privatsphäre',
+        description: 'Wir verwenden Cookies, um dein Erlebnis zu verbessern, die Seitennutzung zu analysieren und unsere Marketingbemühungen zu unterstützen. Gemäß DSGVO kannst du wählen, welche Cookies du akzeptieren möchtest.',
+        necessary: 'Notwendig',
+        necessaryDesc: 'Erforderlich für die Funktion der Website (z. B. Login, Sitzung).',
+        analytics: 'Analytik',
+        analyticsDesc: 'Helfen uns zu verstehen, wie Besucher mit der Website interagieren.',
+        marketing: 'Marketing',
+        marketingDesc: 'Werden verwendet, um relevante Werbung anzuzeigen.',
+        acceptAll: 'Alle akzeptieren',
+        rejectAll: 'Alle ablehnen',
+        customize: 'Anpassen',
+        save: 'Einstellungen speichern',
+        settings: 'Cookie-Einstellungen',
+    }
+  }
+};

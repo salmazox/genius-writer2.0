@@ -1,4 +1,3 @@
-
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { documentService } from './documentService';
 import { ToolType, SavedDocument } from '../types';
@@ -67,6 +66,11 @@ describe('documentService', () => {
         expect(documentService.getAll()).toHaveLength(1);
         
         documentService.delete(doc.id);
+        // Soft delete keeps it but marks deletedAt
+        const stored = documentService.getAll();
+        expect(stored[0].deletedAt).toBeDefined();
+        
+        documentService.hardDelete(doc.id);
         expect(documentService.getAll()).toHaveLength(0);
     });
 

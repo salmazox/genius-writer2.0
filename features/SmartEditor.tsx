@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
-    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square
+    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square, Copy
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';

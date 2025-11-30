@@ -30,7 +30,7 @@ export const usePdfExport = () => {
       return;
     }
 
-    showToast("Generating PDF...", "info"); // Ideally add to translations as dashboard.messages.generatingPdf
+    showToast(t('dashboard.toasts.generatingPdf') || "Generating PDF...", "info");
 
     const opt = {
       margin: options.margin ?? 0.5,
