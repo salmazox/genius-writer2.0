@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -116,10 +113,27 @@ const SAMPLE_CV_DATA: CVData = {
 };
 
 const LandingPage: React.FC = () => {
-  const { t } = useThemeLanguage();
+  const { t, currency } = useThemeLanguage();
   const [isToolsModalOpen, setIsToolsModalOpen] = useState(false);
   const [activeDemoTab, setActiveDemoTab] = useState<'cv' | 'translate' | 'social'>('cv');
   const dummyPreviewRef = useRef<HTMLDivElement>(null); // For CvPreview prop
+
+  // Pricing Calculation based on Currency
+  const symbol = currency === 'EUR' ? '€' : '$';
+  const multiplier = currency === 'EUR' ? 1 : 1.15; // Approx logic, manual override below for clean numbers
+  
+  const getPrice = (eur: number) => {
+      if (currency === 'EUR') return eur;
+      // Simple custom round numbers for USD
+      if (eur === 49) return 59;
+      if (eur === 12) return 15;
+      if (eur === 40) return 45;
+      if (eur === 20) return 25;
+      if (eur === 121) return 144;
+      if (eur === 39) return 45;
+      if (eur === 82) return 99;
+      return Math.ceil(eur * multiplier);
+  };
 
   return (
     <div className="bg-white dark:bg-slate-950 transition-colors duration-200">
@@ -170,43 +184,43 @@ const LandingPage: React.FC = () => {
       <section className="py-20 bg-slate-50 dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-16">
-                  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">Stop Tool Overload</h2>
-                  <p className="text-lg text-slate-600 dark:text-slate-400">Why pay for 5 subscriptions when you can have one?</p>
+                  <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">{t('landing.comparison.title')}</h2>
+                  <p className="text-lg text-slate-600 dark:text-slate-400">{t('landing.comparison.subtitle')}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Without */}
                   <div className="bg-white dark:bg-slate-950 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 relative overflow-hidden">
                       <div className="absolute top-0 left-0 w-full h-2 bg-red-500"></div>
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">WITHOUT Genius Writer</h3>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t('landing.comparison.withoutTitle')}</h3>
                       <ul className="space-y-4 mb-8">
-                          <li className="flex items-center gap-3 text-slate-600 dark:text-slate-400"><XCircle className="text-red-500 shrink-0" size={20}/> <span>€49/mo for Jasper (Content)</span></li>
-                          <li className="flex items-center gap-3 text-slate-600 dark:text-slate-400"><XCircle className="text-red-500 shrink-0" size={20}/> <span>€12/mo for Grammarly (Editing)</span></li>
-                          <li className="flex items-center gap-3 text-slate-600 dark:text-slate-400"><XCircle className="text-red-500 shrink-0" size={20}/> <span>€40/mo for Resumake (CV)</span></li>
-                          <li className="flex items-center gap-3 text-slate-600 dark:text-slate-400"><XCircle className="text-red-500 shrink-0" size={20}/> <span>€20/mo for DeepL (Translation)</span></li>
+                          <li className="flex items-center gap-3 text-slate-600 dark:text-slate-400"><XCircle className="text-red-500 shrink-0" size={20}/> <span>{symbol}{getPrice(49)}/mo {t('landing.comparison.items.jasper')}</span></li>
+                          <li className="flex items-center gap-3 text-slate-600 dark:text-slate-400"><XCircle className="text-red-500 shrink-0" size={20}/> <span>{symbol}{getPrice(12)}/mo {t('landing.comparison.items.grammarly')}</span></li>
+                          <li className="flex items-center gap-3 text-slate-600 dark:text-slate-400"><XCircle className="text-red-500 shrink-0" size={20}/> <span>{symbol}{getPrice(40)}/mo {t('landing.comparison.items.resumake')}</span></li>
+                          <li className="flex items-center gap-3 text-slate-600 dark:text-slate-400"><XCircle className="text-red-500 shrink-0" size={20}/> <span>{symbol}{getPrice(20)}/mo {t('landing.comparison.items.deepl')}</span></li>
                       </ul>
                       <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                          <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Cost</p>
-                          <p className="text-4xl font-bold text-slate-900 dark:text-white">€121<span className="text-lg text-slate-500 font-normal">/month</span></p>
+                          <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">{t('landing.comparison.total')}</p>
+                          <p className="text-4xl font-bold text-slate-900 dark:text-white">{symbol}{getPrice(121)}<span className="text-lg text-slate-500 font-normal">{t('landing.comparison.month')}</span></p>
                       </div>
                   </div>
 
                   {/* With */}
                   <div className="bg-indigo-50 dark:bg-indigo-900/10 p-8 rounded-3xl border-2 border-indigo-500 relative overflow-hidden shadow-xl">
                       <div className="absolute top-0 left-0 w-full h-2 bg-indigo-500"></div>
-                      <div className="absolute top-4 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">Best Value</div>
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">WITH Genius Writer</h3>
+                      <div className="absolute top-4 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">{t('landing.comparison.bestValue')}</div>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t('landing.comparison.withTitle')}</h3>
                       <ul className="space-y-4 mb-8">
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>All Content Tools Included</span></li>
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>Smart Editor Included</span></li>
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>Pro CV Builder Included</span></li>
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>Unlimited Translation Included</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landing.comparison.features.content')}</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landing.comparison.features.editor')}</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landing.comparison.features.cv')}</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landing.comparison.features.trans')}</span></li>
                       </ul>
                       <div className="pt-6 border-t border-indigo-200 dark:border-indigo-800/50">
-                          <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider mb-1">Total Cost</p>
+                          <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider mb-1">{t('landing.comparison.total')}</p>
                           <div className="flex items-end gap-3">
-                              <p className="text-4xl font-bold text-indigo-700 dark:text-indigo-400">€39<span className="text-lg text-indigo-600/70 dark:text-indigo-400/70 font-normal">/month</span></p>
-                              <span className="mb-2 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">SAVE €82/MONTH</span>
+                              <p className="text-4xl font-bold text-indigo-700 dark:text-indigo-400">{symbol}{getPrice(39)}<span className="text-lg text-indigo-600/70 dark:text-indigo-400/70 font-normal">{t('landing.comparison.month')}</span></p>
+                              <span className="mb-2 bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">{t('landing.comparison.save')} {symbol}{getPrice(82)}/{t('landing.comparison.month').replace('/', '').toUpperCase()}</span>
                           </div>
                       </div>
                   </div>

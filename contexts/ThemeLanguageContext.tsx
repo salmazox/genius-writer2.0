@@ -4,12 +4,15 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 
 type Language = 'en' | 'de';
 type Theme = 'light' | 'dark';
+export type Currency = 'EUR' | 'USD';
 
 interface ThemeLanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   theme: Theme;
   toggleTheme: () => void;
+  currency: Currency;
+  setCurrency: (curr: Currency) => void;
   t: (path: string) => string;
 }
 
@@ -18,6 +21,7 @@ const ThemeLanguageContext = createContext<ThemeLanguageContextType | undefined>
 export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useLocalStorage<Language>('language', 'en');
   const [theme, setTheme] = useLocalStorage<Theme>('theme', 'light');
+  const [currency, setCurrency] = useLocalStorage<Currency>('currency', 'EUR');
 
   // Initial Theme Detection
   useEffect(() => {
@@ -55,7 +59,7 @@ export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <ThemeLanguageContext.Provider value={{ language, setLanguage, theme, toggleTheme, t }}>
+    <ThemeLanguageContext.Provider value={{ language, setLanguage, theme, toggleTheme, currency, setCurrency, t }}>
       {children}
     </ThemeLanguageContext.Provider>
   );

@@ -1,19 +1,27 @@
-
-
 import React, { useState } from 'react';
 import { Check, X as XIcon, Star, Building, ShieldCheck, Zap, ArrowRight, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 const PricingPage: React.FC = () => {
-  const { t } = useThemeLanguage();
+  const { t, currency } = useThemeLanguage();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
-  // Updated Pricing Strategy
+  // Updated Pricing Strategy with Dynamic Currency
   const prices = {
-      pro: billingCycle === 'monthly' ? 39 : 32,
-      agency: billingCycle === 'monthly' ? 129 : 109
+      pro: {
+          EUR: billingCycle === 'monthly' ? 39 : 32,
+          USD: billingCycle === 'monthly' ? 45 : 36,
+      },
+      agency: {
+          EUR: billingCycle === 'monthly' ? 129 : 109,
+          USD: billingCycle === 'monthly' ? 149 : 125,
+      }
   };
+
+  const symbol = currency === 'EUR' ? '€' : '$';
+  const currentProPrice = prices.pro[currency];
+  const currentAgencyPrice = prices.agency[currency];
 
   const FeatureItem = ({ text, included = true }: { text: string; included?: boolean }) => (
       <li className={`flex items-start gap-3 text-sm ${included ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-600 line-through decoration-slate-400/50'}`}>
@@ -72,7 +80,7 @@ const PricingPage: React.FC = () => {
                 <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed min-h-[40px]">{t('pricing.starterDesc')}</p>
             </div>
             <div className="mb-8">
-              <span className="text-4xl font-extrabold text-slate-900 dark:text-white">€0</span>
+              <span className="text-4xl font-extrabold text-slate-900 dark:text-white">{symbol}0</span>
               <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
             </div>
             <Link to="/dashboard" className="block w-full py-3 px-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold rounded-xl text-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors mb-8">
@@ -101,10 +109,10 @@ const PricingPage: React.FC = () => {
             </div>
             <div className="mb-8">
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">€{prices.pro}</span>
+                <span className="text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">{symbol}{currentProPrice}</span>
                 <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
               </div>
-              {billingCycle === 'yearly' && <p className="text-xs text-green-600 font-medium mt-1">Billed €{prices.pro * 12} yearly</p>}
+              {billingCycle === 'yearly' && <p className="text-xs text-green-600 font-medium mt-1">Billed {symbol}{currentProPrice * 12} yearly</p>}
             </div>
             <Link to="/auth?plan=pro" className="block w-full py-3.5 px-4 bg-indigo-600 text-white font-bold rounded-xl text-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/30 hover:scale-[1.02] mb-8">
               {t('pricing.startTrial')}
@@ -130,10 +138,10 @@ const PricingPage: React.FC = () => {
             </div>
             <div className="mb-8">
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-slate-900 dark:text-white">€{prices.agency}</span>
+                <span className="text-4xl font-extrabold text-slate-900 dark:text-white">{symbol}{currentAgencyPrice}</span>
                 <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
               </div>
-              {billingCycle === 'yearly' && <p className="text-xs text-green-600 font-medium mt-1">Billed €{prices.agency * 12} yearly</p>}
+              {billingCycle === 'yearly' && <p className="text-xs text-green-600 font-medium mt-1">Billed {symbol}{currentAgencyPrice * 12} yearly</p>}
             </div>
              <Link to="/contact" className="block w-full py-3 px-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-center hover:border-indigo-600 hover:text-indigo-600 dark:hover:border-indigo-500 dark:hover:text-indigo-400 transition-colors mb-8">
               {t('pricing.contactSales')}

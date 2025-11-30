@@ -7,7 +7,7 @@ import { Logo } from './Logo';
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { language, setLanguage, theme, toggleTheme, t } = useThemeLanguage();
+  const { language, setLanguage, theme, toggleTheme, currency, setCurrency, t } = useThemeLanguage();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -57,6 +57,27 @@ const Navbar: React.FC = () => {
             >
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
+
+            {/* Currency Switcher */}
+            <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 px-3 h-6" role="group" aria-label="Currency selection">
+              <button 
+                onClick={() => setCurrency('EUR')}
+                aria-label="Switch to Euro"
+                aria-pressed={currency === 'EUR'}
+                className={`text-xs font-bold ${currency === 'EUR' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+              >
+                €
+              </button>
+              <div className="h-3 w-px bg-slate-200 dark:bg-slate-700"></div>
+              <button 
+                onClick={() => setCurrency('USD')}
+                aria-label="Switch to Dollar"
+                aria-pressed={currency === 'USD'}
+                className={`text-xs font-bold ${currency === 'USD' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
+              >
+                $
+              </button>
+            </div>
 
             {/* Language Switcher */}
             <div className="flex items-center gap-2 border-l border-r border-slate-200 dark:border-slate-700 px-3 h-6" role="group" aria-label="Language selection">
@@ -134,22 +155,40 @@ const Navbar: React.FC = () => {
               </Link>
             ))}
             
-             <div className="flex items-center gap-4 px-3 py-4 border-t border-slate-100 dark:border-slate-800">
-              <button 
-                onClick={() => setLanguage('en')}
-                aria-label="Switch to English"
-                className={`text-sm font-bold ${language === 'en' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`}
-              >
-                English
-              </button>
-               <div className="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
-              <button 
-                onClick={() => setLanguage('de')}
-                aria-label="Switch to German"
-                className={`text-sm font-bold ${language === 'de' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`}
-              >
-                Deutsch
-              </button>
+             <div className="flex items-center justify-between px-3 py-4 border-t border-slate-100 dark:border-slate-800">
+               {/* Mobile Language */}
+               <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setLanguage('en')}
+                    className={`text-sm font-bold ${language === 'en' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`}
+                  >
+                    EN
+                  </button>
+                  <div className="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
+                  <button 
+                    onClick={() => setLanguage('de')}
+                    className={`text-sm font-bold ${language === 'de' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`}
+                  >
+                    DE
+                  </button>
+               </div>
+
+               {/* Mobile Currency */}
+               <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setCurrency('EUR')}
+                    className={`text-sm font-bold ${currency === 'EUR' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`}
+                  >
+                    EUR (€)
+                  </button>
+                  <div className="h-4 w-px bg-slate-300 dark:bg-slate-700"></div>
+                  <button 
+                    onClick={() => setCurrency('USD')}
+                    className={`text-sm font-bold ${currency === 'USD' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`}
+                  >
+                    USD ($)
+                  </button>
+               </div>
             </div>
 
             <div className="pt-2 mt-2 space-y-2">

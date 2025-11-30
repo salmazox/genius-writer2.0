@@ -31,6 +31,28 @@ export const translations = {
         uptime: 'Uptime',
         uptimeVal: '99.9%',
       },
+      comparison: {
+        title: 'Stop Tool Overload',
+        subtitle: 'Why pay for 5 subscriptions when you can have one?',
+        withoutTitle: 'WITHOUT Genius Writer',
+        withTitle: 'WITH Genius Writer',
+        total: 'TOTAL COST',
+        save: 'SAVE',
+        month: '/month',
+        bestValue: 'BEST VALUE',
+        items: {
+          jasper: 'for Jasper (Content)',
+          grammarly: 'for Grammarly (Editing)',
+          resumake: 'for Resumake (CV)',
+          deepl: 'for DeepL (Translation)',
+        },
+        features: {
+          content: 'All Content Tools Included',
+          editor: 'Smart Editor Included',
+          cv: 'Pro CV Builder Included',
+          trans: 'Unlimited Translation Included',
+        }
+      },
       faq: {
         title: 'Frequently Asked Questions',
         q1: 'Is the free plan really free?',
@@ -388,6 +410,28 @@ export const translations = {
         ratingVal: '4.9/5',
         uptime: 'Verfügbarkeit',
         uptimeVal: '99.9%',
+      },
+      comparison: {
+        title: 'Schluss mit Tool-Überflutung',
+        subtitle: 'Warum für 5 Abos zahlen, wenn man alles in einem haben kann?',
+        withoutTitle: 'OHNE Genius Writer',
+        withTitle: 'MIT Genius Writer',
+        total: 'GESAMTKOSTEN',
+        save: 'SPARE',
+        month: '/Monat',
+        bestValue: 'BESTER WERT',
+        items: {
+          jasper: 'für Jasper (Content)',
+          grammarly: 'für Grammarly (Lektorat)',
+          resumake: 'für Resumake (CV)',
+          deepl: 'für DeepL (Übersetzung)',
+        },
+        features: {
+          content: 'Alle Content-Tools inklusive',
+          editor: 'Smart Editor inklusive',
+          cv: 'Pro CV-Builder inklusive',
+          trans: 'Unbegrenzte Übersetzung inklusive',
+        }
       },
       faq: {
         title: 'Häufig gestellte Fragen',
