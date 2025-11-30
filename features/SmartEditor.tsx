@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { 
+import {
     MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square, Copy
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
@@ -10,6 +10,7 @@ import { ShareModal } from '../components/ShareModal';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { useIsMounted } from '../hooks/useIsMounted';
 import { chatWithAI, factCheck, generateSpeech } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { useToast } from '../contexts/ToastContext';
@@ -67,7 +68,8 @@ const SmartEditor: React.FC = () => {
     const debouncedContent = useDebounce(content, 1000);
     const debouncedTitle = useDebounce(title, 1000);
     const chatEndRef = useRef<HTMLDivElement>(null);
-    
+    const isMounted = useIsMounted();
+
     const isPro = user.plan !== 'free';
 
     // Migration Effect for old default content
@@ -164,30 +166,42 @@ const SmartEditor: React.FC = () => {
         try {
             const apiHistory = chatHistory.map(m => ({ role: m.role, text: m.text }));
             const response = await chatWithAI(apiHistory, newUserMsg.text, content);
-            const newAiMsg: ChatMessage = { id: (Date.now() + 1).toString(), role: 'model', text: response };
-            setChatHistory(prev => [...prev, newAiMsg]);
+            if (isMounted()) {
+                const newAiMsg: ChatMessage = { id: (Date.now() + 1).toString(), role: 'model', text: response };
+                setChatHistory(prev => [...prev, newAiMsg]);
+            }
         } catch (e) {
-            showToast(t('dashboard.toasts.error'), "error");
+            if (isMounted()) {
+                showToast(t('dashboard.toasts.error'), "error");
+            }
         } finally {
-            setIsChatLoading(false);
+            if (isMounted()) {
+                setIsChatLoading(false);
+            }
         }
     };
 
     const handleFactCheck = async () => {
         if (!content.trim()) return;
-        
+
         setIsChatLoading(true);
         setActiveSidebar('ai');
-        
+
         setChatHistory(prev => [...prev, { id: Date.now().toString(), role: 'user', text: "Fact check this document." }]);
-        
+
         try {
             const result = await factCheck(content);
-            setChatHistory(prev => [...prev, { id: Date.now().toString(), role: 'model', text: result }]);
+            if (isMounted()) {
+                setChatHistory(prev => [...prev, { id: Date.now().toString(), role: 'model', text: result }]);
+            }
         } catch (e) {
-            showToast(t('dashboard.toasts.error'), "error");
+            if (isMounted()) {
+                showToast(t('dashboard.toasts.error'), "error");
+            }
         } finally {
-            setIsChatLoading(false);
+            if (isMounted()) {
+                setIsChatLoading(false);
+            }
         }
     };
 

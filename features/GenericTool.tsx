@@ -42,7 +42,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const { activeTab: mobileTab, setActiveTab: setMobileTab } = useMobileTabs<'input' | 'result'>('input');
     
     // Updated type to support nested arrays from repeater
-    const [formValues, setFormValues] = useState<Record<string, any>>({});
+    const [formValues, setFormValues] = useState<Record<string, string | string[] | number>>({});
     const [documentContent, setDocumentContent] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
@@ -172,9 +172,9 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         const selectedVoice = brandVoices.find(v => v.id === selectedVoiceId);
         
         // Pass complex objects (like arrays) as JSON strings or handle them in prompt builder
-        const inputsWithTheme: any = {
+        const inputsWithTheme: Record<string, string | string[] | number> = {
             ...formValues,
-            accentColor, 
+            accentColor,
             template
         };
 
@@ -205,10 +205,11 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 showToast(t('dashboard.toasts.generated'), 'success');
             }
             setMobileTab('result');
-        } catch (e: any) {
-            if (e.name !== 'AbortError') {
+        } catch (e: unknown) {
+            const isAbortError = e instanceof Error && e.name === 'AbortError';
+            if (!isAbortError) {
                 console.error(e);
-                const msg = e.message || t('dashboard.toasts.error');
+                const msg = e instanceof Error ? e.message : t('dashboard.toasts.error');
                 showToast(msg, 'error');
             }
         } finally {

@@ -1,9 +1,13 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { logger, LogLevel, ErrorContext } from '../utils/errorHandler';
 
 interface Props {
   children?: ReactNode;
   fallback?: ReactNode;
+  context?: ErrorContext;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  resetKeys?: Array<string | number>;
 }
 
 interface State {
@@ -29,8 +33,37 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
-    // Here you would typically log to an error reporting service
+    // Log to our centralized error logging system
+    logger.log(
+      LogLevel.ERROR,
+      'React Error Boundary caught an error',
+      error,
+      {
+        ...this.props.context,
+        metadata: {
+          ...this.props.context?.metadata,
+          componentStack: errorInfo.componentStack,
+        },
+      }
+    );
+
+    // Call custom error handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+  }
+
+  public componentDidUpdate(prevProps: Props) {
+    // Reset error state if resetKeys changed
+    if (this.state.hasError && this.props.resetKeys) {
+      const prevResetKeys = prevProps.resetKeys || [];
+      const currentResetKeys = this.props.resetKeys;
+
+      if (prevResetKeys.length !== currentResetKeys.length ||
+          prevResetKeys.some((key, index) => key !== currentResetKeys[index])) {
+        this.setState({ hasError: false, error: undefined });
+      }
+    }
   }
 
   public render() {

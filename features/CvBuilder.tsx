@@ -150,9 +150,10 @@ const CvBuilder: React.FC = () => {
                 }));
                 
                 showToast(t('dashboard.toasts.importSuccess'), "success");
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error(err);
-                showToast(err.message || t('dashboard.toasts.importFail'), "error");
+                const errorMessage = err instanceof Error ? err.message : t('dashboard.toasts.importFail');
+                showToast(errorMessage, "error");
             } finally {
                 setIsImporting(false);
             }
@@ -205,8 +206,12 @@ const CvBuilder: React.FC = () => {
             }));
             
             showToast(t('dashboard.toasts.descGenerated'), "success");
-        } catch (e: any) { 
-            if (e.name !== 'AbortError') showToast(e.message || "Failed to generate", "error"); 
+        } catch (e: unknown) {
+            const isAbortError = e instanceof Error && e.name === 'AbortError';
+            if (!isAbortError) {
+                const errorMessage = e instanceof Error ? e.message : "Failed to generate";
+                showToast(errorMessage, "error");
+            }
         } finally { 
             if (abortControllerRef.current === controller) {
                 setIsLoading(false); 
@@ -227,8 +232,12 @@ const CvBuilder: React.FC = () => {
             const result = await analyzeATS(cvData, jobDescription, controller.signal);
             setAtsAnalysis(result);
             showToast(t('dashboard.toasts.analysisComplete'), "success");
-        } catch(e: any) { 
-            if (e.name !== 'AbortError') showToast(e.message || t('dashboard.toasts.analysisFail'), "error"); 
+        } catch(e: unknown) {
+            const isAbortError = e instanceof Error && e.name === 'AbortError';
+            if (!isAbortError) {
+                const errorMessage = e instanceof Error ? e.message : t('dashboard.toasts.analysisFail');
+                showToast(errorMessage, "error");
+            }
         } finally { 
             if (abortControllerRef.current === controller) {
                 setIsLoading(false);
@@ -246,8 +255,9 @@ const CvBuilder: React.FC = () => {
             const letter = await generateCoverLetter(cvData, jobDescription);
             setCoverLetterContent(letter);
             showToast(t('dashboard.toasts.coverLetterGenerated'), "success");
-        } catch (e: any) {
-            showToast(e.message || t('dashboard.toasts.coverLetterFail'), "error");
+        } catch (e: unknown) {
+            const errorMessage = e instanceof Error ? e.message : t('dashboard.toasts.coverLetterFail');
+            showToast(errorMessage, "error");
         } finally {
             setIsGeneratingLetter(false);
         }

@@ -1,7 +1,7 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Menu, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder, Mic } from 'lucide-react';
+import { Menu, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder, Mic, Loader2 } from 'lucide-react';
 import { ToolType, SavedDocument, Folder as FolderType } from '../types';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { useToast } from '../contexts/ToastContext';
@@ -16,12 +16,12 @@ import { useDebounce } from '../hooks/useDebounce';
 import { useUser } from '../contexts/UserContext';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
-// Import refactored features
-import CvBuilder from '../features/CvBuilder';
-import Translator from '../features/Translator';
-import GenericTool from '../features/GenericTool';
-import SmartEditor from '../features/SmartEditor';
-import LiveInterview from '../features/LiveInterview'; // New Import
+// Lazy load heavy feature components for better performance
+const CvBuilder = lazy(() => import('../features/CvBuilder'));
+const Translator = lazy(() => import('../features/Translator'));
+const GenericTool = lazy(() => import('../features/GenericTool'));
+const SmartEditor = lazy(() => import('../features/SmartEditor'));
+const LiveInterview = lazy(() => import('../features/LiveInterview'));
 
 // Import New Dashboard Components
 import { DashboardLibrary } from '../components/dashboard/DashboardLibrary';
@@ -431,17 +431,23 @@ const Dashboard: React.FC = () => {
                     )}
                 </div>
             ) : (
-                // Tool View Wrapped in ErrorBoundary
+                // Tool View Wrapped in ErrorBoundary with Suspense for lazy-loaded components
                 <ErrorBoundary>
-                    <div className="h-full flex flex-col">
-                        {activeToolId === ToolType.CV_BUILDER && <CvBuilder />}
-                        {activeToolId === ToolType.TRANSLATE && <Translator />}
-                        {activeToolId === ToolType.SMART_EDITOR && <SmartEditor />}
-                        {activeToolId === ToolType.LIVE_INTERVIEW && <LiveInterview />}
-                        {!isFullWidthTool(activeToolId) && activeTool && (
-                            <GenericTool tool={activeTool} />
-                        )}
-                    </div>
+                    <Suspense fallback={
+                        <div className="flex items-center justify-center h-full">
+                            <Loader2 className="animate-spin text-indigo-600" size={48} />
+                        </div>
+                    }>
+                        <div className="h-full flex flex-col">
+                            {activeToolId === ToolType.CV_BUILDER && <CvBuilder />}
+                            {activeToolId === ToolType.TRANSLATE && <Translator />}
+                            {activeToolId === ToolType.SMART_EDITOR && <SmartEditor />}
+                            {activeToolId === ToolType.LIVE_INTERVIEW && <LiveInterview />}
+                            {!isFullWidthTool(activeToolId) && activeTool && (
+                                <GenericTool tool={activeTool} />
+                            )}
+                        </div>
+                    </Suspense>
                 </ErrorBoundary>
             )}
         </div>
