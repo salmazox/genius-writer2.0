@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { User as UserIcon, Briefcase, Mail, Phone, MapPin, Globe, Linkedin, Calendar, Award, ExternalLink } from 'lucide-react';
 import { CVData } from '../../types';
 import { sanitizeHtml } from '../../utils/security';
@@ -11,6 +11,7 @@ interface CvPreviewProps {
 
 // Memoize to prevent unnecessary re-renders
 const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) => {
+    const [imageLoaded, setImageLoaded] = useState(false);
     
     const createMarkup = (htmlContent: string) => {
         return { __html: sanitizeHtml(htmlContent) };
@@ -31,7 +32,8 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
                         <img 
                             src={cvData.personal.photoBase64} 
                             alt="Profile" 
-                            className={`w-32 h-32 object-cover border-4 border-white/20 shadow-lg ${cvData.personal.photoShape === 'circle' ? 'rounded-full' : cvData.personal.photoShape === 'rounded' ? 'rounded-2xl' : 'rounded-none'} ${cvData.personal.photoFilter === 'grayscale' ? 'grayscale' : ''}`} 
+                            onLoad={() => setImageLoaded(true)}
+                            className={`w-32 h-32 object-cover border-4 border-white/20 shadow-lg ${cvData.personal.photoShape === 'circle' ? 'rounded-full' : cvData.personal.photoShape === 'rounded' ? 'rounded-2xl' : 'rounded-none'} ${cvData.personal.photoFilter === 'grayscale' ? 'grayscale' : ''} ${!imageLoaded ? 'blur-sm scale-95 opacity-80' : 'scale-100 opacity-100'} transition-all duration-500`} 
                         />
                     </div>
                 )}

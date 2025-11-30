@@ -7,6 +7,11 @@
     <title>Genius Writer</title>
     <meta name="description" content="A comprehensive AI-powered writing assistant for translating documents, building CVs, generating social media content, emails, and more. Your daily business companion." />
     
+    <!-- SEO Metadata -->
+    <meta name="keywords" content="ai writer, cv builder, translator, content generator, resume maker, cover letter ai, productivity tool" />
+    <link rel="canonical" href="https://geniuswriter.com/" />
+    <meta name="robots" content="index, follow" />
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://geniuswriter.com/" />
@@ -58,6 +63,13 @@
     <style>
       body {
         font-family: 'Inter', sans-serif;
+        /* Fix Mobile Safari viewport height issues */
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+      }
+      
+      html {
+        height: -webkit-fill-available;
       }
       
       /* Global Focus Indicator for Accessibility */
@@ -160,5 +172,17 @@
   <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors duration-200">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <script>
+      // Service Worker Registration for PWA support
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(registration => {
+            console.log('SW registered: ', registration);
+          }).catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

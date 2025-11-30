@@ -544,13 +544,8 @@ export const analyzeATS = async (
     } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") throw e;
         console.error("ATS Analysis Error", e);
-        return {
-            score: 0,
-            missingKeywords: [],
-            suggestions: ["Error analyzing data. Please try again."],
-            summary: "Failed to analyze.",
-            improvedSummary: ""
-        };
+        // Better error message for user
+        throw new Error("We couldn't analyze your CV. Please check that all required fields (Experience, Skills) are filled and try again.");
     }
 };
 

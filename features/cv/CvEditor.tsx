@@ -33,6 +33,31 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
         setCvData(prev => ({ ...prev, personal: { ...prev.personal, [section]: value } }));
     };
 
+    // Client-side image compression
+    const compressImage = (base64: string, maxWidth = 800, quality = 0.7): Promise<string> => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = base64;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = () => resolve(base64); // Fallback to original on error
+        });
+    };
+
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -42,7 +67,10 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                 return;
             }
             const reader = new FileReader();
-            reader.onloadend = () => handleCvChange('photoBase64', reader.result as string);
+            reader.onloadend = async () => {
+                const compressed = await compressImage(reader.result as string);
+                handleCvChange('photoBase64', compressed);
+            };
             reader.readAsDataURL(file);
         }
     };
