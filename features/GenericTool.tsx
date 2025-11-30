@@ -17,12 +17,8 @@ import { useSwipe } from '../hooks/useSwipe';
 import { BrandVoiceManager } from './BrandVoiceManager';
 import { Watermark } from '../components/Watermark';
 import { sanitizeHtml } from '../utils/security';
-
-declare global {
-  interface Window {
-    html2pdf: any;
-  }
-}
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { usePdfExport } from '../hooks/usePdfExport';
 
 interface GenericToolProps {
     tool: ToolConfig;
@@ -41,6 +37,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const { t } = useThemeLanguage();
     const { showToast } = useToast();
     const { brandVoices, selectedVoiceId, setSelectedVoiceId, user } = useUser();
+    const copyToClipboard = useCopyToClipboard();
+    const exportToPdf = usePdfExport();
     
     // Updated type to support nested arrays from repeater
     const [formValues, setFormValues] = useState<Record<string, any>>({});
@@ -228,16 +226,12 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     };
 
     const handleCopy = () => {
-        if (!documentContent) return;
-        navigator.clipboard.writeText(documentContent);
-        showToast("Copied content", 'info');
+        copyToClipboard(documentContent);
     };
 
     const handleCopyHtml = () => {
         if (!previewRef.current) return;
-        const html = previewRef.current.innerHTML;
-        navigator.clipboard.writeText(html);
-        showToast("Copied HTML Code", 'info');
+        copyToClipboard(previewRef.current.innerHTML, "Copied HTML Code");
     }
 
     const handleExportWord = () => {
@@ -275,19 +269,10 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         const elementId = hasTemplates ? 'template-wrapper' : null;
         const sourceElement = elementId ? document.getElementById(elementId) || element : element;
 
-        const opt = {
-            margin: 0.5,
+        exportToPdf(sourceElement, {
             filename: `${tool.name.replace(/\s+/g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-        if (window.html2pdf) {
-            showToast("Generating PDF...", "info");
-            window.html2pdf().set(opt).from(sourceElement).save();
-        } else {
-            showToast("PDF Library not loaded.", "error");
-        }
+            margin: 0.5
+        });
     };
 
     const handleDownloadImage = () => {

@@ -18,6 +18,7 @@ import { ToolType, SavedDocument, Comment } from '../types';
 import { useUser } from '../contexts/UserContext';
 import { Watermark } from '../components/Watermark';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 interface ChatMessage {
     id: string;
@@ -30,6 +31,7 @@ const SmartEditor: React.FC = () => {
     const { user } = useUser();
     const { t } = useThemeLanguage();
     const [searchParams, setSearchParams] = useSearchParams();
+    const copyToClipboard = useCopyToClipboard();
     
     // --- State ---
     // Initialize with empty string for cleaner word count/placeholder logic

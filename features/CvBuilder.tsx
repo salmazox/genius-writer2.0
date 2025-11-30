@@ -14,17 +14,12 @@ import { validateImageFile } from '../utils/security';
 import RichTextEditor from '../components/RichTextEditor';
 import { useUser } from '../contexts/UserContext';
 import { Watermark } from '../components/Watermark';
+import { usePdfExport } from '../hooks/usePdfExport';
 
 // Sub-components
 import CvEditor from './cv/CvEditor';
 import CvPreview from './cv/CvPreview';
 import CvAtsSidebar from './cv/CvAtsSidebar';
-
-declare global {
-  interface Window {
-    html2pdf: any;
-  }
-}
 
 // Professional Color Themes
 const CV_THEMES: CVTheme[] = [
@@ -50,6 +45,7 @@ const CvBuilder: React.FC = () => {
     const { showToast } = useToast();
     const { user } = useUser();
     const [searchParams, setSearchParams] = useSearchParams();
+    const exportToPdf = usePdfExport();
     
     // State
     const [viewMode, setViewMode] = useState<'cv' | 'cover_letter'>('cv');
@@ -185,20 +181,10 @@ const CvBuilder: React.FC = () => {
             return;
         }
 
-        const opt = {
-            margin: 0, 
+        exportToPdf(element, {
             filename: `${cvData.personal.fullName.replace(/\s+/g, '_')}_${viewMode === 'cv' ? 'CV' : 'CL'}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-
-        if (window.html2pdf) {
-            showToast("Generating PDF...", "info");
-            window.html2pdf().set(opt).from(element).save();
-        } else {
-            showToast("PDF Library not loaded.", "error");
-        }
+            margin: 0
+        });
     };
 
     const generateCvDescription = async (id: string, item: CVExperience) => {

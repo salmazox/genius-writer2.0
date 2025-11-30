@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Copy, Loader2, ArrowDown } from 'lucide-react';
-import { useToast } from '../contexts/ToastContext';
 import { generateContent } from '../services/gemini';
 import { ToolType } from '../types';
 import { useDebounce } from '../hooks/useDebounce';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 
 const LANGUAGES = [
     "English", "Spanish", "French", "German", "Italian", "Portuguese", "Dutch", "Polish", "Russian",
@@ -15,7 +15,7 @@ const LANGUAGES = [
 ];
 
 const Translator: React.FC = () => {
-    const { showToast } = useToast();
+    const copyToClipboard = useCopyToClipboard();
     
     // Persist state
     const [sourceLang, setSourceLang] = useLocalStorage<string>('trans_source', '');
@@ -55,12 +55,6 @@ const Translator: React.FC = () => {
         translateText();
         return () => { isMounted = false; };
     }, [debouncedContent, sourceLang, targetLang]);
-
-    const handleCopy = useCallback((text: string) => {
-        if (!text) return;
-        navigator.clipboard.writeText(text);
-        showToast('Copied to clipboard', 'info');
-    }, [showToast]);
 
     return (
         <div className="flex h-full flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
@@ -107,7 +101,7 @@ const Translator: React.FC = () => {
                         {LANGUAGES.map(lang => <option key={lang} value={lang}>{lang}</option>)}
                     </select>
                     <div className="flex gap-2">
-                        <button onClick={() => handleCopy(translationOutput)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full">
+                        <button onClick={() => copyToClipboard(translationOutput)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full">
                             <Copy size={18} className="text-slate-500"/>
                         </button>
                     </div>

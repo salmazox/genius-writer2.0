@@ -265,6 +265,8 @@ export const translations = {
         autoSaved: 'Work auto-saved',
         keywordsAdded: 'Keywords added to Skills',
         summaryUpdated: 'Profile Summary updated',
+        generatingPdf: 'Generating PDF...',
+        pdfLibMissing: 'PDF Library not loaded.',
       },
       cv: {
           personal: 'Personal Info',
@@ -687,6 +689,8 @@ export const translations = {
         autoSaved: 'Arbeit automatisch gespeichert',
         keywordsAdded: 'Keywords zu Fähigkeiten hinzugefügt',
         summaryUpdated: 'Profil-Zusammenfassung aktualisiert',
+        generatingPdf: 'PDF wird erstellt...',
+        pdfLibMissing: 'PDF-Bibliothek nicht geladen.',
       },
       cv: {
           personal: 'Persönliche Infos',
@@ -797,51 +801,4 @@ export const translations = {
         jobSeekersDesc: 'Erstelle ATS-freundliche Lebensläufe und Anschreiben, die auffallen.',
         creators: 'Content Creator',
         creatorsDesc: 'Generiere Blogposts, Skripte und Social-Media-Inhalte in Minuten.',
-        agencies: 'Agenturen',
-        agenciesDesc: 'Skaliere die Content-Produktion für mehrere Kunden mit Markenstimmen.',
-      },
-      security: {
-        title: 'Sicherheit auf Enterprise-Niveau',
-        desc: 'Deine Daten gehören dir. Wir nutzen Verschlüsselung auf Banken-Niveau und strenge Datenschutzrichtlinien.',
-        feature1: 'SOC2 Konform',
-        feature2: 'Datenverschlüsselung',
-        feature3: 'Privat-Modus',
-      }
-    },
-    footer: {
-      desc: 'Stärke deine Kreativität und Produktivität mit fortschrittlicher KI-Technologie. Schreibe schneller, besser und intelligenter.',
-      product: 'Produkt',
-      company: 'Unternehmen',
-      legal: 'Rechtliches',
-      rights: 'Alle Rechte vorbehalten.',
-      newsletter: 'Melde dich für unseren Newsletter an',
-      subscribe: 'Abonnieren',
-    },
-    errors: {
-        notFoundTitle: 'Seite nicht gefunden',
-        notFoundDesc: "Entschuldigung, wir konnten die gesuchte Seite nicht finden. Vielleicht hast du dich bei der URL vertippt?",
-        goHome: 'Zurück zur Startseite',
-    },
-    legal: {
-        privacyTitle: 'Datenschutzerklärung',
-        termsTitle: 'Nutzungsbedingungen',
-        imprintTitle: 'Impressum',
-        lastUpdated: 'Zuletzt aktualisiert: 24. Oktober 2023',
-    },
-    cookies: {
-        title: 'Wir schätzen Ihre Privatsphäre',
-        description: 'Wir verwenden Cookies, um Ihr Erlebnis zu verbessern, die Seitennutzung zu analysieren und unsere Marketingbemühungen zu unterstützen. Gemäß DSGVO können Sie wählen, welche Cookies Sie akzeptieren.',
-        necessary: 'Notwendig',
-        necessaryDesc: 'Erforderlich für die Funktion der Website (z. B. Login, Sitzung).',
-        analytics: 'Analytik',
-        analyticsDesc: 'Helfen uns zu verstehen, wie Besucher mit der Website interagieren.',
-        marketing: 'Marketing',
-        marketingDesc: 'Werden verwendet, um relevante Werbung anzuzeigen.',
-        acceptAll: 'Alle akzeptieren',
-        rejectAll: 'Alle ablehnen',
-        customize: 'Einstellungen',
-        save: 'Einstellungen speichern',
-        settings: 'Cookie-Einstellungen',
-    }
-  }
-};
+        agencies:
