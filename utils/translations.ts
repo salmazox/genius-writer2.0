@@ -1,5 +1,7 @@
 
 
+
+
 export const translations = {
   en: {
     nav: {
@@ -376,9 +378,25 @@ export const translations = {
         goHome: 'Go back home',
     },
     legal: {
-        privacyTitle: 'Privacy Policy',
-        termsTitle: 'Terms of Service',
+        privacyTitle: 'Privacy Policy (Datenschutzerklärung)',
+        termsTitle: 'Terms of Service (AGB)',
+        imprintTitle: 'Imprint (Impressum)',
         lastUpdated: 'Last updated: October 24, 2023',
+    },
+    cookies: {
+        title: 'We value your privacy',
+        description: 'We use cookies to enhance your experience, analyze site usage, and assist in our marketing efforts. In accordance with DSGVO/GDPR, you can choose which cookies to accept.',
+        necessary: 'Necessary',
+        necessaryDesc: 'Required for the website to function (e.g. login, session).',
+        analytics: 'Analytics',
+        analyticsDesc: 'Help us understand how visitors interact with the website.',
+        marketing: 'Marketing',
+        marketingDesc: 'Used to display relevant advertisements.',
+        acceptAll: 'Accept All',
+        rejectAll: 'Reject All',
+        customize: 'Customize',
+        save: 'Save Preferences',
+        settings: 'Cookie Settings',
     }
   },
   de: {
@@ -758,7 +776,23 @@ export const translations = {
     legal: {
         privacyTitle: 'Datenschutzerklärung',
         termsTitle: 'Nutzungsbedingungen',
+        imprintTitle: 'Impressum',
         lastUpdated: 'Zuletzt aktualisiert: 24. Oktober 2023',
+    },
+    cookies: {
+        title: 'Wir schätzen Ihre Privatsphäre',
+        description: 'Wir verwenden Cookies, um Ihr Erlebnis zu verbessern, die Seitennutzung zu analysieren und unsere Marketingbemühungen zu unterstützen. Gemäß DSGVO können Sie wählen, welche Cookies Sie akzeptieren.',
+        necessary: 'Notwendig',
+        necessaryDesc: 'Erforderlich für die Funktion der Website (z. B. Login, Sitzung).',
+        analytics: 'Analytik',
+        analyticsDesc: 'Helfen uns zu verstehen, wie Besucher mit der Website interagieren.',
+        marketing: 'Marketing',
+        marketingDesc: 'Werden verwendet, um relevante Werbung anzuzeigen.',
+        acceptAll: 'Alle akzeptieren',
+        rejectAll: 'Alle ablehnen',
+        customize: 'Einstellungen',
+        save: 'Einstellungen speichern',
+        settings: 'Cookie-Einstellungen',
     }
   }
 };

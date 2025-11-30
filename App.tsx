@@ -12,6 +12,7 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { ShortcutsModal } from './components/ShortcutsModal';
 import { CommandPalette } from './components/CommandPalette';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { CookieConsent } from './components/CookieConsent';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 // Lazy load pages for performance
@@ -53,6 +54,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen transition-colors duration-200 relative">
       <OfflineBanner />
+      <CookieConsent />
       <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
       
@@ -106,6 +108,7 @@ const App: React.FC = () => {
                   <Route path="/signup" element={<AuthPage />} />
                   <Route path="/privacy" element={<LegalPage />} />
                   <Route path="/terms" element={<LegalPage />} />
+                  <Route path="/imprint" element={<LegalPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </Suspense>

@@ -9,6 +9,10 @@ const Footer: React.FC = () => {
   const { t } = useThemeLanguage();
   const [email, setEmail] = useState('');
 
+  const openCookieSettings = () => {
+    window.dispatchEvent(new Event('openCookieSettings'));
+  };
+
   return (
     <footer className="bg-slate-900 dark:bg-slate-950 text-slate-300 border-t border-slate-800 pt-16 pb-32 md:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -44,8 +48,10 @@ const Footer: React.FC = () => {
             <h3 className="text-white font-bold mb-6 tracking-wide">{t('footer.company')}</h3>
             <ul className="space-y-3 text-sm">
               <li><Link to="/contact" className="text-slate-400 hover:text-indigo-400 transition-colors">{t('nav.contact')}</Link></li>
+              <li><Link to="/imprint" className="text-slate-400 hover:text-indigo-400 transition-colors">{t('legal.imprintTitle').split(' ')[0]}</Link></li>
               <li><Link to="/privacy" className="text-slate-400 hover:text-indigo-400 transition-colors">Privacy Policy</Link></li>
               <li><Link to="/terms" className="text-slate-400 hover:text-indigo-400 transition-colors">Terms of Service</Link></li>
+              <li><button onClick={openCookieSettings} className="text-slate-400 hover:text-indigo-400 transition-colors text-left">{t('cookies.settings')}</button></li>
             </ul>
           </div>
 
