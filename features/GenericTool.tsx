@@ -10,7 +10,7 @@ import { useUser } from '../contexts/UserContext';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { Button } from '../components/ui/Button';
-import { Input, Select, Textarea } from '../components/ui/Forms';
+import { Input, Select, Textarea, Repeater } from '../components/ui/Forms';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useDebounce } from '../hooks/useDebounce';
 import { useSwipe } from '../hooks/useSwipe';
@@ -42,7 +42,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const { showToast } = useToast();
     const { brandVoices, selectedVoiceId, setSelectedVoiceId, user } = useUser();
     
-    const [formValues, setFormValues] = useState<Record<string, string>>({});
+    // Updated type to support nested arrays from repeater
+    const [formValues, setFormValues] = useState<Record<string, any>>({});
     const [documentContent, setDocumentContent] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
     const [mobileTab, setMobileTab] = useState<'input' | 'result'>('input');
@@ -161,7 +162,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         
         const selectedVoice = brandVoices.find(v => v.id === selectedVoiceId);
         
-        const inputsWithTheme = {
+        // Pass complex objects (like arrays) as JSON strings or handle them in prompt builder
+        const inputsWithTheme: any = {
             ...formValues,
             accentColor, 
             template
@@ -216,7 +218,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
         // Generate a default title based on tool + date
         const defaultTitle = `${tool.name} - ${new Date().toLocaleDateString()}`;
-        const titleCandidate = formValues['topic'] || formValues['productName'] || formValues['prompt'] || defaultTitle;
+        const titleCandidate = formValues['topic'] || formValues['productName'] || formValues['prompt'] || formValues['invoiceNumber'] || formValues['contractType'] || defaultTitle;
         
         const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
 
@@ -374,6 +376,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             #template-wrapper .header-bar { 
                 position: absolute; top: 0; left: 0; right: 0; height: 12px; background-color: var(--accent-color); 
             }
+            #template-wrapper .total-row td { font-weight: bold; background-color: #f8fafc; }
         `;
 
         const classicStyles = `
@@ -393,6 +396,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             #template-wrapper table { width: 100%; margin-top: 2rem; border-top: 2px solid #000; border-bottom: 2px solid #000; }
             #template-wrapper th { text-align: left; padding: 0.5rem; font-style: italic; border-bottom: 1px solid #000; }
             #template-wrapper td { padding: 0.5rem; }
+            #template-wrapper .total-row td { font-weight: bold; border-top: 1px solid #000; }
         `;
 
         const minimalStyles = `
@@ -408,6 +412,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             #template-wrapper table { width: 100%; margin-top: 3rem; }
             #template-wrapper th { text-align: left; padding: 1rem 0; font-weight: 400; border-bottom: 1px dashed #ccc; }
             #template-wrapper td { padding: 1rem 0; border-bottom: 1px dashed #eee; }
+            #template-wrapper .total-row td { font-weight: bold; border-top: 1px dashed #000; }
         `;
 
         if (template === 'classic') return classicStyles;
@@ -536,9 +541,17 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                                     value={formValues[input.name] || ''}
                                     onChange={(e) => setFormValues(prev => ({...prev, [input.name]: e.target.value}))}
                                 />
+                            ) : input.type === 'repeater' ? (
+                                <Repeater
+                                    label={input.label}
+                                    fields={input.fields || []}
+                                    value={formValues[input.name] || []}
+                                    onChange={(val) => setFormValues(prev => ({...prev, [input.name]: val}))}
+                                />
                             ) : (
                                 <Input
                                     label={input.label}
+                                    type={input.type} 
                                     placeholder={input.placeholder}
                                     value={formValues[input.name] || ''}
                                     onChange={(e) => setFormValues(prev => ({...prev, [input.name]: e.target.value}))}

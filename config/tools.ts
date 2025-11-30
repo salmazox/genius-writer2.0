@@ -82,28 +82,49 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
           options: ['Standard Commercial (19% VAT)', 'Reduced Rate (7% VAT)', 'Small Business (Kleinunternehmer §19)', 'Private (No VAT)'] 
         },
         { 
-          name: 'invoiceSender', 
-          label: 'Sender Details (You)', 
-          type: 'textarea', 
-          placeholder: 'Company Name\nAddress\nTax ID (Steuernummer/USt-ID)\nIBAN / BIC\nBank Name' 
+          name: 'invoiceNumber', 
+          label: 'Invoice Number', 
+          type: 'text', 
+          placeholder: 'e.g. INV-2024-001' 
+        },
+        {
+          name: 'invoiceDate',
+          label: 'Date of Issue',
+          type: 'date',
         },
         { 
-          name: 'invoiceRecipient', 
-          label: 'Recipient Details (Client)', 
+          name: 'senderDetails', 
+          label: 'Sender (You)', 
+          type: 'textarea', 
+          placeholder: 'Company Name\nAddress\nTax ID (Steuernummer/USt-ID)\nIBAN / BIC' 
+        },
+        { 
+          name: 'recipientDetails', 
+          label: 'Recipient (Client)', 
           type: 'textarea', 
           placeholder: 'Client Company\nContact Person\nAddress' 
         },
         { 
-          name: 'invoiceDetails', 
-          label: 'Invoice Data', 
-          type: 'textarea', 
-          placeholder: 'Invoice Number: 2024-001\nInvoice Date: DD.MM.YYYY\nDelivery Date: DD.MM.YYYY' 
+          name: 'lineItems', 
+          label: 'Services / Goods', 
+          type: 'repeater',
+          fields: [
+            { name: 'description', label: 'Description', type: 'text' },
+            { name: 'quantity', label: 'Qty', type: 'number' },
+            { name: 'unitPrice', label: 'Price', type: 'number' },
+          ]
         },
-        { 
-          name: 'invoiceItems', 
-          label: 'Line Items', 
-          type: 'textarea', 
-          placeholder: '- Web Design Service: 10 hrs @ 80€\n- Hosting Setup: 1 unit @ 50€' 
+        {
+          name: 'vatRate',
+          label: 'VAT Rate',
+          type: 'select',
+          options: ['19%', '7%', '0% (Exempt)', '0% (Small Business)']
+        },
+        {
+          name: 'priceMode',
+          label: 'Price Calculation Mode',
+          type: 'select',
+          options: ['Net (Plus VAT)', 'Gross (Incl. VAT)']
         },
         {
           name: 'paymentTerms',
@@ -127,6 +148,11 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
           type: 'select', 
           options: ['General Purchase (Kaufvertrag)', 'Private Car Sale (KFZ-Kaufvertrag)', 'Freelance Service (Dienstleistungsvertrag)', 'NDA (Geheimhaltung)', 'Sublease (Untermietvertrag)'] 
         },
+        {
+          name: 'contractDate',
+          label: 'Contract Date',
+          type: 'date'
+        },
         { 
           name: 'partyA', 
           label: 'Party A (Seller/Provider)', 
@@ -140,22 +166,40 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
           placeholder: 'Name, Address' 
         },
         { 
-          name: 'subjectMatter', 
-          label: 'Subject of Contract', 
+          name: 'objectDetails', 
+          label: 'Object/Service Description', 
           type: 'textarea', 
-          placeholder: 'Detailed description of the item sold or service provided. Include condition (new/used) if applicable.' 
+          placeholder: 'Detailed description of the item sold or service provided.' 
         },
-        { 
-          name: 'financials', 
-          label: 'Price & Payment', 
-          type: 'textarea', 
-          placeholder: 'Total Price: €...\nPayment Method: Bank Transfer/Cash\nDue Date: ...' 
+        {
+          name: 'price',
+          label: 'Price / Fee',
+          type: 'number',
+          placeholder: '0.00'
+        },
+        {
+          name: 'vatRate',
+          label: 'VAT Rate',
+          type: 'select',
+          options: ['19%', '7%', '0% (Exempt)', '0% (Small Business)']
+        },
+        {
+          name: 'priceMode',
+          label: 'Price Mode',
+          type: 'select',
+          options: ['Net (Plus VAT)', 'Gross (Incl. VAT)']
+        },
+        {
+          name: 'paymentMethod',
+          label: 'Payment Method',
+          type: 'text',
+          placeholder: 'Bank Transfer, Cash, Paypal'
         },
         { 
           name: 'conditions', 
-          label: 'Special Conditions', 
+          label: 'Conditions / Warranty', 
           type: 'textarea', 
-          placeholder: 'Warranty exclusion (Gewährleistungsausschluss)? Start/End date? Liability limits?' 
+          placeholder: 'Warranty exclusion? Liability limits? Special agreements?' 
         }
       ]
     },
@@ -350,14 +394,14 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
     {
       id: ToolType.HR_INTERVIEW_PREP,
       name: 'Interview Prep',
-      category: t('dashboard.categories.HR'),
+      category: t('dashboard.categories.HR'), 
       description: 'Generate interview questions and answer tips.',
       icon: 'help-circle',
       model: 'gemini-3-pro-preview',
       inputs: [
         { name: 'role', label: t('dashboard.inputs.role'), type: 'text' }, 
         { name: 'industry', label: t('dashboard.inputs.industry'), type: 'text' }
-      ]
+      ] 
     },
     {
       id: ToolType.STARTUP_VALIDATOR,
@@ -369,7 +413,7 @@ export const getTools = (t: (key: string) => string): ToolConfig[] => [
       inputs: [
         { name: 'idea', label: t('dashboard.inputs.idea'), type: 'textarea' },
         { name: 'market', label: t('dashboard.inputs.market'), type: 'text' }
-      ]
+      ] 
     },
     { 
       id: ToolType.PRODUCT_DESC, 

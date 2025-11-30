@@ -70,10 +70,11 @@ export interface ToolConfig {
 export interface ToolInput {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'select';
+  type: 'text' | 'textarea' | 'select' | 'date' | 'number' | 'repeater';
   options?: string[]; // For select type
   placeholder?: string;
   section?: string; // New: For grouping inputs visually
+  fields?: ToolInput[]; // For repeater type (nested inputs)
 }
 
 export interface DocumentVersion {

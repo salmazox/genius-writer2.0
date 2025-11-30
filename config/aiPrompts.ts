@@ -4,10 +4,10 @@ import { ToolType } from "../types";
 export interface AIPromptConfig {
   modelName: string;
   systemInstruction: string;
-  generatePrompt: (inputs: Record<string, string>) => string;
+  generatePrompt: (inputs: Record<string, any>) => string;
 }
 
-export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>): AIPromptConfig => {
+export const getPromptConfig = (tool: ToolType, inputs: Record<string, any>): AIPromptConfig => {
   // Default fallback
   let config: AIPromptConfig = {
     modelName: 'gemini-2.5-flash',
@@ -21,6 +21,39 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
   switch (tool) {
     // --- GERMAN MARKET SPECIALS ---
     case ToolType.INVOICE_GEN:
+      // Helper to process line items
+      const lineItems = Array.isArray(inputs.lineItems) ? inputs.lineItems : [];
+      
+      let subTotal = 0;
+      let itemsListString = "";
+      
+      lineItems.forEach((item: any, index: number) => {
+          const qty = parseFloat(item.quantity) || 0;
+          const price = parseFloat(item.unitPrice) || 0;
+          const total = qty * price;
+          subTotal += total;
+          itemsListString += `${index + 1}. ${item.description || 'Item'} | ${qty} x ${price.toFixed(2)} = ${total.toFixed(2)} €\n`;
+      });
+
+      // Calculate Totals based on Price Mode
+      const vatRateStr = inputs.vatRate || "19%";
+      const vatRate = parseFloat(vatRateStr.replace(/[^0-9.]/g, '')) / 100;
+      const isGrossMode = inputs.priceMode === "Gross (Incl. VAT)";
+      
+      let netTotal = 0;
+      let vatAmount = 0;
+      let grossTotal = 0;
+
+      if (isGrossMode) {
+          grossTotal = subTotal;
+          netTotal = grossTotal / (1 + vatRate);
+          vatAmount = grossTotal - netTotal;
+      } else {
+          netTotal = subTotal;
+          vatAmount = netTotal * vatRate;
+          grossTotal = netTotal + vatAmount;
+      }
+
       config = {
         modelName: 'gemini-2.5-flash',
         systemInstruction: `You are a German accounting expert and frontend developer.
@@ -34,7 +67,7 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         5. Sequential invoice number (Rechnungsnummer).
         6. Description of goods/services (Menge und Art).
         7. Date of supply/service (Leistungszeitpunkt).
-        8. Net amount, VAT rate (19% or 7% or 0%), VAT amount, and Gross amount.
+        8. Net amount, VAT rate, VAT amount, and Gross amount.
         
         Output Rules:
         - Return ONLY HTML code. No markdown code blocks (no \`\`\`html).
@@ -42,53 +75,67 @@ export const getPromptConfig = (tool: ToolType, inputs: Record<string, string>):
         - Do NOT use inline styles for colors or fonts. Rely on the parent container's CSS variables.
         - Structure:
           - Use <h1> for "RECHNUNG".
-          - Use <table> for the item list.
+          - Use <table> for the item list with columns: Pos, Description, Qty, Unit Price, Total.
           - Align numbers to the right.
-        
-        Specific Rules based on Type:
-        - "Standard Commercial": Calculate 19% VAT. Show Net, VAT, Gross.
-        - "Reduced Rate": Calculate 7% VAT. Show Net, VAT, Gross.
-        - "Small Business (Kleinunternehmer)": Do NOT charge VAT. MUST include clause: "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."`,
+          - Add a 'total-row' class to the final sum row.`,
         generatePrompt: () => `
         Generate HTML Invoice.
         
         Type: ${inputs.invoiceType}
-        Sender: ${inputs.invoiceSender}
-        Recipient: ${inputs.invoiceRecipient}
-        Meta Data: ${inputs.invoiceDetails}
-        Items: ${inputs.invoiceItems}
+        Invoice Number: ${inputs.invoiceNumber || 'TBD'}
+        Date: ${inputs.invoiceDate || 'Today'}
+        Sender: ${inputs.senderDetails}
+        Recipient: ${inputs.recipientDetails}
+        
+        LINE ITEMS (Pre-calculated):
+        ${itemsListString}
+        
+        CALCULATED TOTALS:
+        Net Total: ${netTotal.toFixed(2)} €
+        VAT Rate: ${vatRateStr}
+        VAT Amount: ${vatAmount.toFixed(2)} €
+        Gross Total: ${grossTotal.toFixed(2)} €
+        
         Payment Terms: ${inputs.paymentTerms}
         
-        IMPORTANT: Return only the inner HTML structure (divs, tables) to be placed inside an A4 container. Do not include <html> or <body> tags.`
+        IMPORTANT: Return only the inner HTML structure (divs, tables) to be placed inside an A4 container. Use the provided calculated totals exactly.`
       };
       break;
 
     case ToolType.CONTRACT_GEN:
       config = {
-        modelName: 'gemini-2.5-flash', // Switched to Flash for speed as requested
+        modelName: 'gemini-2.5-flash',
         systemInstruction: `You are a German legal assistant (Rechtsassistent).
         Your task is to draft a contract based on German Civil Code (BGB) standards as clean HTML.
         
         IMPORTANT DISCLAIMER:
         Start with a div containing the disclaimer: "**HINWEIS: Dies ist ein KI-generierter Entwurf und stellt keine Rechtsberatung dar.**"
         
+        Financial Logic:
+        - If a Price is provided, clearly state the amount, VAT condition (Net/Gross), and payment method in a dedicated § (e.g., §3 Vergütung).
+        - Calculate and display Net/VAT/Gross if applicable based on the input.
+        
         Output Rules:
         - Return ONLY HTML code. No markdown code blocks.
         - Use semantic tags: <h1> for Title, <h2> for Sections (§1...), <p> for paragraphs.
         - Do NOT use inline styles.
         - Structure:
-          - Header: Title.
+          - Header: Title & Date.
           - Preamble: Introduction of parties.
-          - Sections: §1, §2 etc.
+          - Sections: §1 Object, §2 Duration/Delivery, §3 Payment, §4 Warranty/Conditions etc.
           - Signatures: Create a signature block at the bottom.`,
         generatePrompt: () => `
         Generate HTML Contract.
         Type: ${inputs.contractType}
+        Date: ${inputs.contractDate || 'Today'}
         Party A: ${inputs.partyA}
         Party B: ${inputs.partyB}
-        Subject: ${inputs.subjectMatter}
-        Financials: ${inputs.financials}
-        Conditions: ${inputs.conditions}
+        Object/Service: ${inputs.objectDetails}
+        Price Input: ${inputs.price || 'TBD'}
+        VAT Rate: ${inputs.vatRate}
+        Price Mode: ${inputs.priceMode}
+        Payment Method: ${inputs.paymentMethod}
+        Conditions/Warranty: ${inputs.conditions}
         
         IMPORTANT: Return only the inner HTML structure.`
       };
