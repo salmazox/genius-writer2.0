@@ -450,11 +450,11 @@ const CvBuilder: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                     <div className="mr-4 hidden md:block">
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                     <div className="mr-2 hidden md:block">
                          {isAutoSaving ? <span className="text-[10px] text-slate-400 flex items-center gap-1 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-full"><Save size={10} className="animate-pulse"/> Saving...</span> : <span className="text-[10px] text-green-500 flex items-center gap-1 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-full"><Check size={10}/> Saved</span>}
                      </div>
-                     
+
                      {viewMode === 'cv' && (
                          <>
                             <input type="file" ref={importInputRef} className="hidden" accept="image/*,application/pdf,.pdf" onChange={handleImportCV} />
@@ -502,13 +502,13 @@ const CvBuilder: React.FC = () => {
                             </Button>
                          </>
                      )}
-                     
+
                      <Button size="sm" variant="secondary" onClick={handleSaveDocument} icon={Save}>
                          <span className="hidden md:inline">Save</span>
                      </Button>
                      <Button size="sm" variant={isPro ? "primary" : "ghost"} onClick={handleDownloadPDF} disabled={!isPro && false}>
-                         {isPro ? <Download size={16} className="mr-2"/> : <Lock size={16} className="mr-2"/>}
-                         <span className="hidden md:inline">Export</span>
+                         {isPro ? <Download size={16} className="mr-1 sm:mr-2"/> : <Lock size={16} className="mr-1 sm:mr-2"/>}
+                         <span className="hidden sm:inline">Export</span>
                      </Button>
                 </div>
             </div>
