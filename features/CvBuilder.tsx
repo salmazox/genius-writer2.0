@@ -3,7 +3,7 @@ import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Ch
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
-import { generateContent, analyzeATS, parseResume, generateCoverLetter, parseLinkedInProfile } from '../services/gemini';
+import { generateContent, analyzeATS, parseResume, generateCoverLetter, parseLinkedInProfile, parsePDFResume } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { ToolType, CVData, CVTheme, ATSAnalysis, CVExperience } from '../types';
 import { Button } from '../components/ui/Button';
@@ -146,11 +146,13 @@ const CvBuilder: React.FC = () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Basic validation - In real app, backend would handle PDF parsing better.
-        // Here we rely on Gemini Multimodal to "see" the CV image.
-        if (!file.type.startsWith('image/')) {
-            showToast("For this demo, please upload an image (PNG/JPG) of your resume.", "info");
-            // Allow proceed if it is image
+        // Detect file type and choose appropriate parser
+        const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        const isImage = file.type.startsWith('image/');
+
+        if (!isPDF && !isImage) {
+            showToast("Please upload an image (PNG/JPG) or PDF of your resume.", "info");
+            return;
         }
 
         const reader = new FileReader();
@@ -158,18 +160,25 @@ const CvBuilder: React.FC = () => {
             setIsImporting(true);
             try {
                 const base64 = reader.result as string;
-                const parsedData = await parseResume(base64);
-                
-                // Merge parsed data with defaults to ensure structure
+
+                // Choose parser based on file type
+                const parsedData = isPDF
+                    ? await parsePDFResume(base64)
+                    : await parseResume(base64);
+
+                // Merge parsed data with defaults, including certifications and languages
                 setCvData(prev => ({
                     ...prev,
                     personal: { ...prev.personal, ...parsedData.personal },
-                    experience: parsedData.experience?.map((e: any) => ({...e, id: Date.now().toString() + Math.random()})) || [],
-                    education: parsedData.education?.map((e: any) => ({...e, id: Date.now().toString() + Math.random()})) || [],
-                    skills: parsedData.skills || []
+                    experience: parsedData.experience?.map((e: any) => ({...e, id: Date.now().toString() + Math.random()})) || prev.experience,
+                    education: parsedData.education?.map((e: any) => ({...e, id: Date.now().toString() + Math.random()})) || prev.education,
+                    skills: parsedData.skills || prev.skills,
+                    certifications: parsedData.certifications?.map((c: any) => ({...c, id: Date.now().toString() + Math.random()})) || prev.certifications,
+                    languages: parsedData.languages?.map((l: any) => ({...l, id: Date.now().toString() + Math.random()})) || prev.languages
                 }));
-                
-                showToast(t('dashboard.toasts.importSuccess'), "success");
+
+                const fileType = isPDF ? 'PDF' : 'image';
+                showToast(`Resume imported from ${fileType} successfully! 🎉`, "success");
             } catch (err: any) {
                 console.error(err);
                 showToast(err.message || t('dashboard.toasts.importFail'), "error");
@@ -393,7 +402,7 @@ const CvBuilder: React.FC = () => {
                      
                      {viewMode === 'cv' && (
                          <>
-                            <input type="file" ref={importInputRef} className="hidden" accept="image/*" onChange={handleImportCV} />
+                            <input type="file" ref={importInputRef} className="hidden" accept="image/*,application/pdf,.pdf" onChange={handleImportCV} />
                             <input type="file" ref={linkedinImportInputRef} className="hidden" accept="image/*" onChange={handleImportLinkedIn} />
 
                             <Button size="sm" variant="secondary" onClick={() => importInputRef.current?.click()} icon={Upload} isLoading={isImporting} className="hidden md:flex">

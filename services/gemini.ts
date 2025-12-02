@@ -784,6 +784,121 @@ Begin extraction:`
     }
 };
 
+/**
+ * Parse PDF resume document
+ * Uses Gemini's native PDF parsing capability
+ */
+export const parsePDFResume = async (
+    base64PDF: string,
+    signal?: AbortSignal
+): Promise<Partial<CVData>> => {
+    checkOnline();
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    checkUsageAllowance('word');
+
+    // Extract clean base64 data
+    let cleanedBase64 = base64PDF;
+    const matches = base64PDF.match(/^data:.+;base64,(.+)$/);
+    if (matches) {
+        cleanedBase64 = matches[1];
+    } else {
+        const commaIndex = base64PDF.indexOf(',');
+        if (commaIndex !== -1) {
+            cleanedBase64 = base64PDF.substring(commaIndex + 1);
+        }
+    }
+
+    try {
+        const response = await withRetry(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType: 'application/pdf', data: cleanedBase64 } },
+                        {
+                            text: `You are viewing a PDF resume/CV. Extract ALL information from the document.
+
+Extract the complete content into this JSON structure:
+{
+  "personal": {
+    "fullName": "Full name from resume",
+    "email": "Email address",
+    "phone": "Phone number",
+    "address": "Full address or city/state",
+    "website": "Personal website if present",
+    "linkedin": "LinkedIn URL if present",
+    "jobTitle": "Professional title/headline",
+    "summary": "Professional summary or objective statement"
+  },
+  "experience": [
+    {
+      "title": "Job title",
+      "company": "Company name",
+      "location": "City, State",
+      "startDate": "Start date in any format present",
+      "endDate": "End date or Present/Current",
+      "current": true if currently employed,
+      "description": "Full job description - preserve ALL bullet points and details"
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree name and field of study",
+      "school": "University/Institution name",
+      "location": "City, State if available",
+      "year": "Graduation year or date range"
+    }
+  ],
+  "skills": ["skill1", "skill2", "skill3", ...],
+  "certifications": [
+    {
+      "name": "Certification name",
+      "issuer": "Issuing organization",
+      "date": "Issue date",
+      "url": "Certificate URL if present",
+      "description": "Any additional details"
+    }
+  ],
+  "languages": [
+    {
+      "language": "Language name",
+      "proficiency": "Proficiency level if stated"
+    }
+  ]
+}
+
+IMPORTANT RULES:
+1. Extract EVERYTHING from the PDF - be extremely thorough
+2. Preserve all bullet points and descriptions in full
+3. Extract contact information from header/footer if present
+4. Look for certifications, publications, projects sections
+5. Extract skills from dedicated skills section or embedded in descriptions
+6. If a field is not present in the resume, use empty string ""
+7. For dates: Preserve the format used in the resume
+8. Return ONLY valid JSON, no extra text or markdown
+9. Do not summarize or shorten any content - extract verbatim
+
+Begin extraction:`
+                        }
+                    ]
+                }
+            });
+        }, 3, 1000, signal);
+
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+        const text = response.text || "{}";
+        trackUsage(text);
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        console.error("PDF Resume Parsing Error", e);
+        throw new Error("Failed to parse PDF resume. Please ensure the file is not password-protected and is readable.");
+    }
+};
+
 export const factCheck = async (
     content: string,
     signal?: AbortSignal
