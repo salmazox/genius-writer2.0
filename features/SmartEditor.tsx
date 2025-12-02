@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
-    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square, Copy, Shield, Clock
+    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square, Copy, Shield, Clock, BookOpen, List, FileText
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
@@ -10,6 +10,9 @@ import { ShareModal } from '../components/ShareModal';
 import CollaborationShareModal from '../components/CollaborationShareModal';
 import CommentPanel from '../components/CommentPanel';
 import ActivityFeed from '../components/ActivityFeed';
+import DocumentOutline from '../components/DocumentOutline';
+import ChapterManager from '../components/ChapterManager';
+import TableOfContents from '../components/TableOfContents';
 import PlagiarismPanel from '../components/PlagiarismPanel';
 import SEOPanel from '../components/SEOPanel';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -43,7 +46,7 @@ const SmartEditor: React.FC = () => {
     const [content, setContent] = useLocalStorage<string>('smart_editor_content', '');
     const [title, setTitle] = useLocalStorage<string>('smart_editor_title', 'Untitled Document');
     const [currentDoc, setCurrentDoc] = useState<SavedDocument | null>(null);
-    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | 'plagiarism' | 'activity' | null>(null); // Default closed
+    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | 'plagiarism' | 'activity' | 'outline' | 'chapters' | 'toc' | null>(null); // Default closed
 
     // Collaboration state
     const [showCollaborationShare, setShowCollaborationShare] = useState(false);
@@ -434,6 +437,33 @@ const SmartEditor: React.FC = () => {
                         
                         <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
 
+                        {/* Long-Form Writing Tools */}
+                        <button
+                            onClick={() => setActiveSidebar(activeSidebar === 'chapters' ? null : 'chapters')}
+                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'chapters' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                            title="Chapters"
+                        >
+                            <BookOpen size={20} />
+                        </button>
+
+                        <button
+                            onClick={() => setActiveSidebar(activeSidebar === 'outline' ? null : 'outline')}
+                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'outline' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                            title="Document Outline"
+                        >
+                            <FileText size={20} />
+                        </button>
+
+                        <button
+                            onClick={() => setActiveSidebar(activeSidebar === 'toc' ? null : 'toc')}
+                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'toc' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                            title="Table of Contents"
+                        >
+                            <List size={20} />
+                        </button>
+
+                        <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
                         {/* Sidebar Toggles - Always visible for quick access */}
                         <button
                             onClick={() => setActiveSidebar(activeSidebar === 'plagiarism' ? null : 'plagiarism')}
@@ -612,6 +642,36 @@ const SmartEditor: React.FC = () => {
                         <div className="h-full overflow-hidden">
                             <ActivityFeed
                                 documentId={documentId}
+                                onClose={() => setActiveSidebar(null)}
+                            />
+                        </div>
+                    )}
+
+                    {/* Chapter Manager Sidebar Content */}
+                    {activeSidebar === 'chapters' && (
+                        <div className="h-full overflow-hidden">
+                            <ChapterManager
+                                documentId={documentId}
+                                onClose={() => setActiveSidebar(null)}
+                            />
+                        </div>
+                    )}
+
+                    {/* Document Outline Sidebar Content */}
+                    {activeSidebar === 'outline' && (
+                        <div className="h-full overflow-hidden">
+                            <DocumentOutline
+                                documentId={documentId}
+                                onClose={() => setActiveSidebar(null)}
+                            />
+                        </div>
+                    )}
+
+                    {/* Table of Contents Sidebar Content */}
+                    {activeSidebar === 'toc' && (
+                        <div className="h-full overflow-hidden">
+                            <TableOfContents
+                                content={content}
                                 onClose={() => setActiveSidebar(null)}
                             />
                         </div>
