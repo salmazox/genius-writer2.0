@@ -171,11 +171,11 @@ function analyzeStructure(html: string): ContentStructure {
 
   const listCount = (html.match(/<[uo]l[^>]*>/gi) || []).length;
 
-  const images = html.match(/<img[^>]*>/gi) || [];
+  const images: string[] = html.match(/<img[^>]*>/gi) || [];
   const imageCount = images.length;
   const imagesWithAlt = images.filter(img => /alt=["'][^"']+["']/i.test(img)).length;
 
-  const links = html.match(/<a[^>]*href=["'][^"']+["'][^>]*>/gi) || [];
+  const links: string[] = html.match(/<a[^>]*href=["'][^"']+["'][^>]*>/gi) || [];
   const linkCount = links.length;
   const internalLinks = links.filter(link => !link.includes('http')).length;
   const externalLinks = linkCount - internalLinks;
