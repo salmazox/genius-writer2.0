@@ -24,6 +24,7 @@ import CvAtsSidebar from './cv/CvAtsSidebar';
 import CvAiCoach from './cv/CvAiCoach';
 import JobDescriptionPanel, { type JobDescriptionData } from './cv/JobDescriptionPanel';
 import CoverLetterPanel from './cv/CoverLetterPanel';
+import LinkedInPostsPanel from './cv/LinkedInPostsPanel';
 
 // Professional Color Themes
 const CV_THEMES: CVTheme[] = [
@@ -53,7 +54,7 @@ const CvBuilder: React.FC = () => {
     const { activeTab: mobileTab, setActiveTab: setMobileTab } = useMobileTabs<'editor' | 'preview'>('editor');
     
     // State
-    const [viewMode, setViewMode] = useState<'cv' | 'cover_letter'>('cv');
+    const [viewMode, setViewMode] = useState<'cv' | 'cover_letter' | 'linkedin_posts'>('cv');
     const [cvData, setCvData] = useState<CVData>(INITIAL_CV);
     const [showAtsSidebar, setShowAtsSidebar] = useState(false);
     const [showAiCoach, setShowAiCoach] = useState(false);
@@ -398,13 +399,21 @@ const CvBuilder: React.FC = () => {
                             <span className="hidden md:inline">CV Builder</span>
                             <span className="md:hidden">CV</span>
                         </button>
-                        <button 
+                        <button
                              onClick={() => setViewMode('cover_letter')}
                              className={`px-3 py-1.5 rounded-md text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'cover_letter' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}
                         >
-                            <Mail size={16} /> 
+                            <Mail size={16} />
                             <span className="hidden md:inline">Cover Letter</span>
                             <span className="md:hidden">Cover</span>
+                        </button>
+                        <button
+                             onClick={() => setViewMode('linkedin_posts')}
+                             className={`px-3 py-1.5 rounded-md text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'linkedin_posts' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <Linkedin size={16} />
+                            <span className="hidden md:inline">LinkedIn Posts</span>
+                            <span className="md:hidden">LinkedIn</span>
                         </button>
                     </div>
                 </div>
@@ -617,11 +626,19 @@ const CvBuilder: React.FC = () => {
                         </div>
                     )}
                 </div>
-            ) : (
+            ) : viewMode === 'cover_letter' ? (
                 /* Cover Letter View */
                 <CoverLetterPanel
                     cvData={cvData}
                     jobDescription={jobDescription}
+                    onClose={() => setViewMode('cv')}
+                    className="flex-1"
+                />
+            ) : (
+                /* LinkedIn Posts View */
+                <LinkedInPostsPanel
+                    cvData={cvData}
+                    jobTarget={jobDescription || cvData.personal.jobTitle}
                     onClose={() => setViewMode('cv')}
                     className="flex-1"
                 />

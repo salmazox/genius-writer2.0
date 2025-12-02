@@ -1124,6 +1124,117 @@ export const generateSpeech = async (
     }
 };
 
+/**
+ * Generate LinkedIn post suggestions for job seekers
+ * Creates multiple post variations with different styles and tones
+ */
+export interface LinkedInPost {
+    style: 'professional' | 'storytelling' | 'achievement' | 'casual';
+    content: string;
+    hashtags: string[];
+}
+
+export const generateLinkedInPosts = async (
+    cvData: CVData,
+    jobTarget?: string,
+    signal?: AbortSignal
+): Promise<LinkedInPost[]> => {
+    checkOnline();
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
+
+    checkUsageAllowance('word');
+
+    const cvSummary = {
+        name: cvData.personal.fullName,
+        title: cvData.personal.jobTitle,
+        summary: cvData.personal.summary,
+        topSkills: cvData.skills.slice(0, 8).join(', '),
+        recentExperience: cvData.experience[0] ? `${cvData.experience[0].title} at ${cvData.experience[0].company}` : 'Experienced professional',
+        education: cvData.education[0] ? `${cvData.education[0].degree} from ${cvData.education[0].school}` : null
+    };
+
+    const targetRole = jobTarget || cvData.personal.jobTitle || 'new opportunities';
+
+    try {
+        const response = await withRetry(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `You are a LinkedIn content expert helping a job seeker create engaging posts.
+
+CANDIDATE INFO:
+- Name: ${cvSummary.name}
+- Current/Target Title: ${cvSummary.title}
+- Target Role: ${targetRole}
+- Top Skills: ${cvSummary.topSkills}
+- Recent Experience: ${cvSummary.recentExperience}
+- Summary: ${cvSummary.summary}
+
+Create 4 LinkedIn post variations for this person who is looking for ${targetRole} opportunities. Each post should be:
+- 150-250 words
+- Include line breaks for readability
+- Be authentic and engaging
+- Subtly signal they are open to opportunities without being desperate
+- End with a call-to-action
+
+REQUIRED STYLES:
+1. Professional - Formal, straightforward announcement
+2. Storytelling - Personal narrative with journey/lessons learned
+3. Achievement - Highlight recent accomplishments and skills
+4. Casual - Conversational, relatable, warm tone
+
+OUTPUT FORMAT (strict JSON, no markdown):
+[
+  {
+    "style": "professional",
+    "content": "The post content with \\n for line breaks",
+    "hashtags": ["OpenToWork", "Hiring", "JobSearch", "RelevantSkill1", "RelevantSkill2"]
+  },
+  {
+    "style": "storytelling",
+    "content": "...",
+    "hashtags": ["..."]
+  },
+  {
+    "style": "achievement",
+    "content": "...",
+    "hashtags": ["..."]
+  },
+  {
+    "style": "casual",
+    "content": "...",
+    "hashtags": ["..."]
+  }
+]
+
+IMPORTANT:
+- Each post must have 5-7 relevant hashtags
+- Use \\n for line breaks in content
+- No emojis unless in casual style (max 2-3)
+- Make posts specific to their background
+- Return ONLY the JSON array`
+            });
+        }, 3, 1000, signal);
+
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+        const text = response.text || "[]";
+        trackUsage(text);
+
+        // Clean up response and parse JSON
+        let jsonStr = text.trim();
+        jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
+
+        const posts: LinkedInPost[] = JSON.parse(jsonStr);
+        return posts;
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        console.error("LinkedIn Post Generation Error", e);
+        throw new Error("Failed to generate LinkedIn posts. Please try again.");
+    }
+};
+
 export const createLiveSession = (config: any) => {
     return ai.live.connect({
         model: 'gemini-2.0-flash-exp', // Cost Optimization: Use 2.0 Flash for Live
