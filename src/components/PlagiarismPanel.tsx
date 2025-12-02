@@ -97,13 +97,26 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
 
       {/* Info Box */}
       {!result && !isChecking && (
-        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800 flex items-start gap-2">
-          <Info size={14} className="mt-0.5 flex-shrink-0" />
-          <span>
-            Check your content for originality. Our AI will identify common phrases,
-            clichés, and generic expressions that reduce uniqueness.
-          </span>
-        </div>
+        <>
+          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800 flex items-start gap-2">
+            <Info size={14} className="mt-0.5 flex-shrink-0" />
+            <span>
+              Check your content for originality. Our AI will identify common phrases,
+              clichés, and generic expressions that reduce uniqueness.
+            </span>
+          </div>
+          <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-900 flex items-start gap-2">
+            <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold mb-1">Important Limitation:</p>
+              <p>
+                This is NOT a true plagiarism detector. It uses AI pattern analysis and cannot
+                access external sources to verify if content is copied. For professional plagiarism
+                detection, use dedicated services like Copyscape or Turnitin.
+              </p>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Error Message */}

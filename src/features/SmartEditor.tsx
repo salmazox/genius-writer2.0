@@ -561,9 +561,9 @@ const SmartEditor: React.FC = () => {
                 </div>
 
                 {/* Editor Canvas Container */}
-                <div className="flex-1 overflow-y-auto p-2 lg:p-8 flex justify-center bg-slate-200 dark:bg-slate-950" onClick={handleSelectionCheck}>
+                <div className="flex-1 overflow-y-auto p-4 lg:p-8 flex justify-center bg-slate-200 dark:bg-slate-950" onClick={handleSelectionCheck}>
                     {/* A4 Page Container */}
-                    <div className="w-full max-w-[210mm] bg-white dark:bg-slate-900 shadow-2xl mb-20 transition-all min-h-[297mm] relative">
+                    <div className="w-full max-w-[210mm] bg-white dark:bg-slate-900 shadow-2xl mb-20 transition-all min-h-[297mm] relative overflow-hidden">
                          {/* Selection Highlight for Commenting (Simple Visual) */}
                          {activeSidebar === 'comments' && selectedTextForComment && (
                             <div className="sticky top-0 left-0 w-full bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2 text-xs flex items-center justify-between z-10">

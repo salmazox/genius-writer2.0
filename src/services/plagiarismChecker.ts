@@ -84,37 +84,42 @@ export async function checkPlagiarism(
     }
   }
 
-  // Prepare the prompt for Gemini
+  // Prepare the prompt for Gemini - STRICT scoring required
   const prompt = `
-You are an expert content originality analyzer. Analyze this text for potential plagiarism and originality issues:
+You are a STRICT content originality analyzer. Be CRITICAL and identify even small instances of copied or generic content.
 
 TEXT TO ANALYZE:
 """
 ${text}
 """
 
-Perform a comprehensive originality analysis:
+CRITICAL ANALYSIS REQUIRED - Be harsh and thorough:
 
-1. **Originality Score** (0-100):
-   - 90-100: Highly original, unique voice and ideas
-   - 70-89: Mostly original with some common phrases
-   - 50-69: Contains several generic or overused expressions
-   - 30-49: Many common phrases, lacks originality
-   - 0-29: Highly generic or potentially copied content
+1. **Originality Score** (0-100) - BE STRICT:
+   - 90-100: ONLY for truly unique, never-seen-before content with original insights
+   - 70-89: Mostly original but with recognizable phrases or common structures
+   - 50-69: Mix of original and generic content
+   - 30-49: Predominantly generic phrases and common expressions
+   - 0-29: Copied content, standard templates, or heavily generic writing
 
-2. **Flagged Issues**: Identify specific phrases that are:
-   - Common clichés or overused expressions
-   - Generic statements found in many sources
-   - Phrases that appear verbatim in typical content
-   - Industry jargon used without originality
+   IMPORTANT: If you detect ANY phrases that sound like they're from news articles, Wikipedia,
+   or standard professional writing, score BELOW 50. Be suspicious of well-formed sentences.
 
-3. **Analysis Metrics**:
-   - Percentage of unique vs. generic content
-   - Count of common phrases
-   - Count of overused expressions
-   - Count of clichés
+2. **Flagged Issues**: Identify EVERY instance of:
+   - Exact phrases from common sources (news, Wikipedia, standard business writing)
+   - Professional jargon used in typical ways
+   - Sentence structures that appear in many documents
+   - Common transitions and connectors
+   - Standard opening/closing phrases
+   - Industry-standard descriptions
 
-4. **Improvement Suggestions**: How to make the content more original
+3. **Analysis Metrics** - Count EVERYTHING suspicious:
+   - Percentage of unique vs. generic content (be strict)
+   - Count ALL common phrases (not just obvious ones)
+   - Count ALL overused expressions
+   - Count ALL clichés and standard phrases
+
+4. **Improvement Suggestions**: Specific ways to make content truly original
 
 IMPORTANT: Return ONLY valid JSON in this exact format:
 {

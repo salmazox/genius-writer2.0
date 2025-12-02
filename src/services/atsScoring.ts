@@ -172,7 +172,18 @@ export const calculateRealTimeATSScore = (
 function analyzeKeywordDensity(cvData: CVData, jobDescription?: string): ScoreCriterion {
   const allText = extractAllText(cvData).toLowerCase();
   const details: string[] = [];
-  let score = 50; // Base score
+
+  // Check if CV is essentially empty
+  if (!allText || allText.trim().length < 10) {
+    return {
+      score: 0,
+      weight: 25,
+      details: ['❌ CV is empty - add your information to get scored'],
+      passed: false
+    };
+  }
+
+  let score = 30; // Lower base score (was 50)
 
   // Check for common tech/professional keywords
   const foundKeywords = COMMON_TECH_KEYWORDS.filter(keyword =>
@@ -180,7 +191,7 @@ function analyzeKeywordDensity(cvData: CVData, jobDescription?: string): ScoreCr
   );
 
   const keywordDensity = foundKeywords.length / COMMON_TECH_KEYWORDS.length;
-  score += Math.min(keywordDensity * 100, 30); // Up to +30 points
+  score += Math.min(keywordDensity * 100, 40); // Up to +40 points (increased from 30)
 
   if (foundKeywords.length < 5) {
     details.push('Add more industry-specific keywords to improve ATS visibility');
