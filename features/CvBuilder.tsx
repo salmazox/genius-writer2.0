@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft, Lightbulb, Linkedin } from 'lucide-react';
+import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft, Lightbulb, Linkedin, History } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
@@ -16,6 +16,7 @@ import { Watermark } from '../components/Watermark';
 import { usePdfExport } from '../hooks/usePdfExport';
 import { useMobileTabs } from '../hooks/useMobileTabs';
 import { calculateRealTimeATSScore, type ATSScoreBreakdown } from '../services/atsScoring';
+import { saveVersion, autoSaveCheckpoint } from '../services/versionHistory';
 
 // Sub-components
 import CvEditor from './cv/CvEditor';
@@ -25,6 +26,7 @@ import CvAiCoach from './cv/CvAiCoach';
 import JobDescriptionPanel, { type JobDescriptionData } from './cv/JobDescriptionPanel';
 import CoverLetterPanel from './cv/CoverLetterPanel';
 import LinkedInPostsPanel from './cv/LinkedInPostsPanel';
+import VersionHistoryPanel from './cv/VersionHistoryPanel';
 
 // Professional Color Themes
 const CV_THEMES: CVTheme[] = [
@@ -58,6 +60,7 @@ const CvBuilder: React.FC = () => {
     const [cvData, setCvData] = useState<CVData>(INITIAL_CV);
     const [showAtsSidebar, setShowAtsSidebar] = useState(false);
     const [showAiCoach, setShowAiCoach] = useState(false);
+    const [showVersionHistory, setShowVersionHistory] = useState(false);
     const [jobDescription, setJobDescription] = useState('');
     const [jobDescriptionData, setJobDescriptionData] = useState<JobDescriptionData | null>(null);
     const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
@@ -132,6 +135,13 @@ const CvBuilder: React.FC = () => {
             console.error('Failed to calculate ATS score:', error);
         }
     }, [debouncedCvForScoring, jobDescription]);
+
+    // Auto-save version checkpoints
+    useEffect(() => {
+        if (cvData.personal.fullName && atsScore) {
+            autoSaveCheckpoint(cvData, atsScore);
+        }
+    }, [debouncedCvDataForSave, atsScore]);
 
     const handleSaveDocument = () => {
         const content = viewMode === 'cv' ? JSON.stringify(cvData) : coverLetterContent;
@@ -368,6 +378,20 @@ const CvBuilder: React.FC = () => {
         showToast('CV generated successfully! Review and customize as needed.', 'success');
     };
 
+    const handleSaveVersion = () => {
+        const name = prompt('Enter a name for this version:', `Version - ${new Date().toLocaleDateString()}`);
+        if (name) {
+            const tags = prompt('Enter tags (comma-separated, optional):')?.split(',').map(t => t.trim()).filter(Boolean) || [];
+            saveVersion(cvData, atsScore, name, tags);
+            showToast(`Version "${name}" saved successfully!`, 'success');
+        }
+    };
+
+    const handleRestoreVersion = (restoredCvData: CVData) => {
+        setCvData(restoredCvData);
+        showToast('CV restored from version history', 'success');
+    };
+
     const completionScore = (() => {
         let score = 0;
         if (cvData.personal.fullName) score += 10;
@@ -451,6 +475,14 @@ const CvBuilder: React.FC = () => {
                                 className="hidden md:flex"
                             >
                                 <Lightbulb size={16} className="mr-2"/> AI Coach
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant={showVersionHistory ? "primary" : "outline"}
+                                onClick={() => setShowVersionHistory(!showVersionHistory)}
+                                className="hidden md:flex"
+                            >
+                                <History size={16} className="mr-2"/> Versions
                             </Button>
                          </>
                      )}
@@ -622,6 +654,16 @@ const CvBuilder: React.FC = () => {
                                 cvData={cvData}
                                 atsScore={atsScore}
                                 onUpdateCV={handleUpdateCV}
+                            />
+                        </div>
+                    )}
+
+                    {/* Column 5: Version History Sidebar */}
+                    {showVersionHistory && (
+                        <div className="w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex-shrink-0 overflow-hidden flex flex-col">
+                            <VersionHistoryPanel
+                                onRestoreVersion={handleRestoreVersion}
+                                onClose={() => setShowVersionHistory(false)}
                             />
                         </div>
                     )}
