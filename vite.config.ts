@@ -9,6 +9,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    root: '.',
+    publicDir: 'public',
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true
+    },
     define: {
       // Polyfill process.env so usage in code (like services/gemini.ts) doesn't crash the browser
       'process.env': {
