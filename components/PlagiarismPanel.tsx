@@ -15,7 +15,7 @@ import {
   getSeverityColor
 } from '../services/plagiarismChecker';
 import { ToolType } from '../types';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 
 interface PlagiarismPanelProps {
   content: string;

@@ -17,7 +17,7 @@ import {
   formatHashtagsForPost,
   getPlatformGuidelines
 } from '../services/hashtagGenerator';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 
 interface HashtagSuggestionsProps {
   content: string;
