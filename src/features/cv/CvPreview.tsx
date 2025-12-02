@@ -21,12 +21,12 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
     // Uses float layout to keep sidebar on first page only, while main content flows naturally.
     const ModernTemplate = () => (
         <div className="relative bg-white text-slate-800 shadow-sm overflow-hidden" style={{ minHeight: '297mm' }}>
-            
+
             {/* 1. Background Color for Sidebar (Absolute, Page 1 Height Only) */}
-            <div className="absolute top-0 left-0 w-[32%] h-[297mm] print:h-[297mm] z-0" style={{ backgroundColor: cvData.theme.primary }}></div>
+            <div className="absolute top-0 left-0 w-full sm:w-[32%] h-auto sm:h-[297mm] print:h-[297mm] z-0" style={{ backgroundColor: cvData.theme.primary }}></div>
 
             {/* 2. Sidebar Content (Absolute, Page 1 Height Only) */}
-            <div className="absolute top-0 left-0 w-[32%] h-[297mm] p-8 flex flex-col text-white z-10 overflow-hidden">
+            <div className="relative sm:absolute top-0 left-0 w-full sm:w-[32%] sm:h-[297mm] p-4 sm:p-8 flex flex-col text-white z-10 overflow-hidden">
                 {cvData.personal.photoBase64 && (
                     <div className="mb-8 mx-auto flex justify-center">
                         <img 
@@ -97,11 +97,11 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
                 </div>
             </div>
 
-            {/* 3. Invisible Spacer Float (Pushes content right on Page 1) */}
-            <div className="float-left w-[32%] h-[297mm] shape-outside-margin-box"></div>
+            {/* 3. Invisible Spacer Float (Pushes content right on Page 1) - Hidden on mobile */}
+            <div className="hidden sm:block float-left w-[32%] h-[297mm] shape-outside-margin-box"></div>
 
             {/* 4. Main Content (Flows around spacer) */}
-            <div className="relative p-8 sm:p-10 w-full" style={{ boxSizing: 'border-box' }}>
+            <div className="relative p-4 sm:p-8 lg:p-10 w-full" style={{ boxSizing: 'border-box' }}>
                 <header className="mb-10 pb-6 border-b-2 border-slate-100">
                     <h1 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-2 leading-none break-words" style={{ color: cvData.theme.text }}>{cvData.personal.fullName || "Your Name"}</h1>
                     <p className="text-xl font-light text-slate-500 tracking-wide">{cvData.personal.jobTitle || "Job Title"}</p>
@@ -150,7 +150,7 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
 
     // --- Template: Classic ---
     const ClassicTemplate = () => (
-        <div className="flex flex-col min-h-[29.7cm] p-8 sm:p-12 bg-[#fdfbf7] text-slate-900 font-serif relative shadow-sm">
+        <div className="flex flex-col min-h-[29.7cm] p-4 sm:p-8 lg:p-12 bg-[#fdfbf7] text-slate-900 font-serif relative shadow-sm">
             <div className="absolute top-0 left-0 w-full h-2" style={{ backgroundColor: cvData.theme.primary }}></div>
 
             <header className="text-center mb-10 border-b-4 border-double border-slate-200 pb-8">
@@ -239,8 +239,8 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
 
     // --- Template: Minimal ---
     const MinimalTemplate = () => (
-        <div className="flex flex-col min-h-[29.7cm] p-8 sm:p-12 bg-white font-sans text-slate-800 shadow-sm">
-             <header className="mb-16 grid grid-cols-1 md:grid-cols-12 gap-8 items-end">
+        <div className="flex flex-col min-h-[29.7cm] p-4 sm:p-8 lg:p-12 bg-white font-sans text-slate-800 shadow-sm">
+             <header className="mb-8 sm:mb-16 grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-8 items-end">
                 <div className="md:col-span-8">
                     <h1 className="text-5xl sm:text-6xl font-light tracking-tight mb-4 text-slate-900 leading-tight">{cvData.personal.fullName || "Your Name"}</h1>
                     <p className="text-2xl text-slate-400 font-normal tracking-wide">{cvData.personal.jobTitle || "Job Title"}</p>
@@ -331,7 +331,7 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
     const ProfessionalTemplate = () => (
         <div className="flex flex-col min-h-[29.7cm] bg-white text-slate-900 font-sans shadow-sm">
             {/* Header Bar */}
-            <div className="bg-gradient-to-r from-slate-900 to-slate-700 text-white p-8 sm:p-10">
+            <div className="bg-gradient-to-r from-slate-900 to-slate-700 text-white p-4 sm:p-8 lg:p-10">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
                     <div>
                         <h1 className="text-4xl sm:text-5xl font-bold mb-3 tracking-tight">{cvData.personal.fullName || "Your Name"}</h1>
@@ -346,7 +346,7 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
             </div>
 
             {/* Content */}
-            <div className="p-8 sm:p-10 space-y-10">
+            <div className="p-4 sm:p-8 lg:p-10 space-y-6 sm:space-y-10">
                 {cvData.personal.summary && (
                     <section>
                         <div className="flex items-center gap-3 mb-5">
@@ -421,14 +421,14 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
     const CreativeTemplate = () => (
         <div className="flex flex-col min-h-[29.7cm] bg-white text-slate-900 font-sans relative overflow-hidden shadow-sm">
             {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-full blur-3xl -z-0 opacity-40"></div>
-            <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-pink-100 to-orange-100 dark:from-pink-900/20 dark:to-orange-900/20 rounded-full blur-3xl -z-0 opacity-30"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-full blur-3xl -z-0 opacity-40"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 sm:w-80 sm:h-80 bg-gradient-to-tr from-pink-100 to-orange-100 dark:from-pink-900/20 dark:to-orange-900/20 rounded-full blur-3xl -z-0 opacity-30"></div>
 
             {/* Side Accent */}
-            <div className="absolute right-0 top-32 bottom-32 w-1.5 rounded-full" style={{ background: `linear-gradient(to bottom, ${cvData.theme.primary}, transparent)`, opacity: 0.3 }}></div>
+            <div className="hidden sm:block absolute right-0 top-32 bottom-32 w-1.5 rounded-full" style={{ background: `linear-gradient(to bottom, ${cvData.theme.primary}, transparent)`, opacity: 0.3 }}></div>
 
             {/* Content */}
-            <div className="relative z-10 p-8 sm:p-10">
+            <div className="relative z-10 p-4 sm:p-8 lg:p-10">
                 {/* Header */}
                 <header className="mb-12 relative">
                     <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-8">
@@ -537,15 +537,20 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
     );
 
     return (
-        <div className="relative py-8 w-full flex justify-center">
+        <div className="relative py-2 sm:py-8 w-full flex justify-center px-2 sm:px-0">
             {/*
                A4 Container Wrapper
-               Width is fixed to 21cm (A4) on large screens, scaled down on mobile via max-width
+               Responsive: Full width on mobile, A4 width on desktop
+               Mobile: Uses viewport width with proper scaling
+               Desktop: Fixed to 21cm (A4) for accurate print preview
             */}
             <div
                 ref={previewRef}
-                className="bg-white shadow-xl max-w-full print:shadow-none print:w-full overflow-hidden"
-                style={{ width: '210mm', minHeight: '297mm' }}
+                className="bg-white shadow-xl w-full sm:max-w-[210mm] print:shadow-none print:w-full overflow-hidden"
+                style={{
+                    maxWidth: '100%',
+                    minHeight: '297mm'
+                }}
             >
                 {cvData.template === 'modern' && <ModernTemplate />}
                 {cvData.template === 'classic' && <ClassicTemplate />}
