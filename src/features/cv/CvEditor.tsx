@@ -189,12 +189,12 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                         <div className="p-4 bg-white dark:bg-slate-900">
                             {cvData.experience.map((exp, idx) => (
                                 <div key={exp.id} className="mb-6 pb-6 border-b border-slate-100 dark:border-slate-800 last:border-0 last:mb-0 last:pb-0 relative group">
-                                    <div className="absolute right-0 top-0 flex gap-1 z-10">
-                                        <button onClick={() => moveExperience(idx, 'up')} disabled={idx === 0} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30" aria-label="Move position up"><ChevronUp size={16}/></button>
-                                        <button onClick={() => moveExperience(idx, 'down')} disabled={idx === cvData.experience.length - 1} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30" aria-label="Move position down"><ChevronDown size={16}/></button>
-                                        <button onClick={() => removeExperience(exp.id)} className="p-1 text-slate-300 hover:text-red-500 ml-2" aria-label="Remove position"><XCircle size={16}/></button>
+                                    <div className="absolute right-0 top-0 flex gap-1 pointer-events-none">
+                                        <button onClick={() => moveExperience(idx, 'up')} disabled={idx === 0} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30 pointer-events-auto" aria-label="Move position up"><ChevronUp size={16}/></button>
+                                        <button onClick={() => moveExperience(idx, 'down')} disabled={idx === cvData.experience.length - 1} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30 pointer-events-auto" aria-label="Move position down"><ChevronDown size={16}/></button>
+                                        <button onClick={() => removeExperience(exp.id)} className="p-1 text-slate-300 hover:text-red-500 ml-2 pointer-events-auto" aria-label="Remove position"><XCircle size={16}/></button>
                                     </div>
-                                    <div className="space-y-3 pt-6">
+                                    <div className="space-y-3 pt-10">
                                         <Input placeholder={t('dashboard.cv.jobTitle')} value={exp.title} onChange={e => updateExperience(exp.id, 'title', e.target.value)} className="font-semibold" aria-label="Job Title" />
                                         <div className="grid grid-cols-2 gap-3">
                                             <Input placeholder={t('dashboard.cv.company')} value={exp.company} onChange={e => updateExperience(exp.id, 'company', e.target.value)} aria-label="Company" />
@@ -234,12 +234,12 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                         <div className="p-4 bg-white dark:bg-slate-900">
                              {cvData.education.map((edu, idx) => (
                                 <div key={edu.id} className="mb-4 pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:mb-0 last:pb-0 relative">
-                                    <div className="absolute right-0 top-0 flex gap-1 z-10">
-                                        <button onClick={() => moveEducation(idx, 'up')} disabled={idx === 0} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30" aria-label="Move education up"><ChevronUp size={16}/></button>
-                                        <button onClick={() => moveEducation(idx, 'down')} disabled={idx === cvData.education.length - 1} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30" aria-label="Move education down"><ChevronDown size={16}/></button>
-                                        <button onClick={() => removeEducation(edu.id)} className="p-1 text-slate-300 hover:text-red-500 ml-2" aria-label="Remove education"><XCircle size={16}/></button>
+                                    <div className="absolute right-0 top-0 flex gap-1 pointer-events-none">
+                                        <button onClick={() => moveEducation(idx, 'up')} disabled={idx === 0} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30 pointer-events-auto" aria-label="Move education up"><ChevronUp size={16}/></button>
+                                        <button onClick={() => moveEducation(idx, 'down')} disabled={idx === cvData.education.length - 1} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30 pointer-events-auto" aria-label="Move education down"><ChevronDown size={16}/></button>
+                                        <button onClick={() => removeEducation(edu.id)} className="p-1 text-slate-300 hover:text-red-500 ml-2 pointer-events-auto" aria-label="Remove education"><XCircle size={16}/></button>
                                     </div>
-                                    <div className="pt-6">
+                                    <div className="pt-10">
                                         <Input placeholder={t('dashboard.cv.degree')} value={edu.degree} onChange={e => updateEducation(edu.id, 'degree', e.target.value)} className="mb-2" aria-label="Degree" />
                                         <Input placeholder={t('dashboard.cv.school')} value={edu.school} onChange={e => updateEducation(edu.id, 'school', e.target.value)} className="mb-2" aria-label="School" />
                                         <div className="grid grid-cols-2 gap-2">
@@ -270,12 +270,12 @@ const CvEditor: React.FC<CvEditorProps> = ({ cvData, setCvData, generateCvDescri
                         <div className="p-4 bg-white dark:bg-slate-900">
                              {cvData.certifications.map((cert, idx) => (
                                 <div key={cert.id} className="mb-4 pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:mb-0 last:pb-0 relative">
-                                    <div className="absolute right-0 top-0 flex gap-1 z-10">
-                                        <button onClick={() => moveCertificate(idx, 'up')} disabled={idx === 0} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30" aria-label="Move certificate up"><ChevronUp size={16}/></button>
-                                        <button onClick={() => moveCertificate(idx, 'down')} disabled={idx === cvData.certifications.length - 1} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30" aria-label="Move certificate down"><ChevronDown size={16}/></button>
-                                        <button onClick={() => removeCertificate(cert.id)} className="p-1 text-slate-300 hover:text-red-500 ml-2" aria-label="Remove certificate"><XCircle size={16}/></button>
+                                    <div className="absolute right-0 top-0 flex gap-1 pointer-events-none">
+                                        <button onClick={() => moveCertificate(idx, 'up')} disabled={idx === 0} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30 pointer-events-auto" aria-label="Move certificate up"><ChevronUp size={16}/></button>
+                                        <button onClick={() => moveCertificate(idx, 'down')} disabled={idx === cvData.certifications.length - 1} className="p-1 text-slate-300 hover:text-indigo-500 disabled:opacity-30 pointer-events-auto" aria-label="Move certificate down"><ChevronDown size={16}/></button>
+                                        <button onClick={() => removeCertificate(cert.id)} className="p-1 text-slate-300 hover:text-red-500 ml-2 pointer-events-auto" aria-label="Remove certificate"><XCircle size={16}/></button>
                                     </div>
-                                    <div className="pt-6 space-y-2">
+                                    <div className="pt-10 space-y-2">
                                         <Input placeholder={t('dashboard.cv.certName')} value={cert.name} onChange={e => updateCertificate(cert.id, 'name', e.target.value)} aria-label="Certificate Name" />
                                         <div className="grid grid-cols-2 gap-2">
                                             <Input placeholder={t('dashboard.cv.issuer')} value={cert.issuer} onChange={e => updateCertificate(cert.id, 'issuer', e.target.value)} aria-label="Issuer" />
