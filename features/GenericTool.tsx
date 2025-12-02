@@ -28,6 +28,11 @@ import {
   generateBlogOutline,
   generateBlogFromOutline
 } from '../services/blogOutlineGenerator';
+import ImageStyleSelector from '../components/ImageStyleSelector';
+import {
+  ImageStylePreset,
+  applyStyleToPrompt
+} from '../services/imageStylePresets';
 
 interface GenericToolProps {
     tool: ToolConfig;
@@ -74,6 +79,9 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const [blogOutline, setBlogOutline] = useState<BlogOutline | null>(null);
     const [showOutlineEditor, setShowOutlineEditor] = useState(false);
     const [isGeneratingOutline, setIsGeneratingOutline] = useState(false);
+
+    // Image Style State
+    const [selectedImageStyle, setSelectedImageStyle] = useState<ImageStylePreset | null>(null);
 
     const previewRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -252,10 +260,27 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
         try {
             if (isImageTool) {
+                // Apply image style preset if selected
+                let imageInputs = { ...inputsWithTheme };
+                if (selectedImageStyle) {
+                    // Find the prompt field (could be 'prompt', 'description', etc.)
+                    const promptField = Object.keys(imageInputs).find(key =>
+                        ['prompt', 'description', 'imageDescription'].includes(key)
+                    );
+
+                    if (promptField && imageInputs[promptField]) {
+                        const { enhancedPrompt } = applyStyleToPrompt(
+                            imageInputs[promptField],
+                            selectedImageStyle.id
+                        );
+                        imageInputs[promptField] = enhancedPrompt;
+                    }
+                }
+
                 // Image Gen uses normal generateContent
                 const result = await generateContent(
-                    tool.id, 
-                    inputsWithTheme, 
+                    tool.id,
+                    imageInputs,
                     selectedVoice ? `${selectedVoice.name}: ${selectedVoice.description}` : undefined,
                     controller.signal
                 );
@@ -652,13 +677,24 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                             )}
                         </div>
                     ))}
-                    
+
+                    {/* Image Style Selector for Image Tools */}
+                    {isImageTool && (
+                        <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-50 dark:bg-slate-800">
+                            <ImageStyleSelector
+                                selectedStyleId={selectedImageStyle?.id}
+                                onSelectStyle={setSelectedImageStyle}
+                                basePrompt={formValues['prompt'] || formValues['description'] || ''}
+                            />
+                        </div>
+                    )}
+
                     {!isImageTool && (
                         <div>
                              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2 tracking-wide flex items-center gap-1">
                                  <Tag size={12} /> Tags
                              </label>
-                             <input 
+                             <input
                                 type="text"
                                 placeholder="e.g. marketing, draft, Q4"
                                 value={tags}
