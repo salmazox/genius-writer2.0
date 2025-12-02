@@ -22,6 +22,17 @@ import { useMobileTabs } from '../hooks/useMobileTabs';
 import HashtagSuggestions from '../components/HashtagSuggestions';
 import SocialMediaPreview from '../components/SocialMediaPreview';
 import { SocialPlatform } from '../services/hashtagGenerator';
+import BlogOutlineEditor from '../components/BlogOutlineEditor';
+import {
+  BlogOutline,
+  generateBlogOutline,
+  generateBlogFromOutline
+} from '../services/blogOutlineGenerator';
+import ImageStyleSelector from '../components/ImageStyleSelector';
+import {
+  ImageStylePreset,
+  applyStyleToPrompt
+} from '../services/imageStylePresets';
 
 interface GenericToolProps {
     tool: ToolConfig;
@@ -63,20 +74,29 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     
     // Tagging state
     const [tags, setTags] = useState<string>('');
-    
+
+    // Blog Outline State
+    const [blogOutline, setBlogOutline] = useState<BlogOutline | null>(null);
+    const [showOutlineEditor, setShowOutlineEditor] = useState(false);
+    const [isGeneratingOutline, setIsGeneratingOutline] = useState(false);
+
+    // Image Style State
+    const [selectedImageStyle, setSelectedImageStyle] = useState<ImageStylePreset | null>(null);
+
     const previewRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
     // Debounce state for auto-save
     const debouncedForm = useDebounce(formValues, 1000);
     const debouncedContent = useDebounce(documentContent, 1000);
-    
+
     const isPro = user.plan !== 'free';
     const isImageTool = tool.id === ToolType.IMAGE_GEN;
     const hasTemplates = [ToolType.INVOICE_GEN, ToolType.CONTRACT_GEN, ToolType.EMAIL_TEMPLATE].includes(tool.id);
     const isHtmlOutput = hasTemplates;
     const isLegalTool = tool.id === ToolType.CONTRACT_GEN || tool.id === ToolType.INVOICE_GEN;
     const isSocialMediaTool = [ToolType.SOCIAL_TWITTER, ToolType.SOCIAL_LINKEDIN].includes(tool.id);
+    const isBlogTool = tool.id === ToolType.BLOG_FULL;
     const socialPlatform: SocialPlatform | null =
         tool.id === ToolType.SOCIAL_TWITTER ? 'twitter' :
         tool.id === ToolType.SOCIAL_LINKEDIN ? 'linkedin' :
@@ -168,7 +188,59 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         saveDraft();
     }, [debouncedForm, debouncedContent, template, accentColor, tool.id]);
 
+    const handleGenerateBlogOutline = async () => {
+        setIsGeneratingOutline(true);
+        try {
+            const topic = formValues['topic'] || '';
+            const keywordsStr = formValues['keywords'] || '';
+            const keywords = keywordsStr.split(',').map((k: string) => k.trim()).filter(Boolean);
+            const tone = formValues['tone'] || 'professional';
+            const length = formValues['length'] || 'medium';
+
+            const outline = await generateBlogOutline(topic, keywords, {
+                tone,
+                targetLength: length,
+                includeKeyPoints: true
+            });
+
+            setBlogOutline(outline);
+            setShowOutlineEditor(true);
+            showToast('Blog outline generated! Edit it before generating the full blog.', 'success');
+        } catch (error) {
+            console.error('Failed to generate outline:', error);
+            showToast('Failed to generate outline. Please try again.', 'error');
+        } finally {
+            setIsGeneratingOutline(false);
+        }
+    };
+
+    const handleGenerateBlogFromOutline = async () => {
+        if (!blogOutline) return;
+
+        setIsLoading(true);
+        setShowOutlineEditor(false);
+        setDocumentContent('');
+
+        try {
+            const blogContent = await generateBlogFromOutline(blogOutline);
+            setDocumentContent(blogContent);
+            showToast(t('dashboard.toasts.generated'), 'success');
+            setMobileTab('result');
+        } catch (error) {
+            console.error('Failed to generate blog:', error);
+            showToast('Failed to generate blog. Please try again.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleGenerate = async () => {
+        // For blog tools, generate outline first
+        if (isBlogTool && !showOutlineEditor) {
+            await handleGenerateBlogOutline();
+            return;
+        }
+
         if (abortControllerRef.current) abortControllerRef.current.abort();
         const controller = new AbortController();
         abortControllerRef.current = controller;
@@ -176,22 +248,39 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         setIsLoading(true);
         // Clear content if not streaming images (images replace all at once)
         if (!isImageTool) setDocumentContent('');
-        
+
         const selectedVoice = brandVoices.find(v => v.id === selectedVoiceId);
-        
+
         // Pass complex objects (like arrays) as JSON strings or handle them in prompt builder
         const inputsWithTheme: any = {
             ...formValues,
-            accentColor, 
+            accentColor,
             template
         };
 
         try {
             if (isImageTool) {
+                // Apply image style preset if selected
+                let imageInputs = { ...inputsWithTheme };
+                if (selectedImageStyle) {
+                    // Find the prompt field (could be 'prompt', 'description', etc.)
+                    const promptField = Object.keys(imageInputs).find(key =>
+                        ['prompt', 'description', 'imageDescription'].includes(key)
+                    );
+
+                    if (promptField && imageInputs[promptField]) {
+                        const { enhancedPrompt } = applyStyleToPrompt(
+                            imageInputs[promptField],
+                            selectedImageStyle.id
+                        );
+                        imageInputs[promptField] = enhancedPrompt;
+                    }
+                }
+
                 // Image Gen uses normal generateContent
                 const result = await generateContent(
-                    tool.id, 
-                    inputsWithTheme, 
+                    tool.id,
+                    imageInputs,
                     selectedVoice ? `${selectedVoice.name}: ${selectedVoice.description}` : undefined,
                     controller.signal
                 );
@@ -588,13 +677,24 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                             )}
                         </div>
                     ))}
-                    
+
+                    {/* Image Style Selector for Image Tools */}
+                    {isImageTool && (
+                        <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-50 dark:bg-slate-800">
+                            <ImageStyleSelector
+                                selectedStyleId={selectedImageStyle?.id}
+                                onSelectStyle={setSelectedImageStyle}
+                                basePrompt={formValues['prompt'] || formValues['description'] || ''}
+                            />
+                        </div>
+                    )}
+
                     {!isImageTool && (
                         <div>
                              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2 tracking-wide flex items-center gap-1">
                                  <Tag size={12} /> Tags
                              </label>
-                             <input 
+                             <input
                                 type="text"
                                 placeholder="e.g. marketing, draft, Q4"
                                 value={tags}
@@ -605,8 +705,12 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                         </div>
                     )}
 
-                    <Button onClick={handleGenerate} isLoading={isLoading} className="w-full mt-8 py-3.5">
-                        {isLoading ? (isImageTool ? t('dashboard.thinking') : "Generating...") : t('dashboard.generate')}
+                    <Button onClick={handleGenerate} isLoading={isLoading || isGeneratingOutline} className="w-full mt-8 py-3.5">
+                        {isBlogTool && !showOutlineEditor ? (
+                            isGeneratingOutline ? "Generating Outline..." : "Generate Outline"
+                        ) : (
+                            isLoading ? (isImageTool ? t('dashboard.thinking') : "Generating...") : t('dashboard.generate')
+                        )}
                     </Button>
                 </div>
             </div>
@@ -699,7 +803,25 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
                             {/* Actual Content Render */}
                             <div className={`${hasTemplates ? '' : ''} relative z-10 h-full`}>
-                                {isLoading && !documentContent ? (
+                                {/* Blog Outline Editor */}
+                                {isBlogTool && showOutlineEditor && blogOutline ? (
+                                    <div className="p-8 max-w-5xl mx-auto">
+                                        <div className="mb-6">
+                                            <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                                                Edit Blog Outline
+                                            </h2>
+                                            <p className="text-sm text-slate-600">
+                                                Customize the outline below, then generate your full blog post.
+                                            </p>
+                                        </div>
+                                        <BlogOutlineEditor
+                                            outline={blogOutline}
+                                            onChange={setBlogOutline}
+                                            onGenerate={handleGenerateBlogFromOutline}
+                                            isGenerating={isLoading}
+                                        />
+                                    </div>
+                                ) : isLoading && !documentContent ? (
                                     <div className="space-y-4 max-w-2xl mx-auto pt-10">
                                         {isImageTool ? (
                                             <div className="flex flex-col items-center justify-center h-full">

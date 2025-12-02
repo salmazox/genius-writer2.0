@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ShareModal } from '../components/ShareModal';
 import PlagiarismPanel from '../components/PlagiarismPanel';
+import SEOPanel from '../components/SEOPanel';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
@@ -52,9 +53,6 @@ const SmartEditor: React.FC = () => {
     const [newComment, setNewComment] = useState('');
     const [selectedTextForComment, setSelectedTextForComment] = useState('');
 
-    // SEO State
-    const [seoKeywords, setSeoKeywords] = useState('');
-    
     // TTS State
     const [isPlaying, setIsPlaying] = useState(false);
     const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
@@ -280,18 +278,6 @@ const SmartEditor: React.FC = () => {
             setIsGeneratingAudio(false);
         }
     };
-
-    // --- SEO Logic ---
-    const seoAnalysis = useMemo(() => {
-        if (!seoKeywords.trim()) return [];
-        const text = content.replace(/<[^>]*>/g, '').toLowerCase();
-        return seoKeywords.split(',').map(k => k.trim()).filter(Boolean).map(keyword => {
-            const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`, 'g');
-            const matches = text.match(regex);
-            const count = matches ? matches.length : 0;
-            return { keyword, count };
-        });
-    }, [content, seoKeywords]);
 
     const handleExport = (format: 'html' | 'txt' | 'doc') => {
         if (!isPro) {
@@ -561,38 +547,10 @@ const SmartEditor: React.FC = () => {
                             </div>
 
                             <div className="p-4 flex-1 overflow-y-auto">
-                                <div className="mb-6">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Target Keywords</label>
-                                    <textarea
-                                        value={seoKeywords}
-                                        onChange={(e) => setSeoKeywords(e.target.value)}
-                                        placeholder="Enter keywords (comma separated)..."
-                                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none h-24"
-                                    />
-                                    <p className="text-[10px] text-slate-400 mt-1">Real-time usage tracking</p>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Keyword Density</h4>
-                                    {seoAnalysis.length === 0 ? (
-                                        <div className="text-center py-4 text-slate-400 text-sm">
-                                            No keywords defined.
-                                        </div>
-                                    ) : (
-                                        seoAnalysis.map(({ keyword, count }) => (
-                                            <div key={keyword} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
-                                                <span className="font-medium text-slate-700 dark:text-slate-300">{keyword}</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text-sm font-bold ${count === 0 ? 'text-red-500' : count > 5 ? 'text-orange-500' : 'text-green-500'}`}>
-                                                        {count}x
-                                                    </span>
-                                                    {count === 0 && <AlertCircle size={14} className="text-red-500"/>}
-                                                    {count > 0 && count <= 5 && <Check size={14} className="text-green-500"/>}
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
+                                <SEOPanel
+                                    content={content}
+                                    title={title}
+                                />
                             </div>
                         </>
                     )}
