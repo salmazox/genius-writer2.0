@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft } from 'lucide-react';
+import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft, Lightbulb, Linkedin } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
-import { generateContent, analyzeATS, parseResume, generateCoverLetter } from '../services/gemini';
+import { generateContent, analyzeATS, parseResume, generateCoverLetter, parseLinkedInProfile, parsePDFResume } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { ToolType, CVData, CVTheme, ATSAnalysis, CVExperience } from '../types';
 import { Button } from '../components/ui/Button';
@@ -15,11 +15,16 @@ import { useUser } from '../contexts/UserContext';
 import { Watermark } from '../components/Watermark';
 import { usePdfExport } from '../hooks/usePdfExport';
 import { useMobileTabs } from '../hooks/useMobileTabs';
+import { calculateRealTimeATSScore, type ATSScoreBreakdown } from '../services/atsScoring';
 
 // Sub-components
 import CvEditor from './cv/CvEditor';
 import CvPreview from './cv/CvPreview';
 import CvAtsSidebar from './cv/CvAtsSidebar';
+import CvAiCoach from './cv/CvAiCoach';
+import JobDescriptionPanel, { type JobDescriptionData } from './cv/JobDescriptionPanel';
+import CoverLetterPanel from './cv/CoverLetterPanel';
+import LinkedInPostsPanel from './cv/LinkedInPostsPanel';
 
 // Professional Color Themes
 const CV_THEMES: CVTheme[] = [
@@ -49,11 +54,14 @@ const CvBuilder: React.FC = () => {
     const { activeTab: mobileTab, setActiveTab: setMobileTab } = useMobileTabs<'editor' | 'preview'>('editor');
     
     // State
-    const [viewMode, setViewMode] = useState<'cv' | 'cover_letter'>('cv');
+    const [viewMode, setViewMode] = useState<'cv' | 'cover_letter' | 'linkedin_posts'>('cv');
     const [cvData, setCvData] = useState<CVData>(INITIAL_CV);
     const [showAtsSidebar, setShowAtsSidebar] = useState(false);
+    const [showAiCoach, setShowAiCoach] = useState(false);
     const [jobDescription, setJobDescription] = useState('');
+    const [jobDescriptionData, setJobDescriptionData] = useState<JobDescriptionData | null>(null);
     const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
+    const [atsScore, setAtsScore] = useState<ATSScoreBreakdown | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
@@ -63,13 +71,17 @@ const CvBuilder: React.FC = () => {
     const cvPreviewRef = useRef<HTMLDivElement>(null);
     const coverLetterRef = useRef<HTMLDivElement>(null);
     const importInputRef = useRef<HTMLInputElement>(null);
+    const linkedinImportInputRef = useRef<HTMLInputElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
     // Debounce for Auto-Save (Longer delay)
     const debouncedCvDataForSave = useDebounce(cvData, 1500);
-    
+
     // Debounce for Preview Rendering (Shorter delay for responsiveness)
     const previewCvData = useDebounce(cvData, 200);
+
+    // Debounce for ATS Scoring (Medium delay for real-time feedback)
+    const debouncedCvForScoring = useDebounce(cvData, 500);
 
     const isPro = user.plan !== 'free';
 
@@ -102,7 +114,7 @@ const CvBuilder: React.FC = () => {
     // Auto-Save
     useEffect(() => {
         if (JSON.stringify(debouncedCvDataForSave) === JSON.stringify(INITIAL_CV)) return;
-        
+
         const saveDraft = () => {
             setIsAutoSaving(true);
             localStorage.setItem('cv_draft', JSON.stringify(debouncedCvDataForSave));
@@ -110,6 +122,16 @@ const CvBuilder: React.FC = () => {
         };
         saveDraft();
     }, [debouncedCvDataForSave]);
+
+    // Real-time ATS Score Calculation
+    useEffect(() => {
+        try {
+            const score = calculateRealTimeATSScore(debouncedCvForScoring, jobDescription);
+            setAtsScore(score);
+        } catch (error) {
+            console.error('Failed to calculate ATS score:', error);
+        }
+    }, [debouncedCvForScoring, jobDescription]);
 
     const handleSaveDocument = () => {
         const content = viewMode === 'cv' ? JSON.stringify(cvData) : coverLetterContent;
@@ -126,11 +148,13 @@ const CvBuilder: React.FC = () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Basic validation - In real app, backend would handle PDF parsing better.
-        // Here we rely on Gemini Multimodal to "see" the CV image.
-        if (!file.type.startsWith('image/')) {
-            showToast("For this demo, please upload an image (PNG/JPG) of your resume.", "info");
-            // Allow proceed if it is image
+        // Detect file type and choose appropriate parser
+        const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        const isImage = file.type.startsWith('image/');
+
+        if (!isPDF && !isImage) {
+            showToast("Please upload an image (PNG/JPG) or PDF of your resume.", "info");
+            return;
         }
 
         const reader = new FileReader();
@@ -138,21 +162,66 @@ const CvBuilder: React.FC = () => {
             setIsImporting(true);
             try {
                 const base64 = reader.result as string;
-                const parsedData = await parseResume(base64);
-                
-                // Merge parsed data with defaults to ensure structure
+
+                // Choose parser based on file type
+                const parsedData = isPDF
+                    ? await parsePDFResume(base64)
+                    : await parseResume(base64);
+
+                // Merge parsed data with defaults, including certifications and languages
                 setCvData(prev => ({
                     ...prev,
                     personal: { ...prev.personal, ...parsedData.personal },
-                    experience: parsedData.experience?.map((e: any) => ({...e, id: Date.now().toString() + Math.random()})) || [],
-                    education: parsedData.education?.map((e: any) => ({...e, id: Date.now().toString() + Math.random()})) || [],
-                    skills: parsedData.skills || []
+                    experience: parsedData.experience?.map((e: any) => ({...e, id: Date.now().toString() + Math.random()})) || prev.experience,
+                    education: parsedData.education?.map((e: any) => ({...e, id: Date.now().toString() + Math.random()})) || prev.education,
+                    skills: parsedData.skills || prev.skills,
+                    certifications: parsedData.certifications?.map((c: any) => ({...c, id: Date.now().toString() + Math.random()})) || prev.certifications,
+                    languages: parsedData.languages?.map((l: any) => ({...l, id: Date.now().toString() + Math.random()})) || prev.languages
                 }));
-                
-                showToast(t('dashboard.toasts.importSuccess'), "success");
+
+                const fileType = isPDF ? 'PDF' : 'image';
+                showToast(`Resume imported from ${fileType} successfully! 🎉`, "success");
             } catch (err: any) {
                 console.error(err);
                 showToast(err.message || t('dashboard.toasts.importFail'), "error");
+            } finally {
+                setIsImporting(false);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleImportLinkedIn = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            showToast("Please upload a screenshot (PNG/JPG) of your LinkedIn profile.", "info");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+            setIsImporting(true);
+            try {
+                const base64 = reader.result as string;
+                const parsedData = await parseLinkedInProfile(base64);
+
+                // Merge parsed data with defaults, including certifications and languages
+                setCvData(prev => ({
+                    ...prev,
+                    personal: { ...prev.personal, ...parsedData.personal },
+                    experience: parsedData.experience?.map((e: any) => ({ ...e, id: Date.now().toString() + Math.random() })) || prev.experience,
+                    education: parsedData.education?.map((e: any) => ({ ...e, id: Date.now().toString() + Math.random() })) || prev.education,
+                    skills: parsedData.skills || prev.skills,
+                    certifications: parsedData.certifications?.map((c: any) => ({ ...c, id: Date.now().toString() + Math.random() })) || prev.certifications,
+                    languages: parsedData.languages?.map((l: any) => ({ ...l, id: Date.now().toString() + Math.random() })) || prev.languages
+                }));
+
+                showToast('LinkedIn profile imported successfully! 🎉', "success");
+            } catch (err: any) {
+                console.error(err);
+                showToast(err.message || 'Failed to import LinkedIn profile', "error");
             } finally {
                 setIsImporting(false);
             }
@@ -272,6 +341,33 @@ const CvBuilder: React.FC = () => {
         }
     };
 
+    const handleUpdateCV = (updates: Partial<CVData>) => {
+        setCvData(prev => ({
+            ...prev,
+            ...updates,
+            // Merge nested objects properly
+            personal: updates.personal ? { ...prev.personal, ...updates.personal } : prev.personal
+        }));
+    };
+
+    const handleJobDescriptionAnalyzed = (data: JobDescriptionData) => {
+        setJobDescriptionData(data);
+        showToast('Job description analyzed successfully', 'success');
+    };
+
+    const handleGenerateCV = (generatedCV: Partial<CVData>) => {
+        setCvData(prev => ({
+            ...prev,
+            personal: generatedCV.personal ? { ...prev.personal, ...generatedCV.personal } : prev.personal,
+            experience: generatedCV.experience || prev.experience,
+            education: generatedCV.education || prev.education,
+            skills: generatedCV.skills || prev.skills,
+            certifications: generatedCV.certifications || prev.certifications,
+            languages: generatedCV.languages || prev.languages
+        }));
+        showToast('CV generated successfully! Review and customize as needed.', 'success');
+    };
+
     const completionScore = (() => {
         let score = 0;
         if (cvData.personal.fullName) score += 10;
@@ -303,13 +399,21 @@ const CvBuilder: React.FC = () => {
                             <span className="hidden md:inline">CV Builder</span>
                             <span className="md:hidden">CV</span>
                         </button>
-                        <button 
+                        <button
                              onClick={() => setViewMode('cover_letter')}
                              className={`px-3 py-1.5 rounded-md text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'cover_letter' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}
                         >
-                            <Mail size={16} /> 
+                            <Mail size={16} />
                             <span className="hidden md:inline">Cover Letter</span>
                             <span className="md:hidden">Cover</span>
+                        </button>
+                        <button
+                             onClick={() => setViewMode('linkedin_posts')}
+                             className={`px-3 py-1.5 rounded-md text-sm font-bold flex items-center gap-2 transition-all ${viewMode === 'linkedin_posts' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <Linkedin size={16} />
+                            <span className="hidden md:inline">LinkedIn Posts</span>
+                            <span className="md:hidden">LinkedIn</span>
                         </button>
                     </div>
                 </div>
@@ -321,12 +425,32 @@ const CvBuilder: React.FC = () => {
                      
                      {viewMode === 'cv' && (
                          <>
-                            <input type="file" ref={importInputRef} className="hidden" accept="image/*" onChange={handleImportCV} />
+                            <input type="file" ref={importInputRef} className="hidden" accept="image/*,application/pdf,.pdf" onChange={handleImportCV} />
+                            <input type="file" ref={linkedinImportInputRef} className="hidden" accept="image/*" onChange={handleImportLinkedIn} />
+
                             <Button size="sm" variant="secondary" onClick={() => importInputRef.current?.click()} icon={Upload} isLoading={isImporting} className="hidden md:flex">
                                 Import
                             </Button>
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => linkedinImportInputRef.current?.click()}
+                                isLoading={isImporting}
+                                className="hidden lg:flex"
+                            >
+                                <Linkedin size={16} className="mr-2"/>
+                                LinkedIn
+                            </Button>
                             <Button size="sm" variant="outline" onClick={() => setShowAtsSidebar(!showAtsSidebar)} className="hidden md:flex">
                                 <Target size={16} className="mr-2"/> {showAtsSidebar ? 'Hide ATS' : 'ATS Tool'}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant={showAiCoach ? "primary" : "outline"}
+                                onClick={() => setShowAiCoach(!showAiCoach)}
+                                className="hidden md:flex"
+                            >
+                                <Lightbulb size={16} className="mr-2"/> AI Coach
                             </Button>
                          </>
                      )}
@@ -353,15 +477,102 @@ const CvBuilder: React.FC = () => {
                     {/* Column 1: Interactive Form */}
                     <div className={`w-full lg:w-[380px] xl:w-[450px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto p-4 pb-24 lg:pb-4 custom-scrollbar z-10 flex-shrink-0 ${mobileTab === 'preview' ? 'hidden lg:block' : 'flex-1 lg:block'}`}>
                         <div className="mb-6 space-y-4">
-                            {/* Score */}
-                            <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden" role="region" aria-label="Profile Strength">
-                                <div className="flex justify-between items-end mb-2 relative z-10">
-                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><Trophy size={14} className={completionScore === 100 ? "text-yellow-500" : "text-slate-400"} /> Profile Strength</h3>
-                                    <span className={`text-lg font-bold ${completionScore === 100 ? 'text-green-500' : 'text-indigo-600'}`}>{completionScore}%</span>
+                            {/* Job Description Panel */}
+                            <JobDescriptionPanel
+                                value={jobDescription}
+                                onChange={setJobDescription}
+                                onAnalyzed={handleJobDescriptionAnalyzed}
+                                onGenerateCV={handleGenerateCV}
+                            />
+
+                            {/* Enhanced ATS Score */}
+                            <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-slate-800 dark:to-slate-800 rounded-xl border border-indigo-200 dark:border-slate-700 shadow-sm relative overflow-hidden" role="region" aria-label="ATS Score">
+                                <div className="flex justify-between items-center mb-3">
+                                    <div>
+                                        <h3 className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1">
+                                            <Trophy size={14} className={atsScore && atsScore.overall >= 85 ? "text-yellow-500" : "text-slate-400"} />
+                                            ATS Score
+                                        </h3>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                            {atsScore?.grade || 'Calculating...'}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className={`text-2xl font-bold ${
+                                            !atsScore ? 'text-slate-400' :
+                                            atsScore.overall >= 85 ? 'text-green-500' :
+                                            atsScore.overall >= 70 ? 'text-indigo-600' :
+                                            atsScore.overall >= 50 ? 'text-yellow-600' : 'text-red-500'
+                                        }`}>
+                                            {atsScore?.overall || 0}
+                                        </span>
+                                        <span className="text-sm text-slate-500">/100</span>
+                                    </div>
                                 </div>
-                                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 relative z-10">
-                                    <div className={`h-2 rounded-full transition-all duration-500 ease-out ${completionScore === 100 ? 'bg-green-500' : 'bg-indigo-600'}`} style={{ width: `${completionScore}%` }}></div>
+
+                                {/* Progress Bar */}
+                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 mb-3">
+                                    <div
+                                        className={`h-2.5 rounded-full transition-all duration-700 ease-out ${
+                                            !atsScore ? 'bg-slate-400' :
+                                            atsScore.overall >= 85 ? 'bg-green-500' :
+                                            atsScore.overall >= 70 ? 'bg-indigo-600' :
+                                            atsScore.overall >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                        }`}
+                                        style={{ width: `${atsScore?.overall || 0}%` }}
+                                    ></div>
                                 </div>
+
+                                {/* Score Breakdown - Compact */}
+                                {atsScore && (
+                                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Keywords</span>
+                                            <span className={`font-bold ${atsScore.criteria.keywords.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.keywords.score}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Formatting</span>
+                                            <span className={`font-bold ${atsScore.criteria.formatting.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.formatting.score}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Metrics</span>
+                                            <span className={`font-bold ${atsScore.criteria.quantification.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.quantification.score}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Action Verbs</span>
+                                            <span className={`font-bold ${atsScore.criteria.actionVerbs.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.actionVerbs.score}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Length</span>
+                                            <span className={`font-bold ${atsScore.criteria.length.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.length.score}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Structure</span>
+                                            <span className={`font-bold ${atsScore.criteria.structure.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.structure.score}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Top Suggestion */}
+                                {atsScore && atsScore.suggestions.length > 0 && (
+                                    <div className="mt-3 p-2 bg-white/80 dark:bg-slate-700/80 rounded-lg border border-indigo-200 dark:border-slate-600">
+                                        <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                                            💡 {atsScore.suggestions[0]}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Template & Theme Selectors */}
@@ -403,39 +614,34 @@ const CvBuilder: React.FC = () => {
 
                     {/* Column 3: ATS Sidebar */}
                     <CvAtsSidebar show={showAtsSidebar} onClose={() => setShowAtsSidebar(false)} atsAnalysis={atsAnalysis} jobDescription={jobDescription} setJobDescription={setJobDescription} runAtsAnalysis={runAtsAnalysis} isLoading={isLoading} handleApplyKeywords={handleApplyKeywords} handleApplySummary={handleApplySummary} clearAnalysis={() => setAtsAnalysis(null)} />
-                </div>
-            ) : (
-                /* Cover Letter View */
-                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                    <div className="w-full lg:w-96 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col">
-                         <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Job Details</h2>
-                         <p className="text-sm text-slate-500 mb-4">Paste the job description here. We'll use your CV details to write a tailored cover letter.</p>
-                         
-                         <textarea 
-                             className="flex-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 resize-none mb-4 focus:ring-2 focus:ring-indigo-500 text-sm" 
-                             placeholder="Paste Job Description here..." 
-                             value={jobDescription} 
-                             onChange={(e) => setJobDescription(e.target.value)} 
-                         />
-                         
-                         <Button onClick={handleGenerateCoverLetter} isLoading={isGeneratingLetter} icon={Sparkles} className="w-full">
-                             Generate Letter
-                         </Button>
-                    </div>
-                    <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-8 overflow-y-auto flex justify-center custom-scrollbar pb-24 lg:pb-8">
-                        <div className="w-full max-w-[210mm] bg-white dark:bg-slate-900 shadow-2xl min-h-[297mm] p-12 relative" ref={coverLetterRef}>
-                             {!isPro && <Watermark />}
-                             {coverLetterContent ? (
-                                 <RichTextEditor value={coverLetterContent} onChange={setCoverLetterContent} className="min-h-full border-none" />
-                             ) : (
-                                 <div className="h-full flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
-                                     <Mail size={48} className="mb-4 opacity-50" />
-                                     <p>Cover letter preview will appear here</p>
-                                 </div>
-                             )}
+
+                    {/* Column 4: AI Co-Pilot Sidebar */}
+                    {showAiCoach && (
+                        <div className="w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex-shrink-0 overflow-hidden flex flex-col">
+                            <CvAiCoach
+                                cvData={cvData}
+                                atsScore={atsScore}
+                                onUpdateCV={handleUpdateCV}
+                            />
                         </div>
-                    </div>
+                    )}
                 </div>
+            ) : viewMode === 'cover_letter' ? (
+                /* Cover Letter View */
+                <CoverLetterPanel
+                    cvData={cvData}
+                    jobDescription={jobDescription}
+                    onClose={() => setViewMode('cv')}
+                    className="flex-1"
+                />
+            ) : (
+                /* LinkedIn Posts View */
+                <LinkedInPostsPanel
+                    cvData={cvData}
+                    jobTarget={jobDescription || cvData.personal.jobTitle}
+                    onClose={() => setViewMode('cv')}
+                    className="flex-1"
+                />
             )}
         </div>
     );

@@ -659,6 +659,393 @@ export const parseResume = async (
     }
 };
 
+/**
+ * Parse LinkedIn profile screenshot with optimized prompting
+ * Specifically designed for LinkedIn's profile layout
+ */
+export const parseLinkedInProfile = async (
+    base64Image: string,
+    signal?: AbortSignal
+): Promise<Partial<CVData>> => {
+    checkOnline();
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    checkUsageAllowance('word');
+
+    // Dynamically detect MIME type and extract clean base64 data
+    let mimeType = 'image/png';
+    let cleanedBase64 = base64Image;
+
+    const matches = base64Image.match(/^data:(.+);base64,(.+)$/);
+    if (matches) {
+        mimeType = matches[1];
+        cleanedBase64 = matches[2];
+    } else {
+        const commaIndex = base64Image.indexOf(',');
+        if (commaIndex !== -1) {
+            cleanedBase64 = base64Image.substring(commaIndex + 1);
+        }
+    }
+
+    try {
+        const response = await withRetry(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType: mimeType, data: cleanedBase64 } },
+                        {
+                            text: `You are viewing a screenshot of a LinkedIn profile. Extract ALL visible information thoroughly.
+
+IMPORTANT: LinkedIn profiles have a specific layout:
+- Top section: Name, headline, location, profile photo
+- About section: Professional summary
+- Experience section: Job titles, companies, dates, descriptions
+- Education section: Degrees, schools, years
+- Skills section: Listed skills (often many)
+- Sometimes: Certifications, languages, volunteer work
+
+Extract everything into this JSON structure:
+{
+  "personal": {
+    "fullName": "Full name from profile",
+    "email": "Email if visible (often not shown)",
+    "phone": "Phone if visible (rarely shown)",
+    "address": "City, State/Country from location",
+    "website": "",
+    "linkedin": "linkedin.com/in/username (construct if you see the profile)",
+    "jobTitle": "Current headline/title from top of profile",
+    "summary": "Content from About section - extract in full"
+  },
+  "experience": [
+    {
+      "title": "Job title",
+      "company": "Company name",
+      "location": "City, State",
+      "startDate": "MM/YYYY or Month YYYY",
+      "endDate": "MM/YYYY or Present",
+      "current": true if currently working here,
+      "description": "Job description if visible - bullet points or paragraphs"
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree name and field",
+      "school": "University/School name",
+      "location": "City, State",
+      "year": "Graduation year or date range"
+    }
+  ],
+  "skills": ["skill1", "skill2", "skill3", ...],
+  "certifications": [
+    {
+      "name": "Certification name",
+      "issuer": "Issuing organization",
+      "date": "Issue date",
+      "url": "",
+      "description": ""
+    }
+  ],
+  "languages": [
+    {
+      "language": "Language name",
+      "proficiency": "Native/Fluent/Professional/Basic"
+    }
+  ]
+}
+
+Rules:
+1. Extract EVERYTHING visible - be thorough
+2. For dates: Use LinkedIn's format if visible (e.g., "Jan 2020" or "2020")
+3. If a field is not visible, use empty string ""
+4. For skills: Extract all visible skills, LinkedIn often shows many
+5. For summary: Extract the entire "About" section verbatim
+6. For experience descriptions: Extract full descriptions if visible
+7. Construct LinkedIn URL as "linkedin.com/in/[visible-username]" if you can see it
+8. Return ONLY valid JSON, no extra text or markdown
+
+Begin extraction:`
+                        }
+                    ]
+                }
+            });
+        }, 3, 1000, signal);
+
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+        const text = response.text || "{}";
+        trackUsage(text);
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        console.error("LinkedIn Profile Parsing Error", e);
+        throw new Error("Failed to parse LinkedIn profile. Please ensure the screenshot clearly shows your profile information.");
+    }
+};
+
+/**
+ * Parse PDF resume document
+ * Uses Gemini's native PDF parsing capability
+ */
+export const parsePDFResume = async (
+    base64PDF: string,
+    signal?: AbortSignal
+): Promise<Partial<CVData>> => {
+    checkOnline();
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    checkUsageAllowance('word');
+
+    // Extract clean base64 data
+    let cleanedBase64 = base64PDF;
+    const matches = base64PDF.match(/^data:.+;base64,(.+)$/);
+    if (matches) {
+        cleanedBase64 = matches[1];
+    } else {
+        const commaIndex = base64PDF.indexOf(',');
+        if (commaIndex !== -1) {
+            cleanedBase64 = base64PDF.substring(commaIndex + 1);
+        }
+    }
+
+    try {
+        const response = await withRetry(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType: 'application/pdf', data: cleanedBase64 } },
+                        {
+                            text: `You are viewing a PDF resume/CV. Extract ALL information from the document.
+
+Extract the complete content into this JSON structure:
+{
+  "personal": {
+    "fullName": "Full name from resume",
+    "email": "Email address",
+    "phone": "Phone number",
+    "address": "Full address or city/state",
+    "website": "Personal website if present",
+    "linkedin": "LinkedIn URL if present",
+    "jobTitle": "Professional title/headline",
+    "summary": "Professional summary or objective statement"
+  },
+  "experience": [
+    {
+      "title": "Job title",
+      "company": "Company name",
+      "location": "City, State",
+      "startDate": "Start date in any format present",
+      "endDate": "End date or Present/Current",
+      "current": true if currently employed,
+      "description": "Full job description - preserve ALL bullet points and details"
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree name and field of study",
+      "school": "University/Institution name",
+      "location": "City, State if available",
+      "year": "Graduation year or date range"
+    }
+  ],
+  "skills": ["skill1", "skill2", "skill3", ...],
+  "certifications": [
+    {
+      "name": "Certification name",
+      "issuer": "Issuing organization",
+      "date": "Issue date",
+      "url": "Certificate URL if present",
+      "description": "Any additional details"
+    }
+  ],
+  "languages": [
+    {
+      "language": "Language name",
+      "proficiency": "Proficiency level if stated"
+    }
+  ]
+}
+
+IMPORTANT RULES:
+1. Extract EVERYTHING from the PDF - be extremely thorough
+2. Preserve all bullet points and descriptions in full
+3. Extract contact information from header/footer if present
+4. Look for certifications, publications, projects sections
+5. Extract skills from dedicated skills section or embedded in descriptions
+6. If a field is not present in the resume, use empty string ""
+7. For dates: Preserve the format used in the resume
+8. Return ONLY valid JSON, no extra text or markdown
+9. Do not summarize or shorten any content - extract verbatim
+
+Begin extraction:`
+                        }
+                    ]
+                }
+            });
+        }, 3, 1000, signal);
+
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+        const text = response.text || "{}";
+        trackUsage(text);
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        console.error("PDF Resume Parsing Error", e);
+        throw new Error("Failed to parse PDF resume. Please ensure the file is not password-protected and is readable.");
+    }
+};
+
+/**
+ * Generate a complete CV from a job description
+ * Uses AI to create realistic, ATS-optimized CV content tailored to the job
+ */
+export const generateCVFromJobDescription = async (
+    jobDescription: string,
+    userGuidance?: { industry?: string; experience?: string; name?: string },
+    signal?: AbortSignal
+): Promise<Partial<CVData>> => {
+    checkOnline();
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
+
+    checkUsageAllowance('word');
+
+    try {
+        const guidanceText = userGuidance
+            ? `\n\nUser Guidance:
+- Name: ${userGuidance.name || 'Alex Morgan'}
+- Industry: ${userGuidance.industry || 'From job description'}
+- Experience Level: ${userGuidance.experience || 'Mid-Senior (5-8 years)'}`
+            : '';
+
+        const response = await withRetry(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-2.5-pro',
+                contents: `You are an expert CV/resume writer and career coach. Generate a complete, ATS-optimized CV tailored to the following job description.
+
+JOB DESCRIPTION:
+${jobDescription}${guidanceText}
+
+IMPORTANT RULES:
+1. Create realistic, quantifiable achievements (use percentages, dollar amounts, metrics)
+2. Use strong action verbs (Led, Spearheaded, Architected, Optimized, etc.)
+3. Tailor ALL content to match the job description's requirements
+4. Include keywords from the job description naturally
+5. Make the candidate seem qualified but not overqualified
+6. Use HTML bullet points (<ul><li>) for descriptions
+7. Include 2-3 relevant experience entries
+8. Include 2 education entries (Bachelor's + relevant certification or Master's)
+9. Include 12-15 skills that match the job requirements
+10. Write a compelling 60-80 word professional summary
+11. Generate realistic dates (current year backwards)
+12. Include contact information
+
+OUTPUT FORMAT (strict JSON):
+{
+  "personal": {
+    "fullName": "string",
+    "email": "string (professional)",
+    "phone": "string (format: +1 555 0192)",
+    "address": "string (City, State/Country)",
+    "linkedin": "string (format: in/username)",
+    "jobTitle": "string (matches the job or similar)",
+    "summary": "string (60-80 words, compelling, tailored to job)"
+  },
+  "experience": [
+    {
+      "title": "string",
+      "company": "string (realistic company name)",
+      "location": "string",
+      "startDate": "YYYY-MM",
+      "endDate": "Present or YYYY-MM",
+      "current": boolean,
+      "description": "<ul><li>Achievement with quantifiable result (e.g., increased X by 40%)</li><li>Another achievement with metrics</li><li>Technical accomplishment relevant to job</li></ul>"
+    }
+  ],
+  "education": [
+    {
+      "degree": "string (Bachelor's/Master's)",
+      "field": "string (relevant to job)",
+      "institution": "string (realistic university)",
+      "location": "string",
+      "graduationDate": "YYYY",
+      "gpa": "3.7" (optional, only if impressive),
+      "description": "string (honors, relevant coursework, activities)"
+    }
+  ],
+  "skills": ["skill1", "skill2", ...] (12-15 skills matching job requirements),
+  "certifications": [
+    {
+      "name": "string (relevant certification)",
+      "issuer": "string (certifying body)",
+      "date": "YYYY-MM",
+      "expiryDate": "YYYY-MM" (optional),
+      "credentialId": "string" (optional)
+    }
+  ] (include 1-2 relevant certs, or empty array if none apply),
+  "languages": [
+    {
+      "name": "English",
+      "proficiency": "Native"
+    }
+  ] (include if relevant to job)
+}
+
+Generate the CV now. Return ONLY the JSON, no markdown formatting.`
+            });
+        }, 3, 1000, signal);
+
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+        const text = response.text || "{}";
+        trackUsage(text);
+
+        // Clean up response and parse JSON
+        let jsonStr = text.trim();
+        // Remove markdown code blocks if present
+        jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
+
+        const cvData = JSON.parse(jsonStr);
+
+        // Ensure IDs are generated for array items
+        if (cvData.experience) {
+            cvData.experience = cvData.experience.map((exp: any) => ({
+                ...exp,
+                id: Date.now().toString() + Math.random()
+            }));
+        }
+        if (cvData.education) {
+            cvData.education = cvData.education.map((edu: any) => ({
+                ...edu,
+                id: Date.now().toString() + Math.random()
+            }));
+        }
+        if (cvData.certifications) {
+            cvData.certifications = cvData.certifications.map((cert: any) => ({
+                ...cert,
+                id: Date.now().toString() + Math.random()
+            }));
+        }
+        if (cvData.languages) {
+            cvData.languages = cvData.languages.map((lang: any) => ({
+                ...lang,
+                id: Date.now().toString() + Math.random()
+            }));
+        }
+
+        return cvData;
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        console.error("CV Generation Error", e);
+        throw new Error("Failed to generate CV from job description. Please try again or provide more details.");
+    }
+};
+
 export const factCheck = async (
     content: string,
     signal?: AbortSignal
@@ -667,7 +1054,7 @@ export const factCheck = async (
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
     if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
-    
+
     checkUsageAllowance('word');
 
     try {
@@ -734,6 +1121,117 @@ export const generateSpeech = async (
         if (e instanceof DOMException && e.name === "AbortError") throw e;
         console.error("TTS Generation Error", e);
         throw new Error("Failed to generate speech.");
+    }
+};
+
+/**
+ * Generate LinkedIn post suggestions for job seekers
+ * Creates multiple post variations with different styles and tones
+ */
+export interface LinkedInPost {
+    style: 'professional' | 'storytelling' | 'achievement' | 'casual';
+    content: string;
+    hashtags: string[];
+}
+
+export const generateLinkedInPosts = async (
+    cvData: CVData,
+    jobTarget?: string,
+    signal?: AbortSignal
+): Promise<LinkedInPost[]> => {
+    checkOnline();
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
+
+    checkUsageAllowance('word');
+
+    const cvSummary = {
+        name: cvData.personal.fullName,
+        title: cvData.personal.jobTitle,
+        summary: cvData.personal.summary,
+        topSkills: cvData.skills.slice(0, 8).join(', '),
+        recentExperience: cvData.experience[0] ? `${cvData.experience[0].title} at ${cvData.experience[0].company}` : 'Experienced professional',
+        education: cvData.education[0] ? `${cvData.education[0].degree} from ${cvData.education[0].school}` : null
+    };
+
+    const targetRole = jobTarget || cvData.personal.jobTitle || 'new opportunities';
+
+    try {
+        const response = await withRetry(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `You are a LinkedIn content expert helping a job seeker create engaging posts.
+
+CANDIDATE INFO:
+- Name: ${cvSummary.name}
+- Current/Target Title: ${cvSummary.title}
+- Target Role: ${targetRole}
+- Top Skills: ${cvSummary.topSkills}
+- Recent Experience: ${cvSummary.recentExperience}
+- Summary: ${cvSummary.summary}
+
+Create 4 LinkedIn post variations for this person who is looking for ${targetRole} opportunities. Each post should be:
+- 150-250 words
+- Include line breaks for readability
+- Be authentic and engaging
+- Subtly signal they are open to opportunities without being desperate
+- End with a call-to-action
+
+REQUIRED STYLES:
+1. Professional - Formal, straightforward announcement
+2. Storytelling - Personal narrative with journey/lessons learned
+3. Achievement - Highlight recent accomplishments and skills
+4. Casual - Conversational, relatable, warm tone
+
+OUTPUT FORMAT (strict JSON, no markdown):
+[
+  {
+    "style": "professional",
+    "content": "The post content with \\n for line breaks",
+    "hashtags": ["OpenToWork", "Hiring", "JobSearch", "RelevantSkill1", "RelevantSkill2"]
+  },
+  {
+    "style": "storytelling",
+    "content": "...",
+    "hashtags": ["..."]
+  },
+  {
+    "style": "achievement",
+    "content": "...",
+    "hashtags": ["..."]
+  },
+  {
+    "style": "casual",
+    "content": "...",
+    "hashtags": ["..."]
+  }
+]
+
+IMPORTANT:
+- Each post must have 5-7 relevant hashtags
+- Use \\n for line breaks in content
+- No emojis unless in casual style (max 2-3)
+- Make posts specific to their background
+- Return ONLY the JSON array`
+            });
+        }, 3, 1000, signal);
+
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+        const text = response.text || "[]";
+        trackUsage(text);
+
+        // Clean up response and parse JSON
+        let jsonStr = text.trim();
+        jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
+
+        const posts: LinkedInPost[] = JSON.parse(jsonStr);
+        return posts;
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        console.error("LinkedIn Post Generation Error", e);
+        throw new Error("Failed to generate LinkedIn posts. Please try again.");
     }
 };
 
