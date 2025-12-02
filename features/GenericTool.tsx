@@ -19,6 +19,9 @@ import { sanitizeHtml } from '../utils/security';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { usePdfExport } from '../hooks/usePdfExport';
 import { useMobileTabs } from '../hooks/useMobileTabs';
+import HashtagSuggestions from '../components/HashtagSuggestions';
+import SocialMediaPreview from '../components/SocialMediaPreview';
+import { SocialPlatform } from '../services/hashtagGenerator';
 
 interface GenericToolProps {
     tool: ToolConfig;
@@ -73,6 +76,11 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const hasTemplates = [ToolType.INVOICE_GEN, ToolType.CONTRACT_GEN, ToolType.EMAIL_TEMPLATE].includes(tool.id);
     const isHtmlOutput = hasTemplates;
     const isLegalTool = tool.id === ToolType.CONTRACT_GEN || tool.id === ToolType.INVOICE_GEN;
+    const isSocialMediaTool = [ToolType.SOCIAL_TWITTER, ToolType.SOCIAL_LINKEDIN].includes(tool.id);
+    const socialPlatform: SocialPlatform | null =
+        tool.id === ToolType.SOCIAL_TWITTER ? 'twitter' :
+        tool.id === ToolType.SOCIAL_LINKEDIN ? 'linkedin' :
+        null;
 
     // Swipe gestures
     const swipeHandlers = useSwipe({
@@ -720,8 +728,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                                             />
                                         </div>
                                     ) : isHtmlOutput ? (
-                                        <div 
-                                            className={`max-w-none w-full h-full`} 
+                                        <div
+                                            className={`max-w-none w-full h-full`}
                                             ref={previewRef}
                                             dangerouslySetInnerHTML={{ __html: sanitizeHtml(documentContent) }}
                                         />
@@ -735,6 +743,37 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                                         <Sparkles size={48} className="mb-4 opacity-50" />
                                         <p className="text-sm font-medium">Ready to create.</p>
                                         <p className="text-xs mt-2 opacity-70">Fill in the details on the left to start.</p>
+                                    </div>
+                                )}
+
+                                {/* Social Media Preview & Hashtag Suggestions */}
+                                {isSocialMediaTool && documentContent && socialPlatform && (
+                                    <div className="mt-6 px-8 pb-8 space-y-6">
+                                        {/* Platform Preview */}
+                                        <div>
+                                            <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                                <Eye size={18} className="text-indigo-600" />
+                                                Post Preview
+                                            </h4>
+                                            <SocialMediaPreview
+                                                platform={socialPlatform}
+                                                content={documentContent}
+                                            />
+                                        </div>
+
+                                        {/* Hashtag Suggestions */}
+                                        <div>
+                                            <HashtagSuggestions
+                                                content={documentContent}
+                                                platform={socialPlatform}
+                                                onHashtagClick={(hashtag) => {
+                                                    showToast(`${hashtag} copied to clipboard`, 'success');
+                                                }}
+                                                onCopyAll={(hashtags) => {
+                                                    showToast('All hashtags copied to clipboard', 'success');
+                                                }}
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </div>
