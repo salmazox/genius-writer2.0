@@ -20,6 +20,7 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { usePdfExport } from '../hooks/usePdfExport';
 import { useMobileTabs } from '../hooks/useMobileTabs';
 import HashtagSuggestions from '../components/HashtagSuggestions';
+import SocialMediaPreview from '../components/SocialMediaPreview';
 import { SocialPlatform } from '../services/hashtagGenerator';
 
 interface GenericToolProps {
@@ -745,19 +746,34 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                                     </div>
                                 )}
 
-                                {/* Hashtag Suggestions for Social Media Tools */}
+                                {/* Social Media Preview & Hashtag Suggestions */}
                                 {isSocialMediaTool && documentContent && socialPlatform && (
-                                    <div className="mt-6 px-8 pb-8">
-                                        <HashtagSuggestions
-                                            content={documentContent}
-                                            platform={socialPlatform}
-                                            onHashtagClick={(hashtag) => {
-                                                showToast(`${hashtag} copied to clipboard`, 'success');
-                                            }}
-                                            onCopyAll={(hashtags) => {
-                                                showToast('All hashtags copied to clipboard', 'success');
-                                            }}
-                                        />
+                                    <div className="mt-6 px-8 pb-8 space-y-6">
+                                        {/* Platform Preview */}
+                                        <div>
+                                            <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                                <Eye size={18} className="text-indigo-600" />
+                                                Post Preview
+                                            </h4>
+                                            <SocialMediaPreview
+                                                platform={socialPlatform}
+                                                content={documentContent}
+                                            />
+                                        </div>
+
+                                        {/* Hashtag Suggestions */}
+                                        <div>
+                                            <HashtagSuggestions
+                                                content={documentContent}
+                                                platform={socialPlatform}
+                                                onHashtagClick={(hashtag) => {
+                                                    showToast(`${hashtag} copied to clipboard`, 'success');
+                                                }}
+                                                onCopyAll={(hashtags) => {
+                                                    showToast('All hashtags copied to clipboard', 'success');
+                                                }}
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </div>
