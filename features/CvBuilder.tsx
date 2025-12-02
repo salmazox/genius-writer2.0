@@ -22,6 +22,7 @@ import CvEditor from './cv/CvEditor';
 import CvPreview from './cv/CvPreview';
 import CvAtsSidebar from './cv/CvAtsSidebar';
 import CvAiCoach from './cv/CvAiCoach';
+import JobDescriptionPanel, { type JobDescriptionData } from './cv/JobDescriptionPanel';
 
 // Professional Color Themes
 const CV_THEMES: CVTheme[] = [
@@ -56,6 +57,7 @@ const CvBuilder: React.FC = () => {
     const [showAtsSidebar, setShowAtsSidebar] = useState(false);
     const [showAiCoach, setShowAiCoach] = useState(false);
     const [jobDescription, setJobDescription] = useState('');
+    const [jobDescriptionData, setJobDescriptionData] = useState<JobDescriptionData | null>(null);
     const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
     const [atsScore, setAtsScore] = useState<ATSScoreBreakdown | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -298,6 +300,11 @@ const CvBuilder: React.FC = () => {
         }));
     };
 
+    const handleJobDescriptionAnalyzed = (data: JobDescriptionData) => {
+        setJobDescriptionData(data);
+        showToast('Job description analyzed successfully', 'success');
+    };
+
     const completionScore = (() => {
         let score = 0;
         if (cvData.personal.fullName) score += 10;
@@ -387,6 +394,13 @@ const CvBuilder: React.FC = () => {
                     {/* Column 1: Interactive Form */}
                     <div className={`w-full lg:w-[380px] xl:w-[450px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto p-4 pb-24 lg:pb-4 custom-scrollbar z-10 flex-shrink-0 ${mobileTab === 'preview' ? 'hidden lg:block' : 'flex-1 lg:block'}`}>
                         <div className="mb-6 space-y-4">
+                            {/* Job Description Panel */}
+                            <JobDescriptionPanel
+                                value={jobDescription}
+                                onChange={setJobDescription}
+                                onAnalyzed={handleJobDescriptionAnalyzed}
+                            />
+
                             {/* Enhanced ATS Score */}
                             <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-slate-800 dark:to-slate-800 rounded-xl border border-indigo-200 dark:border-slate-700 shadow-sm relative overflow-hidden" role="region" aria-label="ATS Score">
                                 <div className="flex justify-between items-center mb-3">
