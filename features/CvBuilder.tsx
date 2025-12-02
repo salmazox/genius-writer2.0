@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft } from 'lucide-react';
+import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft, Lightbulb } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
@@ -21,6 +21,7 @@ import { calculateRealTimeATSScore, type ATSScoreBreakdown } from '../services/a
 import CvEditor from './cv/CvEditor';
 import CvPreview from './cv/CvPreview';
 import CvAtsSidebar from './cv/CvAtsSidebar';
+import CvAiCoach from './cv/CvAiCoach';
 
 // Professional Color Themes
 const CV_THEMES: CVTheme[] = [
@@ -53,6 +54,7 @@ const CvBuilder: React.FC = () => {
     const [viewMode, setViewMode] = useState<'cv' | 'cover_letter'>('cv');
     const [cvData, setCvData] = useState<CVData>(INITIAL_CV);
     const [showAtsSidebar, setShowAtsSidebar] = useState(false);
+    const [showAiCoach, setShowAiCoach] = useState(false);
     const [jobDescription, setJobDescription] = useState('');
     const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
     const [atsScore, setAtsScore] = useState<ATSScoreBreakdown | null>(null);
@@ -287,6 +289,15 @@ const CvBuilder: React.FC = () => {
         }
     };
 
+    const handleUpdateCV = (updates: Partial<CVData>) => {
+        setCvData(prev => ({
+            ...prev,
+            ...updates,
+            // Merge nested objects properly
+            personal: updates.personal ? { ...prev.personal, ...updates.personal } : prev.personal
+        }));
+    };
+
     const completionScore = (() => {
         let score = 0;
         if (cvData.personal.fullName) score += 10;
@@ -342,6 +353,14 @@ const CvBuilder: React.FC = () => {
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => setShowAtsSidebar(!showAtsSidebar)} className="hidden md:flex">
                                 <Target size={16} className="mr-2"/> {showAtsSidebar ? 'Hide ATS' : 'ATS Tool'}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant={showAiCoach ? "primary" : "outline"}
+                                onClick={() => setShowAiCoach(!showAiCoach)}
+                                className="hidden md:flex"
+                            >
+                                <Lightbulb size={16} className="mr-2"/> AI Coach
                             </Button>
                          </>
                      )}
@@ -497,6 +516,17 @@ const CvBuilder: React.FC = () => {
 
                     {/* Column 3: ATS Sidebar */}
                     <CvAtsSidebar show={showAtsSidebar} onClose={() => setShowAtsSidebar(false)} atsAnalysis={atsAnalysis} jobDescription={jobDescription} setJobDescription={setJobDescription} runAtsAnalysis={runAtsAnalysis} isLoading={isLoading} handleApplyKeywords={handleApplyKeywords} handleApplySummary={handleApplySummary} clearAnalysis={() => setAtsAnalysis(null)} />
+
+                    {/* Column 4: AI Co-Pilot Sidebar */}
+                    {showAiCoach && (
+                        <div className="w-80 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex-shrink-0 overflow-hidden flex flex-col">
+                            <CvAiCoach
+                                cvData={cvData}
+                                atsScore={atsScore}
+                                onUpdateCV={handleUpdateCV}
+                            />
+                        </div>
+                    )}
                 </div>
             ) : (
                 /* Cover Letter View */
