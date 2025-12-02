@@ -52,16 +52,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   ]);
 
   return (
-    <div className="flex flex-col min-h-screen transition-colors duration-200 relative">
+    <div className="flex flex-col min-h-screen transition-colors duration-200 relative overflow-x-hidden">
       <OfflineBanner />
       <CookieConsent />
       <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
-      
+
       {!isDashboard && !isAuth && !is404 && <Navbar />}
-      {isDashboard && !isAuth && <Navbar />} 
-      
-      <main id="main-content" className={`flex-grow ${isDashboard ? 'h-[calc(100dvh-64px)] overflow-hidden' : ''} pb-16 md:pb-0`}>
+      {isDashboard && !isAuth && <Navbar />}
+
+      <main id="main-content" className={`flex-grow overflow-x-hidden ${isDashboard ? 'h-[calc(100dvh-64px)] overflow-y-hidden' : ''} pb-16 md:pb-0`}>
         <ErrorBoundary>
           {children}
         </ErrorBoundary>

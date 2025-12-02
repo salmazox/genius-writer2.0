@@ -341,11 +341,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
             />
 
             {!hideToolbar && (
-                <div className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 p-1.5 rounded-t-xl select-none shadow-sm transition-all overflow-hidden">
-                    
-                    {/* Main Toolbar - Force horizontal scroll on overflow */}
+                <div className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 p-1.5 rounded-t-xl select-none shadow-sm transition-all">
+
+                    {/* Main Toolbar - Wrap on mobile, single row on desktop */}
                     {!inputMode ? (
-                        <div className="flex flex-nowrap items-center gap-1 overflow-x-auto no-scrollbar pb-1 w-full max-w-[100vw]">
+                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-1 sm:overflow-x-auto no-scrollbar w-full">
                             {/* Undo/Redo */}
                             <div className="flex gap-0.5 mr-1 flex-shrink-0">
                                 <ToolbarButton icon={Undo} command="undo" title="Undo" />

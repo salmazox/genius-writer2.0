@@ -401,141 +401,162 @@ const SmartEditor: React.FC = () => {
                     </div>
                     
                     {/* Right: Actions */}
-                    <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2">
                         <div className="hidden md:flex text-xs text-slate-400 mr-2 items-center gap-1">
                             {isSaving ? <><Loader2 size={12} className="animate-spin"/> {t('dashboard.smart.saving')}</> : <><Check size={12}/> {t('dashboard.smart.saved')}</>}
                         </div>
-                        
-                        {/* TTS Button */}
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={handleListen} 
-                            title={isPlaying ? "Stop" : "Read Aloud"} 
-                            icon={isGeneratingAudio ? Sparkles : isPlaying ? Square : Volume2} 
-                            className={`hidden sm:flex ${isPlaying ? "text-red-500 animate-pulse" : ""}`}
+
+                        {/* Mobile: Only show Save + AI */}
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={Save}
+                            onClick={handleSaveDocument}
+                            aria-label={t('dashboard.smart.save')}
+                            className="lg:hidden"
                         />
-
-                        <Button variant="ghost" size="sm" icon={Share2} onClick={() => { handleSaveDocument(); setIsShareOpen(true); }} className="hidden sm:flex">
-                            <span className="hidden md:inline">{t('dashboard.smart.share')}</span>
-                        </Button>
-                        <Button variant="ghost" size="sm" icon={History} onClick={() => { if(!currentDoc) handleSaveDocument(); setIsHistoryOpen(true); }} className="hidden sm:flex" />
-                        
-                        <Button variant="secondary" size="sm" icon={Save} onClick={handleSaveDocument} aria-label={t('dashboard.smart.save')} className="hidden sm:flex">
-                            <span className="hidden md:inline">{t('dashboard.smart.save')}</span>
-                        </Button>
-                        
-                        {/* Export Dropdown Group - Visible on all screens but compact */}
-                        <div className="relative group">
-                            <Button variant={isPro ? "secondary" : "ghost"} size="sm" icon={isPro ? Download : Lock} aria-label="Export Menu">
-                                <span className="hidden md:inline">{t('dashboard.smart.export')}</span>
-                            </Button>
-                            <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                                <button onClick={() => handleExport('html')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-t-xl">HTML</button>
-                                <button onClick={() => handleExport('doc')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">Word Doc</button>
-                                <button onClick={() => handleExport('txt')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-b-xl">Plain Text</button>
-                            </div>
-                        </div>
-                        
-                        <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
-
-                        {/* Brand Kit Tools */}
-                        <button
-                            onClick={() => setActiveSidebar(activeSidebar === 'brandkit' ? null : 'brandkit')}
-                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'brandkit' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
-                            title="Brand Kit"
-                        >
-                            <Palette size={20} />
-                        </button>
-
-                        <button
-                            onClick={() => setActiveSidebar(activeSidebar === 'brandcheck' ? null : 'brandcheck')}
-                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'brandcheck' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
-                            title="Brand Consistency"
-                        >
-                            <ShieldCheck size={20} />
-                        </button>
-
-                        <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
-
-                        {/* Long-Form Writing Tools */}
-                        <button
-                            onClick={() => setActiveSidebar(activeSidebar === 'chapters' ? null : 'chapters')}
-                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'chapters' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
-                            title="Chapters"
-                        >
-                            <BookOpen size={20} />
-                        </button>
-
-                        <button
-                            onClick={() => setActiveSidebar(activeSidebar === 'outline' ? null : 'outline')}
-                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'outline' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
-                            title="Document Outline"
-                        >
-                            <FileText size={20} />
-                        </button>
-
-                        <button
-                            onClick={() => setActiveSidebar(activeSidebar === 'toc' ? null : 'toc')}
-                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'toc' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
-                            title="Table of Contents"
-                        >
-                            <List size={20} />
-                        </button>
-
-                        <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
-
-                        {/* Sidebar Toggles - Always visible for quick access */}
-                        <button
-                            onClick={() => setActiveSidebar(activeSidebar === 'plagiarism' ? null : 'plagiarism')}
-                            className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'plagiarism' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
-                            title="Originality Check"
-                        >
-                            <Shield size={20} />
-                        </button>
-
-                        <button
-                            onClick={() => setActiveSidebar(activeSidebar === 'seo' ? null : 'seo')}
-                            className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'seo' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
-                            title="SEO Analysis"
-                        >
-                            <Search size={20} />
-                        </button>
-
-                        <button
-                            onClick={() => setActiveSidebar(activeSidebar === 'comments' ? null : 'comments')}
-                            className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'comments' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
-                            title="Comments"
-                        >
-                            <MessageCircle size={20} />
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                handleSaveDocument();
-                                setShowCollaborationShare(true);
-                            }}
-                            className="p-2 rounded-lg transition-colors text-slate-500 hover:bg-slate-100"
-                            title="Share Document"
-                        >
-                            <Share2 size={20} />
-                        </button>
-
-                        <button
-                            onClick={() => setActiveSidebar(activeSidebar === 'activity' ? null : 'activity')}
-                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'activity' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
-                            title="Activity Feed"
-                        >
-                            <Clock size={20} />
-                        </button>
 
                         <button
                             onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
-                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'ai' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                            className={`lg:hidden p-1.5 sm:p-2 rounded-lg transition-colors ${activeSidebar === 'ai' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
                             title={t('dashboard.smart.aiCompanion')}
                         >
-                            <Sidebar size={20} />
+                            <Sidebar size={18} />
                         </button>
+
+                        {/* Desktop: Show all tools organized */}
+                        <div className="hidden lg:flex items-center gap-1">
+                            {/* TTS Button */}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleListen}
+                                title={isPlaying ? "Stop" : "Read Aloud"}
+                                icon={isGeneratingAudio ? Sparkles : isPlaying ? Square : Volume2}
+                                className={isPlaying ? "text-red-500 animate-pulse" : ""}
+                            />
+
+                            <Button variant="ghost" size="sm" icon={Share2} onClick={() => { handleSaveDocument(); setIsShareOpen(true); }}>
+                                <span className="hidden xl:inline">{t('dashboard.smart.share')}</span>
+                            </Button>
+                            <Button variant="ghost" size="sm" icon={History} onClick={() => { if(!currentDoc) handleSaveDocument(); setIsHistoryOpen(true); }} />
+
+                            <Button variant="secondary" size="sm" icon={Save} onClick={handleSaveDocument} aria-label={t('dashboard.smart.save')}>
+                                <span className="hidden xl:inline">{t('dashboard.smart.save')}</span>
+                            </Button>
+
+                            {/* Export Dropdown Group */}
+                            <div className="relative group">
+                                <Button variant={isPro ? "secondary" : "ghost"} size="sm" icon={isPro ? Download : Lock} aria-label="Export Menu">
+                                    <span className="hidden xl:inline">{t('dashboard.smart.export')}</span>
+                                </Button>
+                                <div className="absolute right-0 mt-2 w-36 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                    <button onClick={() => handleExport('html')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-t-xl">HTML</button>
+                                    <button onClick={() => handleExport('doc')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800">Word Doc</button>
+                                    <button onClick={() => handleExport('txt')} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 rounded-b-xl">Plain Text</button>
+                                </div>
+                            </div>
+
+                            <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
+                            {/* Brand Kit Tools */}
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'brandkit' ? null : 'brandkit')}
+                                className={`p-2 rounded-lg transition-colors ${activeSidebar === 'brandkit' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title="Brand Kit"
+                            >
+                                <Palette size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'brandcheck' ? null : 'brandcheck')}
+                                className={`p-2 rounded-lg transition-colors ${activeSidebar === 'brandcheck' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title="Brand Consistency"
+                            >
+                                <ShieldCheck size={18} />
+                            </button>
+
+                            <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
+                            {/* Long-Form Writing Tools */}
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'chapters' ? null : 'chapters')}
+                                className={`p-2 rounded-lg transition-colors ${activeSidebar === 'chapters' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title="Chapters"
+                            >
+                                <BookOpen size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'outline' ? null : 'outline')}
+                                className={`p-2 rounded-lg transition-colors ${activeSidebar === 'outline' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title="Document Outline"
+                            >
+                                <FileText size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'toc' ? null : 'toc')}
+                                className={`p-2 rounded-lg transition-colors ${activeSidebar === 'toc' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title="Table of Contents"
+                            >
+                                <List size={18} />
+                            </button>
+
+                            <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
+                            {/* Sidebar Toggles */}
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'plagiarism' ? null : 'plagiarism')}
+                                className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'plagiarism' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title="Originality Check"
+                            >
+                                <Shield size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'seo' ? null : 'seo')}
+                                className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'seo' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title="SEO Analysis"
+                            >
+                                <Search size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'comments' ? null : 'comments')}
+                                className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'comments' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title="Comments"
+                            >
+                                <MessageCircle size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    handleSaveDocument();
+                                    setShowCollaborationShare(true);
+                                }}
+                                className="p-2 rounded-lg transition-colors text-slate-500 hover:bg-slate-100"
+                                title="Share Document"
+                            >
+                                <Share2 size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'activity' ? null : 'activity')}
+                                className={`p-2 rounded-lg transition-colors ${activeSidebar === 'activity' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title="Activity Feed"
+                            >
+                                <Clock size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'ai' ? null : 'ai')}
+                                className={`p-2 rounded-lg transition-colors ${activeSidebar === 'ai' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title={t('dashboard.smart.aiCompanion')}
+                            >
+                                <Sidebar size={18} />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -564,7 +585,7 @@ const SmartEditor: React.FC = () => {
 
             {/* Sidebar */}
             {activeSidebar && (
-                <div className="w-80 lg:w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl absolute right-0 top-0 h-full lg:relative z-40 animate-in slide-in-from-right duration-300">
+                <div className="w-full lg:w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl fixed lg:relative right-0 top-0 h-full z-50 lg:z-40 animate-in slide-in-from-right duration-300">
                     
                     {/* AI Sidebar Content */}
                     {activeSidebar === 'ai' && (
