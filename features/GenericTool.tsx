@@ -33,6 +33,8 @@ import {
   ImageStylePreset,
   applyStyleToPrompt
 } from '../services/imageStylePresets';
+import TemplateBrowser from '../components/TemplateBrowser';
+import { ContentTemplate } from '../services/contentTemplates';
 
 interface GenericToolProps {
     tool: ToolConfig;
@@ -82,6 +84,9 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
     // Image Style State
     const [selectedImageStyle, setSelectedImageStyle] = useState<ImageStylePreset | null>(null);
+
+    // Template Browser State
+    const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
 
     const previewRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -232,6 +237,15 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleTemplateSelect = (template: ContentTemplate) => {
+        // Apply template's prefilled inputs to form
+        setFormValues(prev => ({
+            ...prev,
+            ...template.prefilledInputs
+        }));
+        showToast(`Template "${template.name}" applied!`, 'success');
     };
 
     const handleGenerate = async () => {
@@ -529,11 +543,17 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     };
 
     return (
-        <div 
+        <div
             className="flex h-full flex-col lg:flex-row relative touch-pan-y"
             {...swipeHandlers}
         >
             {showVoiceManager && <BrandVoiceManager onClose={() => setShowVoiceManager(false)} />}
+            <TemplateBrowser
+                isOpen={showTemplateBrowser}
+                onClose={() => setShowTemplateBrowser(false)}
+                onSelectTemplate={handleTemplateSelect}
+                currentToolType={tool.id}
+            />
 
             {/* Mobile/Tablet Tab Switcher */}
             <div className="lg:hidden flex border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 z-20">
@@ -578,9 +598,33 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     </div>
                 )}
 
+                {/* Browse Templates Button */}
+                <button
+                    onClick={() => setShowTemplateBrowser(true)}
+                    className="w-full mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-2 border-indigo-200 dark:border-indigo-800 rounded-xl hover:shadow-md transition-all group"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+                            <Sparkles size={20} />
+                        </div>
+                        <div className="flex-1 text-left">
+                            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                Browse Templates
+                                <span className="text-xs px-2 py-0.5 bg-indigo-600 text-white rounded font-semibold">50+</span>
+                            </div>
+                            <div className="text-xs text-slate-600 dark:text-slate-400">
+                                Start with proven content structures
+                            </div>
+                        </div>
+                        <div className="text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform">
+                            →
+                        </div>
+                    </div>
+                </button>
+
                 {/* Dynamic Inputs */}
                 <div className="space-y-5 md:pb-0">
-                    
+
                     {/* Template & Color Selector for Supported Tools */}
                     {hasTemplates && (
                         <div className="space-y-4">
