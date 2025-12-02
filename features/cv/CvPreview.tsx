@@ -327,20 +327,231 @@ const CvPreview: React.FC<CvPreviewProps> = React.memo(({ cvData, previewRef }) 
         </div>
     );
 
+    // --- Template: Professional ---
+    const ProfessionalTemplate = () => (
+        <div className="flex flex-col min-h-[29.7cm] bg-white text-slate-900 font-sans shadow-sm">
+            {/* Header Bar */}
+            <div className="bg-gradient-to-r from-slate-900 to-slate-700 text-white p-8 sm:p-10">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
+                    <div>
+                        <h1 className="text-4xl sm:text-5xl font-bold mb-3 tracking-tight">{cvData.personal.fullName || "Your Name"}</h1>
+                        <p className="text-xl font-light text-slate-300 tracking-wide">{cvData.personal.jobTitle || "Job Title"}</p>
+                    </div>
+                    <div className="text-sm space-y-1 text-slate-300">
+                        {cvData.personal.email && <div className="flex items-center gap-2"><Mail size={14} /> {cvData.personal.email}</div>}
+                        {cvData.personal.phone && <div className="flex items-center gap-2"><Phone size={14} /> {cvData.personal.phone}</div>}
+                        {cvData.personal.linkedin && <div className="flex items-center gap-2"><Linkedin size={14} /> {cvData.personal.linkedin.split('/').pop()}</div>}
+                    </div>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-8 sm:p-10 space-y-10">
+                {cvData.personal.summary && (
+                    <section>
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="h-1 w-16 rounded-full" style={{ backgroundColor: cvData.theme.primary }}></div>
+                            <h3 className="text-base font-bold uppercase tracking-[0.2em] text-slate-700">Executive Summary</h3>
+                        </div>
+                        <p className="text-base leading-relaxed text-slate-600 pl-4 border-l-4 border-slate-200">{cvData.personal.summary}</p>
+                    </section>
+                )}
+
+                {cvData.experience.length > 0 && (
+                    <section>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="h-1 w-16 rounded-full" style={{ backgroundColor: cvData.theme.primary }}></div>
+                            <h3 className="text-base font-bold uppercase tracking-[0.2em] text-slate-700">Professional Experience</h3>
+                        </div>
+                        <div className="space-y-8">
+                            {cvData.experience.map(exp => (
+                                <div key={exp.id} className="break-inside-avoid">
+                                    <div className="flex flex-col sm:flex-row justify-between sm:items-baseline mb-2 pb-2 border-b-2 border-slate-100">
+                                        <div>
+                                            <h4 className="font-bold text-xl text-slate-900">{exp.title}</h4>
+                                            <div className="text-base font-semibold mt-1" style={{ color: cvData.theme.primary }}>{exp.company} • {exp.location}</div>
+                                        </div>
+                                        <span className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full inline-block w-fit mt-2 sm:mt-0 uppercase tracking-wide">{exp.startDate} - {exp.endDate || 'Present'}</span>
+                                    </div>
+                                    <div className="text-base leading-relaxed text-slate-600 mt-3 rich-text-content" dangerouslySetInnerHTML={createMarkup(exp.description)} />
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                    {cvData.education.length > 0 && (
+                        <section>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="h-1 w-12 rounded-full" style={{ backgroundColor: cvData.theme.primary }}></div>
+                                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-700">Education</h3>
+                            </div>
+                            <div className="space-y-5">
+                                {cvData.education.map(edu => (
+                                    <div key={edu.id} className="break-inside-avoid">
+                                        <div className="font-bold text-lg text-slate-900">{edu.degree}</div>
+                                        <div className="text-base text-slate-600 font-medium mt-1">{edu.school}</div>
+                                        <div className="text-xs text-slate-400 uppercase tracking-wide mt-1">{edu.year}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
+                    {cvData.skills.length > 0 && (
+                        <section>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="h-1 w-12 rounded-full" style={{ backgroundColor: cvData.theme.primary }}></div>
+                                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-700">Core Competencies</h3>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {cvData.skills.map(s => (
+                                    <span key={s} className="px-3 py-1.5 border-2 border-slate-200 text-slate-700 text-sm font-semibold rounded-lg hover:border-slate-300 transition-colors">{s}</span>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
+    // --- Template: Creative ---
+    const CreativeTemplate = () => (
+        <div className="flex flex-col min-h-[29.7cm] bg-white text-slate-900 font-sans relative overflow-hidden shadow-sm">
+            {/* Decorative Elements */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-full blur-3xl -z-0 opacity-40"></div>
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-pink-100 to-orange-100 dark:from-pink-900/20 dark:to-orange-900/20 rounded-full blur-3xl -z-0 opacity-30"></div>
+
+            {/* Side Accent */}
+            <div className="absolute right-0 top-32 bottom-32 w-1.5 rounded-full" style={{ background: `linear-gradient(to bottom, ${cvData.theme.primary}, transparent)`, opacity: 0.3 }}></div>
+
+            {/* Content */}
+            <div className="relative z-10 p-8 sm:p-10">
+                {/* Header */}
+                <header className="mb-12 relative">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-8">
+                        <div className="flex-1">
+                            <div className="inline-block mb-3 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest" style={{ backgroundColor: `${cvData.theme.primary}20`, color: cvData.theme.primary }}>
+                                {cvData.personal.jobTitle || "Job Title"}
+                            </div>
+                            <h1 className="text-5xl sm:text-6xl font-extrabold mb-4 leading-none bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent" style={{ transform: 'rotate(-1deg)', transformOrigin: 'left' }}>
+                                {cvData.personal.fullName || "Your Name"}
+                            </h1>
+                            {cvData.personal.summary && (
+                                <p className="text-lg leading-relaxed text-slate-600 max-w-2xl mt-6 italic border-l-4 pl-6" style={{ borderColor: cvData.theme.primary }}>
+                                    {cvData.personal.summary}
+                                </p>
+                            )}
+                        </div>
+
+                        {cvData.personal.photoBase64 && (
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl blur-xl opacity-30"></div>
+                                <img
+                                    src={cvData.personal.photoBase64}
+                                    alt="Profile"
+                                    onLoad={() => setImageLoaded(true)}
+                                    className={`relative w-32 h-32 object-cover border-4 border-white shadow-2xl ${cvData.personal.photoShape === 'circle' ? 'rounded-full' : cvData.personal.photoShape === 'rounded' ? 'rounded-3xl' : 'rounded-lg'} ${cvData.personal.photoFilter === 'grayscale' ? 'grayscale' : ''} ${!imageLoaded ? 'blur-sm scale-95 opacity-80' : 'scale-100 opacity-100'} transition-all duration-500`}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Contact */}
+                    <div className="flex flex-wrap gap-4 mt-8 text-sm text-slate-600">
+                        {cvData.personal.email && <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-slate-200"><Mail size={14} className="opacity-60" /> {cvData.personal.email}</div>}
+                        {cvData.personal.phone && <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-slate-200"><Phone size={14} className="opacity-60" /> {cvData.personal.phone}</div>}
+                        {cvData.personal.linkedin && <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-slate-200"><Linkedin size={14} className="opacity-60" /> LinkedIn</div>}
+                        {cvData.personal.website && <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg shadow-sm border border-slate-200"><Globe size={14} className="opacity-60" /> {cvData.personal.website.replace(/^https?:\/\//, '')}</div>}
+                    </div>
+                </header>
+
+                {/* Experience */}
+                {cvData.experience.length > 0 && (
+                    <section className="mb-12">
+                        <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
+                            <div className="w-2 h-8 rounded-full" style={{ backgroundColor: cvData.theme.primary }}></div>
+                            Work Experience
+                        </h3>
+                        <div className="space-y-10">
+                            {cvData.experience.map((exp, idx) => (
+                                <div key={exp.id} className="relative pl-8 break-inside-avoid">
+                                    <div className="absolute left-0 top-2 w-4 h-4 rounded-full border-4 border-white shadow-md" style={{ backgroundColor: cvData.theme.primary }}></div>
+                                    {idx < cvData.experience.length - 1 && (
+                                        <div className="absolute left-2 top-6 bottom-0 w-0.5 bg-gradient-to-b from-slate-200 to-transparent"></div>
+                                    )}
+                                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                                        <div className="flex flex-col sm:flex-row justify-between sm:items-baseline mb-3">
+                                            <div>
+                                                <h4 className="font-bold text-xl text-slate-900 mb-1">{exp.title}</h4>
+                                                <div className="text-base font-semibold" style={{ color: cvData.theme.primary }}>{exp.company}</div>
+                                            </div>
+                                            <span className="text-xs font-mono text-slate-500 bg-slate-50 px-3 py-1.5 rounded-full inline-block w-fit mt-2 sm:mt-0">{exp.startDate} → {exp.endDate || 'Now'}</span>
+                                        </div>
+                                        <div className="text-sm leading-relaxed text-slate-600 rich-text-content" dangerouslySetInnerHTML={createMarkup(exp.description)} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {/* Bottom Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                    {cvData.skills.length > 0 && (
+                        <section className="sm:col-span-2">
+                            <h3 className="text-lg font-bold mb-5 flex items-center gap-2">
+                                <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: cvData.theme.primary }}></div>
+                                Skills & Expertise
+                            </h3>
+                            <div className="flex flex-wrap gap-2.5">
+                                {cvData.skills.map(s => (
+                                    <span key={s} className="px-4 py-2 rounded-xl text-sm font-semibold shadow-sm border-2 transition-all hover:shadow-md" style={{ borderColor: `${cvData.theme.primary}40`, color: cvData.theme.primary, backgroundColor: `${cvData.theme.primary}10` }}>{s}</span>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
+                    {cvData.education.length > 0 && (
+                        <section>
+                            <h3 className="text-lg font-bold mb-5 flex items-center gap-2">
+                                <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: cvData.theme.primary }}></div>
+                                Education
+                            </h3>
+                            <div className="space-y-5">
+                                {cvData.education.map(edu => (
+                                    <div key={edu.id} className="break-inside-avoid">
+                                        <div className="font-bold text-base text-slate-900 leading-tight">{edu.degree}</div>
+                                        <div className="text-sm text-slate-600 mt-1">{edu.school}</div>
+                                        <div className="text-xs text-slate-400 mt-1 font-mono">{edu.year}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <div className="relative py-8 w-full flex justify-center">
-            {/* 
-               A4 Container Wrapper 
-               Width is fixed to 21cm (A4) on large screens, scaled down on mobile via max-width 
+            {/*
+               A4 Container Wrapper
+               Width is fixed to 21cm (A4) on large screens, scaled down on mobile via max-width
             */}
-            <div 
-                ref={previewRef} 
+            <div
+                ref={previewRef}
                 className="bg-white shadow-xl max-w-full print:shadow-none print:w-full overflow-hidden"
                 style={{ width: '210mm', minHeight: '297mm' }}
             >
                 {cvData.template === 'modern' && <ModernTemplate />}
                 {cvData.template === 'classic' && <ClassicTemplate />}
                 {cvData.template === 'minimal' && <MinimalTemplate />}
+                {cvData.template === 'professional' && <ProfessionalTemplate />}
+                {cvData.template === 'creative' && <CreativeTemplate />}
             </div>
         </div>
     );

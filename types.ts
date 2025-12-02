@@ -189,7 +189,7 @@ export interface CVPersonal {
 }
 
 export interface CVData {
-  template: 'modern' | 'classic' | 'minimal';
+  template: 'modern' | 'classic' | 'minimal' | 'professional' | 'creative';
   theme: CVTheme;
   personal: CVPersonal;
   experience: CVExperience[];

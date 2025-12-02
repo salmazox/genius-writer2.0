@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft, Lightbulb, Linkedin, History } from 'lucide-react';
+import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft, Lightbulb, Linkedin, History, Paintbrush } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
@@ -27,6 +27,7 @@ import JobDescriptionPanel, { type JobDescriptionData } from './cv/JobDescriptio
 import CoverLetterPanel from './cv/CoverLetterPanel';
 import LinkedInPostsPanel from './cv/LinkedInPostsPanel';
 import VersionHistoryPanel from './cv/VersionHistoryPanel';
+import TemplateSelector, { type CVTemplate } from './cv/TemplateSelector';
 
 // Professional Color Themes
 const CV_THEMES: CVTheme[] = [
@@ -61,6 +62,7 @@ const CvBuilder: React.FC = () => {
     const [showAtsSidebar, setShowAtsSidebar] = useState(false);
     const [showAiCoach, setShowAiCoach] = useState(false);
     const [showVersionHistory, setShowVersionHistory] = useState(false);
+    const [showTemplateSelector, setShowTemplateSelector] = useState(false);
     const [jobDescription, setJobDescription] = useState('');
     const [jobDescriptionData, setJobDescriptionData] = useState<JobDescriptionData | null>(null);
     const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
@@ -392,6 +394,12 @@ const CvBuilder: React.FC = () => {
         showToast('CV restored from version history', 'success');
     };
 
+    const handleSelectTemplate = (template: CVTemplate) => {
+        setCvData(prev => ({ ...prev, template }));
+        setShowTemplateSelector(false);
+        showToast(`Template changed to "${template}"`, 'success');
+    };
+
     const completionScore = (() => {
         let score = 0;
         if (cvData.personal.fullName) score += 10;
@@ -464,6 +472,14 @@ const CvBuilder: React.FC = () => {
                             >
                                 <Linkedin size={16} className="mr-2"/>
                                 LinkedIn
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setShowTemplateSelector(true)}
+                                className="hidden md:flex"
+                            >
+                                <Paintbrush size={16} className="mr-2"/> Template
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => setShowAtsSidebar(!showAtsSidebar)} className="hidden md:flex">
                                 <Target size={16} className="mr-2"/> {showAtsSidebar ? 'Hide ATS' : 'ATS Tool'}
@@ -684,6 +700,20 @@ const CvBuilder: React.FC = () => {
                     onClose={() => setViewMode('cv')}
                     className="flex-1"
                 />
+            )}
+
+            {/* Template Selector Modal */}
+            {showTemplateSelector && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowTemplateSelector(false)}>
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-6 overflow-y-auto max-h-[90vh] custom-scrollbar">
+                            <TemplateSelector
+                                currentTemplate={cvData.template}
+                                onSelectTemplate={handleSelectTemplate}
+                            />
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
