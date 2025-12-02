@@ -227,9 +227,9 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Translation Glossaries" size="lg">
-      <div className="flex h-[600px]">
+      <div className="flex flex-col md:flex-row h-[600px]">
         {/* Left Sidebar - Glossary List */}
-        <div className="w-64 border-r border-slate-200 pr-4">
+        <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-200 pb-4 md:pb-0 md:pr-4 max-h-64 md:max-h-full overflow-y-auto">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-sm text-slate-600 uppercase">Glossaries</h3>
             <button
@@ -344,16 +344,16 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
         </div>
 
         {/* Right Panel - Glossary Details */}
-        <div className="flex-1 pl-4 flex flex-col">
+        <div className="flex-1 pl-0 md:pl-4 pt-4 md:pt-0 flex flex-col overflow-hidden">
           {selectedGlossary ? (
             <>
               {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">
+              <div className="flex flex-col sm:flex-row items-start justify-between mb-4 gap-3">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg md:text-xl font-bold text-slate-900 truncate">
                     {selectedGlossary.name}
                   </h2>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs md:text-sm text-slate-500">
                     {selectedGlossary.sourceLang} → {selectedGlossary.targetLang}
                   </p>
                   {selectedGlossary.description && (
@@ -383,11 +383,11 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
               </div>
 
               {/* Add/Edit Entry Form */}
-              <div className="mb-4 p-4 bg-slate-50 rounded-lg space-y-2">
-                <h4 className="text-sm font-bold text-slate-700">
+              <div className="mb-4 p-3 md:p-4 bg-slate-50 rounded-lg space-y-2">
+                <h4 className="text-xs md:text-sm font-bold text-slate-700">
                   {editingEntry ? 'Edit Entry' : 'Add New Entry'}
                 </h4>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input
                     type="text"
                     value={newEntrySource}
