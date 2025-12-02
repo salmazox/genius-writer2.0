@@ -32,7 +32,7 @@ import {
   importGlossaryFromCSV,
   getGlossaryStats
 } from '../services/translationGlossary';
-import Button from './ui/Button';
+import { Button } from './ui/Button';
 import { Modal } from './ui/Modal';
 import { useToast } from '../contexts/ToastContext';
 
@@ -195,7 +195,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
       if (result.errors.length > 0) {
         showToast(
           `Imported ${result.success} entries with ${result.errors.length} errors`,
-          'warning'
+          'info'
         );
       } else {
         showToast(`Imported ${result.success} entries successfully`, 'success');
@@ -226,7 +226,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Translation Glossaries" size="large">
+    <Modal isOpen={isOpen} onClose={onClose} title="Translation Glossaries" size="lg">
       <div className="flex h-[600px]">
         {/* Left Sidebar - Glossary List */}
         <div className="w-64 border-r border-slate-200 pr-4">
