@@ -15,6 +15,7 @@ import { useUser } from '../contexts/UserContext';
 import { Watermark } from '../components/Watermark';
 import { usePdfExport } from '../hooks/usePdfExport';
 import { useMobileTabs } from '../hooks/useMobileTabs';
+import { calculateRealTimeATSScore, type ATSScoreBreakdown } from '../services/atsScoring';
 
 // Sub-components
 import CvEditor from './cv/CvEditor';
@@ -54,6 +55,7 @@ const CvBuilder: React.FC = () => {
     const [showAtsSidebar, setShowAtsSidebar] = useState(false);
     const [jobDescription, setJobDescription] = useState('');
     const [atsAnalysis, setAtsAnalysis] = useState<ATSAnalysis | null>(null);
+    const [atsScore, setAtsScore] = useState<ATSScoreBreakdown | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
@@ -67,9 +69,12 @@ const CvBuilder: React.FC = () => {
 
     // Debounce for Auto-Save (Longer delay)
     const debouncedCvDataForSave = useDebounce(cvData, 1500);
-    
+
     // Debounce for Preview Rendering (Shorter delay for responsiveness)
     const previewCvData = useDebounce(cvData, 200);
+
+    // Debounce for ATS Scoring (Medium delay for real-time feedback)
+    const debouncedCvForScoring = useDebounce(cvData, 500);
 
     const isPro = user.plan !== 'free';
 
@@ -102,7 +107,7 @@ const CvBuilder: React.FC = () => {
     // Auto-Save
     useEffect(() => {
         if (JSON.stringify(debouncedCvDataForSave) === JSON.stringify(INITIAL_CV)) return;
-        
+
         const saveDraft = () => {
             setIsAutoSaving(true);
             localStorage.setItem('cv_draft', JSON.stringify(debouncedCvDataForSave));
@@ -110,6 +115,16 @@ const CvBuilder: React.FC = () => {
         };
         saveDraft();
     }, [debouncedCvDataForSave]);
+
+    // Real-time ATS Score Calculation
+    useEffect(() => {
+        try {
+            const score = calculateRealTimeATSScore(debouncedCvForScoring, jobDescription);
+            setAtsScore(score);
+        } catch (error) {
+            console.error('Failed to calculate ATS score:', error);
+        }
+    }, [debouncedCvForScoring, jobDescription]);
 
     const handleSaveDocument = () => {
         const content = viewMode === 'cv' ? JSON.stringify(cvData) : coverLetterContent;
@@ -353,15 +368,94 @@ const CvBuilder: React.FC = () => {
                     {/* Column 1: Interactive Form */}
                     <div className={`w-full lg:w-[380px] xl:w-[450px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto p-4 pb-24 lg:pb-4 custom-scrollbar z-10 flex-shrink-0 ${mobileTab === 'preview' ? 'hidden lg:block' : 'flex-1 lg:block'}`}>
                         <div className="mb-6 space-y-4">
-                            {/* Score */}
-                            <div className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden" role="region" aria-label="Profile Strength">
-                                <div className="flex justify-between items-end mb-2 relative z-10">
-                                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1"><Trophy size={14} className={completionScore === 100 ? "text-yellow-500" : "text-slate-400"} /> Profile Strength</h3>
-                                    <span className={`text-lg font-bold ${completionScore === 100 ? 'text-green-500' : 'text-indigo-600'}`}>{completionScore}%</span>
+                            {/* Enhanced ATS Score */}
+                            <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-slate-800 dark:to-slate-800 rounded-xl border border-indigo-200 dark:border-slate-700 shadow-sm relative overflow-hidden" role="region" aria-label="ATS Score">
+                                <div className="flex justify-between items-center mb-3">
+                                    <div>
+                                        <h3 className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1">
+                                            <Trophy size={14} className={atsScore && atsScore.overall >= 85 ? "text-yellow-500" : "text-slate-400"} />
+                                            ATS Score
+                                        </h3>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                            {atsScore?.grade || 'Calculating...'}
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className={`text-2xl font-bold ${
+                                            !atsScore ? 'text-slate-400' :
+                                            atsScore.overall >= 85 ? 'text-green-500' :
+                                            atsScore.overall >= 70 ? 'text-indigo-600' :
+                                            atsScore.overall >= 50 ? 'text-yellow-600' : 'text-red-500'
+                                        }`}>
+                                            {atsScore?.overall || 0}
+                                        </span>
+                                        <span className="text-sm text-slate-500">/100</span>
+                                    </div>
                                 </div>
-                                <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 relative z-10">
-                                    <div className={`h-2 rounded-full transition-all duration-500 ease-out ${completionScore === 100 ? 'bg-green-500' : 'bg-indigo-600'}`} style={{ width: `${completionScore}%` }}></div>
+
+                                {/* Progress Bar */}
+                                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 mb-3">
+                                    <div
+                                        className={`h-2.5 rounded-full transition-all duration-700 ease-out ${
+                                            !atsScore ? 'bg-slate-400' :
+                                            atsScore.overall >= 85 ? 'bg-green-500' :
+                                            atsScore.overall >= 70 ? 'bg-indigo-600' :
+                                            atsScore.overall >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                        }`}
+                                        style={{ width: `${atsScore?.overall || 0}%` }}
+                                    ></div>
                                 </div>
+
+                                {/* Score Breakdown - Compact */}
+                                {atsScore && (
+                                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Keywords</span>
+                                            <span className={`font-bold ${atsScore.criteria.keywords.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.keywords.score}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Formatting</span>
+                                            <span className={`font-bold ${atsScore.criteria.formatting.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.formatting.score}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Metrics</span>
+                                            <span className={`font-bold ${atsScore.criteria.quantification.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.quantification.score}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Action Verbs</span>
+                                            <span className={`font-bold ${atsScore.criteria.actionVerbs.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.actionVerbs.score}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Length</span>
+                                            <span className={`font-bold ${atsScore.criteria.length.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.length.score}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between p-1.5 bg-white/60 dark:bg-slate-700/60 rounded">
+                                            <span className="text-slate-600 dark:text-slate-300">Structure</span>
+                                            <span className={`font-bold ${atsScore.criteria.structure.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                                {atsScore.criteria.structure.score}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Top Suggestion */}
+                                {atsScore && atsScore.suggestions.length > 0 && (
+                                    <div className="mt-3 p-2 bg-white/80 dark:bg-slate-700/80 rounded-lg border border-indigo-200 dark:border-slate-600">
+                                        <p className="text-[10px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                                            💡 {atsScore.suggestions[0]}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Template & Theme Selectors */}
