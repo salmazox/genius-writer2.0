@@ -33,6 +33,7 @@ import {
   type VersionStats
 } from '../../services/versionHistory';
 import { CVData } from '../../types';
+import SuccessMetricsTracker from './SuccessMetricsTracker';
 
 // ============================================================================
 // INTERFACES
@@ -339,19 +340,30 @@ const VersionHistoryPanel: React.FC<VersionHistoryPanelProps> = ({
                   </div>
 
                   {/* Expanded Details */}
-                  {selectedVersion?.id === version.id && version.atsScore && (
-                    <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
-                      <h6 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">Score Breakdown</h6>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {Object.entries(version.atsScore.criteria).map(([key, value]) => (
-                          <div key={key} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded">
-                            <span className="capitalize">{key}</span>
-                            <span className={`font-bold ${value.passed ? 'text-green-600' : 'text-red-600'}`}>
-                              {value.score}%
-                            </span>
+                  {selectedVersion?.id === version.id && (
+                    <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 space-y-4">
+                      {/* Score Breakdown */}
+                      {version.atsScore && (
+                        <div className="space-y-2">
+                          <h6 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">Score Breakdown</h6>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            {Object.entries(version.atsScore.criteria).map(([key, value]) => (
+                              <div key={key} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded">
+                                <span className="capitalize">{key}</span>
+                                <span className={`font-bold ${value.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                  {value.score}%
+                                </span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      )}
+
+                      {/* Success Metrics Tracker */}
+                      <SuccessMetricsTracker
+                        version={version}
+                        onUpdate={loadVersions}
+                      />
                     </div>
                   )}
                 </div>
