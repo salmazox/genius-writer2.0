@@ -353,6 +353,19 @@ const CvBuilder: React.FC = () => {
         showToast('Job description analyzed successfully', 'success');
     };
 
+    const handleGenerateCV = (generatedCV: Partial<CVData>) => {
+        setCvData(prev => ({
+            ...prev,
+            personal: generatedCV.personal ? { ...prev.personal, ...generatedCV.personal } : prev.personal,
+            experience: generatedCV.experience || prev.experience,
+            education: generatedCV.education || prev.education,
+            skills: generatedCV.skills || prev.skills,
+            certifications: generatedCV.certifications || prev.certifications,
+            languages: generatedCV.languages || prev.languages
+        }));
+        showToast('CV generated successfully! Review and customize as needed.', 'success');
+    };
+
     const completionScore = (() => {
         let score = 0;
         if (cvData.personal.fullName) score += 10;
@@ -459,6 +472,7 @@ const CvBuilder: React.FC = () => {
                                 value={jobDescription}
                                 onChange={setJobDescription}
                                 onAnalyzed={handleJobDescriptionAnalyzed}
+                                onGenerateCV={handleGenerateCV}
                             />
 
                             {/* Enhanced ATS Score */}

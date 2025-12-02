@@ -6,9 +6,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Building, Sparkles, X, RefreshCw, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
-import { generateContent } from '../../services/gemini';
-import { ToolType } from '../../types';
+import { Briefcase, Building, Sparkles, X, RefreshCw, AlertCircle, CheckCircle, Loader2, Wand2 } from 'lucide-react';
+import { generateContent, generateCVFromJobDescription } from '../../services/gemini';
+import { ToolType, CVData } from '../../types';
 
 // ============================================================================
 // INTERFACES
@@ -27,6 +27,7 @@ interface JobDescriptionPanelProps {
   value: string;
   onChange: (value: string) => void;
   onAnalyzed?: (data: JobDescriptionData) => void;
+  onGenerateCV?: (cvData: Partial<CVData>) => void;
   className?: string;
 }
 
@@ -38,10 +39,12 @@ const JobDescriptionPanel: React.FC<JobDescriptionPanelProps> = ({
   value,
   onChange,
   onAnalyzed,
+  onGenerateCV,
   className = ''
 }) => {
   const [jobDescData, setJobDescData] = useState<JobDescriptionData | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [autoAnalyzeTriggered, setAutoAnalyzeTriggered] = useState(false);
 
@@ -140,6 +143,23 @@ Rules:
     setJobDescData(null);
     setAutoAnalyzeTriggered(false);
     analyzeJobDescription(value);
+  };
+
+  const handleGenerateCV = async () => {
+    if (!value || !onGenerateCV) return;
+
+    setIsGenerating(true);
+    setError(null);
+
+    try {
+      const generatedCV = await generateCVFromJobDescription(value);
+      onGenerateCV(generatedCV);
+    } catch (err) {
+      console.error('CV generation error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate CV');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -320,7 +340,7 @@ We are looking for a Senior Software Engineer with 5+ years of experience in Rea
             )}
 
             {/* Actions */}
-            <div className="pt-2 border-t border-green-200 dark:border-slate-700">
+            <div className="pt-2 border-t border-green-200 dark:border-slate-700 flex items-center justify-between gap-4">
               <button
                 onClick={handleReanalyze}
                 disabled={isAnalyzing}
@@ -329,6 +349,26 @@ We are looking for a Senior Software Engineer with 5+ years of experience in Rea
                 <RefreshCw size={12} />
                 Re-analyze
               </button>
+
+              {onGenerateCV && (
+                <button
+                  onClick={handleGenerateCV}
+                  disabled={isGenerating || isAnalyzing}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-400 disabled:to-slate-500 text-white rounded-lg text-xs font-bold transition-all disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Generating CV...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 size={14} />
+                      Generate CV from This Job
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>

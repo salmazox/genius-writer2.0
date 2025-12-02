@@ -899,6 +899,153 @@ Begin extraction:`
     }
 };
 
+/**
+ * Generate a complete CV from a job description
+ * Uses AI to create realistic, ATS-optimized CV content tailored to the job
+ */
+export const generateCVFromJobDescription = async (
+    jobDescription: string,
+    userGuidance?: { industry?: string; experience?: string; name?: string },
+    signal?: AbortSignal
+): Promise<Partial<CVData>> => {
+    checkOnline();
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
+
+    checkUsageAllowance('word');
+
+    try {
+        const guidanceText = userGuidance
+            ? `\n\nUser Guidance:
+- Name: ${userGuidance.name || 'Alex Morgan'}
+- Industry: ${userGuidance.industry || 'From job description'}
+- Experience Level: ${userGuidance.experience || 'Mid-Senior (5-8 years)'}`
+            : '';
+
+        const response = await withRetry(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-2.5-pro',
+                contents: `You are an expert CV/resume writer and career coach. Generate a complete, ATS-optimized CV tailored to the following job description.
+
+JOB DESCRIPTION:
+${jobDescription}${guidanceText}
+
+IMPORTANT RULES:
+1. Create realistic, quantifiable achievements (use percentages, dollar amounts, metrics)
+2. Use strong action verbs (Led, Spearheaded, Architected, Optimized, etc.)
+3. Tailor ALL content to match the job description's requirements
+4. Include keywords from the job description naturally
+5. Make the candidate seem qualified but not overqualified
+6. Use HTML bullet points (<ul><li>) for descriptions
+7. Include 2-3 relevant experience entries
+8. Include 2 education entries (Bachelor's + relevant certification or Master's)
+9. Include 12-15 skills that match the job requirements
+10. Write a compelling 60-80 word professional summary
+11. Generate realistic dates (current year backwards)
+12. Include contact information
+
+OUTPUT FORMAT (strict JSON):
+{
+  "personal": {
+    "fullName": "string",
+    "email": "string (professional)",
+    "phone": "string (format: +1 555 0192)",
+    "address": "string (City, State/Country)",
+    "linkedin": "string (format: in/username)",
+    "jobTitle": "string (matches the job or similar)",
+    "summary": "string (60-80 words, compelling, tailored to job)"
+  },
+  "experience": [
+    {
+      "title": "string",
+      "company": "string (realistic company name)",
+      "location": "string",
+      "startDate": "YYYY-MM",
+      "endDate": "Present or YYYY-MM",
+      "current": boolean,
+      "description": "<ul><li>Achievement with quantifiable result (e.g., increased X by 40%)</li><li>Another achievement with metrics</li><li>Technical accomplishment relevant to job</li></ul>"
+    }
+  ],
+  "education": [
+    {
+      "degree": "string (Bachelor's/Master's)",
+      "field": "string (relevant to job)",
+      "institution": "string (realistic university)",
+      "location": "string",
+      "graduationDate": "YYYY",
+      "gpa": "3.7" (optional, only if impressive),
+      "description": "string (honors, relevant coursework, activities)"
+    }
+  ],
+  "skills": ["skill1", "skill2", ...] (12-15 skills matching job requirements),
+  "certifications": [
+    {
+      "name": "string (relevant certification)",
+      "issuer": "string (certifying body)",
+      "date": "YYYY-MM",
+      "expiryDate": "YYYY-MM" (optional),
+      "credentialId": "string" (optional)
+    }
+  ] (include 1-2 relevant certs, or empty array if none apply),
+  "languages": [
+    {
+      "name": "English",
+      "proficiency": "Native"
+    }
+  ] (include if relevant to job)
+}
+
+Generate the CV now. Return ONLY the JSON, no markdown formatting.`
+            });
+        }, 3, 1000, signal);
+
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+        const text = response.text || "{}";
+        trackUsage(text);
+
+        // Clean up response and parse JSON
+        let jsonStr = text.trim();
+        // Remove markdown code blocks if present
+        jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
+
+        const cvData = JSON.parse(jsonStr);
+
+        // Ensure IDs are generated for array items
+        if (cvData.experience) {
+            cvData.experience = cvData.experience.map((exp: any) => ({
+                ...exp,
+                id: Date.now().toString() + Math.random()
+            }));
+        }
+        if (cvData.education) {
+            cvData.education = cvData.education.map((edu: any) => ({
+                ...edu,
+                id: Date.now().toString() + Math.random()
+            }));
+        }
+        if (cvData.certifications) {
+            cvData.certifications = cvData.certifications.map((cert: any) => ({
+                ...cert,
+                id: Date.now().toString() + Math.random()
+            }));
+        }
+        if (cvData.languages) {
+            cvData.languages = cvData.languages.map((lang: any) => ({
+                ...lang,
+                id: Date.now().toString() + Math.random()
+            }));
+        }
+
+        return cvData;
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        console.error("CV Generation Error", e);
+        throw new Error("Failed to generate CV from job description. Please try again or provide more details.");
+    }
+};
+
 export const factCheck = async (
     content: string,
     signal?: AbortSignal
