@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft, Lightbulb } from 'lucide-react';
+import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Check, Upload, FileText, Mail, Sparkles, Loader2, Lock, ArrowLeft, Lightbulb, Linkedin } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
-import { generateContent, analyzeATS, parseResume, generateCoverLetter } from '../services/gemini';
+import { generateContent, analyzeATS, parseResume, generateCoverLetter, parseLinkedInProfile } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { ToolType, CVData, CVTheme, ATSAnalysis, CVExperience } from '../types';
 import { Button } from '../components/ui/Button';
@@ -69,6 +69,7 @@ const CvBuilder: React.FC = () => {
     const cvPreviewRef = useRef<HTMLDivElement>(null);
     const coverLetterRef = useRef<HTMLDivElement>(null);
     const importInputRef = useRef<HTMLInputElement>(null);
+    const linkedinImportInputRef = useRef<HTMLInputElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
     // Debounce for Auto-Save (Longer delay)
@@ -172,6 +173,44 @@ const CvBuilder: React.FC = () => {
             } catch (err: any) {
                 console.error(err);
                 showToast(err.message || t('dashboard.toasts.importFail'), "error");
+            } finally {
+                setIsImporting(false);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleImportLinkedIn = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            showToast("Please upload a screenshot (PNG/JPG) of your LinkedIn profile.", "info");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+            setIsImporting(true);
+            try {
+                const base64 = reader.result as string;
+                const parsedData = await parseLinkedInProfile(base64);
+
+                // Merge parsed data with defaults, including certifications and languages
+                setCvData(prev => ({
+                    ...prev,
+                    personal: { ...prev.personal, ...parsedData.personal },
+                    experience: parsedData.experience?.map((e: any) => ({ ...e, id: Date.now().toString() + Math.random() })) || prev.experience,
+                    education: parsedData.education?.map((e: any) => ({ ...e, id: Date.now().toString() + Math.random() })) || prev.education,
+                    skills: parsedData.skills || prev.skills,
+                    certifications: parsedData.certifications?.map((c: any) => ({ ...c, id: Date.now().toString() + Math.random() })) || prev.certifications,
+                    languages: parsedData.languages?.map((l: any) => ({ ...l, id: Date.now().toString() + Math.random() })) || prev.languages
+                }));
+
+                showToast('LinkedIn profile imported successfully! 🎉', "success");
+            } catch (err: any) {
+                console.error(err);
+                showToast(err.message || 'Failed to import LinkedIn profile', "error");
             } finally {
                 setIsImporting(false);
             }
@@ -355,8 +394,20 @@ const CvBuilder: React.FC = () => {
                      {viewMode === 'cv' && (
                          <>
                             <input type="file" ref={importInputRef} className="hidden" accept="image/*" onChange={handleImportCV} />
+                            <input type="file" ref={linkedinImportInputRef} className="hidden" accept="image/*" onChange={handleImportLinkedIn} />
+
                             <Button size="sm" variant="secondary" onClick={() => importInputRef.current?.click()} icon={Upload} isLoading={isImporting} className="hidden md:flex">
                                 Import
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => linkedinImportInputRef.current?.click()}
+                                isLoading={isImporting}
+                                className="hidden lg:flex"
+                            >
+                                <Linkedin size={16} className="mr-2"/>
+                                LinkedIn
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => setShowAtsSidebar(!showAtsSidebar)} className="hidden md:flex">
                                 <Target size={16} className="mr-2"/> {showAtsSidebar ? 'Hide ATS' : 'ATS Tool'}

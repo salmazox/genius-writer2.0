@@ -659,6 +659,131 @@ export const parseResume = async (
     }
 };
 
+/**
+ * Parse LinkedIn profile screenshot with optimized prompting
+ * Specifically designed for LinkedIn's profile layout
+ */
+export const parseLinkedInProfile = async (
+    base64Image: string,
+    signal?: AbortSignal
+): Promise<Partial<CVData>> => {
+    checkOnline();
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+    checkUsageAllowance('word');
+
+    // Dynamically detect MIME type and extract clean base64 data
+    let mimeType = 'image/png';
+    let cleanedBase64 = base64Image;
+
+    const matches = base64Image.match(/^data:(.+);base64,(.+)$/);
+    if (matches) {
+        mimeType = matches[1];
+        cleanedBase64 = matches[2];
+    } else {
+        const commaIndex = base64Image.indexOf(',');
+        if (commaIndex !== -1) {
+            cleanedBase64 = base64Image.substring(commaIndex + 1);
+        }
+    }
+
+    try {
+        const response = await withRetry(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType: mimeType, data: cleanedBase64 } },
+                        {
+                            text: `You are viewing a screenshot of a LinkedIn profile. Extract ALL visible information thoroughly.
+
+IMPORTANT: LinkedIn profiles have a specific layout:
+- Top section: Name, headline, location, profile photo
+- About section: Professional summary
+- Experience section: Job titles, companies, dates, descriptions
+- Education section: Degrees, schools, years
+- Skills section: Listed skills (often many)
+- Sometimes: Certifications, languages, volunteer work
+
+Extract everything into this JSON structure:
+{
+  "personal": {
+    "fullName": "Full name from profile",
+    "email": "Email if visible (often not shown)",
+    "phone": "Phone if visible (rarely shown)",
+    "address": "City, State/Country from location",
+    "website": "",
+    "linkedin": "linkedin.com/in/username (construct if you see the profile)",
+    "jobTitle": "Current headline/title from top of profile",
+    "summary": "Content from About section - extract in full"
+  },
+  "experience": [
+    {
+      "title": "Job title",
+      "company": "Company name",
+      "location": "City, State",
+      "startDate": "MM/YYYY or Month YYYY",
+      "endDate": "MM/YYYY or Present",
+      "current": true if currently working here,
+      "description": "Job description if visible - bullet points or paragraphs"
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree name and field",
+      "school": "University/School name",
+      "location": "City, State",
+      "year": "Graduation year or date range"
+    }
+  ],
+  "skills": ["skill1", "skill2", "skill3", ...],
+  "certifications": [
+    {
+      "name": "Certification name",
+      "issuer": "Issuing organization",
+      "date": "Issue date",
+      "url": "",
+      "description": ""
+    }
+  ],
+  "languages": [
+    {
+      "language": "Language name",
+      "proficiency": "Native/Fluent/Professional/Basic"
+    }
+  ]
+}
+
+Rules:
+1. Extract EVERYTHING visible - be thorough
+2. For dates: Use LinkedIn's format if visible (e.g., "Jan 2020" or "2020")
+3. If a field is not visible, use empty string ""
+4. For skills: Extract all visible skills, LinkedIn often shows many
+5. For summary: Extract the entire "About" section verbatim
+6. For experience descriptions: Extract full descriptions if visible
+7. Construct LinkedIn URL as "linkedin.com/in/[visible-username]" if you can see it
+8. Return ONLY valid JSON, no extra text or markdown
+
+Begin extraction:`
+                        }
+                    ]
+                }
+            });
+        }, 3, 1000, signal);
+
+        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+
+        const text = response.text || "{}";
+        trackUsage(text);
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+    } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") throw e;
+        console.error("LinkedIn Profile Parsing Error", e);
+        throw new Error("Failed to parse LinkedIn profile. Please ensure the screenshot clearly shows your profile information.");
+    }
+};
+
 export const factCheck = async (
     content: string,
     signal?: AbortSignal
@@ -667,7 +792,7 @@ export const factCheck = async (
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
     if (!apiLimiter.tryAcquire()) throw new Error("Rate limit exceeded.");
-    
+
     checkUsageAllowance('word');
 
     try {
