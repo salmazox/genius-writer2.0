@@ -23,6 +23,7 @@ import CvPreview from './cv/CvPreview';
 import CvAtsSidebar from './cv/CvAtsSidebar';
 import CvAiCoach from './cv/CvAiCoach';
 import JobDescriptionPanel, { type JobDescriptionData } from './cv/JobDescriptionPanel';
+import CoverLetterPanel from './cv/CoverLetterPanel';
 
 // Professional Color Themes
 const CV_THEMES: CVTheme[] = [
@@ -618,36 +619,12 @@ const CvBuilder: React.FC = () => {
                 </div>
             ) : (
                 /* Cover Letter View */
-                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                    <div className="w-full lg:w-96 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col">
-                         <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Job Details</h2>
-                         <p className="text-sm text-slate-500 mb-4">Paste the job description here. We'll use your CV details to write a tailored cover letter.</p>
-                         
-                         <textarea 
-                             className="flex-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 resize-none mb-4 focus:ring-2 focus:ring-indigo-500 text-sm" 
-                             placeholder="Paste Job Description here..." 
-                             value={jobDescription} 
-                             onChange={(e) => setJobDescription(e.target.value)} 
-                         />
-                         
-                         <Button onClick={handleGenerateCoverLetter} isLoading={isGeneratingLetter} icon={Sparkles} className="w-full">
-                             Generate Letter
-                         </Button>
-                    </div>
-                    <div className="flex-1 bg-slate-100 dark:bg-slate-950 p-8 overflow-y-auto flex justify-center custom-scrollbar pb-24 lg:pb-8">
-                        <div className="w-full max-w-[210mm] bg-white dark:bg-slate-900 shadow-2xl min-h-[297mm] p-12 relative" ref={coverLetterRef}>
-                             {!isPro && <Watermark />}
-                             {coverLetterContent ? (
-                                 <RichTextEditor value={coverLetterContent} onChange={setCoverLetterContent} className="min-h-full border-none" />
-                             ) : (
-                                 <div className="h-full flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
-                                     <Mail size={48} className="mb-4 opacity-50" />
-                                     <p>Cover letter preview will appear here</p>
-                                 </div>
-                             )}
-                        </div>
-                    </div>
-                </div>
+                <CoverLetterPanel
+                    cvData={cvData}
+                    jobDescription={jobDescription}
+                    onClose={() => setViewMode('cv')}
+                    className="flex-1"
+                />
             )}
         </div>
     );
