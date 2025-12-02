@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { 
-    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square, Copy
+import {
+    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square, Copy, Shield
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { ShareModal } from '../components/ShareModal';
+import PlagiarismPanel from '../components/PlagiarismPanel';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
@@ -37,7 +38,7 @@ const SmartEditor: React.FC = () => {
     const [content, setContent] = useLocalStorage<string>('smart_editor_content', '');
     const [title, setTitle] = useLocalStorage<string>('smart_editor_title', 'Untitled Document');
     const [currentDoc, setCurrentDoc] = useState<SavedDocument | null>(null);
-    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | null>(null); // Default closed
+    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | 'plagiarism' | null>(null); // Default closed
     
     const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
         { id: '1', role: 'model', text: 'Hi! I am your AI writing companion. I can help you brainstorm, draft, or edit this document. What are we working on today?' }
@@ -425,9 +426,17 @@ const SmartEditor: React.FC = () => {
                         <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
 
                         {/* Sidebar Toggles - Always visible for quick access */}
-                        <button 
-                            onClick={() => setActiveSidebar(activeSidebar === 'seo' ? null : 'seo')} 
-                            className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'seo' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`} 
+                        <button
+                            onClick={() => setActiveSidebar(activeSidebar === 'plagiarism' ? null : 'plagiarism')}
+                            className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'plagiarism' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                            title="Originality Check"
+                        >
+                            <Shield size={20} />
+                        </button>
+
+                        <button
+                            onClick={() => setActiveSidebar(activeSidebar === 'seo' ? null : 'seo')}
+                            className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'seo' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
                             title="SEO Analysis"
                         >
                             <Search size={20} />
@@ -526,6 +535,23 @@ const SmartEditor: React.FC = () => {
                         </>
                     )}
 
+                    {/* Plagiarism Sidebar Content */}
+                    {activeSidebar === 'plagiarism' && (
+                        <>
+                            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
+                                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2"><Shield size={16} className="text-indigo-600"/> Originality Check</h3>
+                                <button onClick={() => setActiveSidebar(null)} className="lg:hidden" aria-label="Close Sidebar"><X size={20} className="text-slate-400"/></button>
+                            </div>
+
+                            <div className="p-4 flex-1 overflow-y-auto">
+                                <PlagiarismPanel
+                                    content={content}
+                                    toolType={ToolType.SMART_EDITOR}
+                                />
+                            </div>
+                        </>
+                    )}
+
                     {/* SEO Sidebar Content */}
                     {activeSidebar === 'seo' && (
                         <>
@@ -533,11 +559,11 @@ const SmartEditor: React.FC = () => {
                                 <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2"><Search size={16} className="text-indigo-600"/> SEO Analysis</h3>
                                 <button onClick={() => setActiveSidebar(null)} className="lg:hidden" aria-label="Close Sidebar"><X size={20} className="text-slate-400"/></button>
                             </div>
-                            
+
                             <div className="p-4 flex-1 overflow-y-auto">
                                 <div className="mb-6">
                                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Target Keywords</label>
-                                    <textarea 
+                                    <textarea
                                         value={seoKeywords}
                                         onChange={(e) => setSeoKeywords(e.target.value)}
                                         placeholder="Enter keywords (comma separated)..."
