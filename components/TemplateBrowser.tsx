@@ -48,6 +48,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
   const [selectedTemplate, setSelectedTemplate] = useState<ContentTemplate | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [difficultyFilter, setDifficultyFilter] = useState<string[]>([]);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
 
   const categories = getCategoriesWithCounts();
 
@@ -86,6 +87,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
 
   const handleSelectTemplate = (template: ContentTemplate) => {
     setSelectedTemplate(template);
+    setShowMobilePreview(true); // Show preview on mobile
   };
 
   const handleUseTemplate = () => {
@@ -93,6 +95,11 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
       onSelectTemplate(selectedTemplate);
       onClose();
     }
+  };
+
+  const handleCloseMobilePreview = () => {
+    setShowMobilePreview(false);
+    setSelectedTemplate(null);
   };
 
   const toggleDifficultyFilter = (difficulty: string) => {
@@ -107,26 +114,26 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} size="lg" title="">
       <div className="h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Sparkles size={24} className="text-indigo-600" />
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">
+        <div className="p-4 md:p-6 border-b border-slate-200">
+          <div className="flex items-start md:items-center justify-between mb-4 gap-3">
+            <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+              <Sparkles size={20} className="text-indigo-600 flex-shrink-0 md:w-6 md:h-6" />
+              <div className="min-w-0">
+                <h2 className="text-lg md:text-2xl font-bold text-slate-900 truncate">
                   Content Templates
                 </h2>
-                <p className="text-sm text-slate-600">
-                  {filteredTemplates.length} templates • Start with proven structures
+                <p className="text-xs md:text-sm text-slate-600 truncate">
+                  {filteredTemplates.length} templates
                 </p>
               </div>
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+              className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm font-semibold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors flex-shrink-0"
             >
-              <Filter size={16} />
-              Filters
-              {showFilters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              <Filter size={14} className="md:w-4 md:h-4" />
+              <span className="hidden sm:inline">Filters</span>
+              {showFilters ? <ChevronUp size={12} className="md:w-3.5 md:h-3.5" /> : <ChevronDown size={12} className="md:w-3.5 md:h-3.5" />}
             </button>
           </div>
 
@@ -150,12 +157,12 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                 <label className="block text-xs font-bold text-slate-700 mb-2 uppercase">
                   Difficulty Level
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {['beginner', 'intermediate', 'advanced'].map(difficulty => (
                     <button
                       key={difficulty}
                       onClick={() => toggleDifficultyFilter(difficulty)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                      className={`px-2.5 md:px-3 py-1 md:py-1.5 text-xs font-semibold rounded-lg transition-colors ${
                         difficultyFilter.includes(difficulty)
                           ? 'bg-indigo-600 text-white'
                           : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
@@ -203,7 +210,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-hidden flex">
           {/* Template Grid */}
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className={`flex-1 p-4 md:p-6 overflow-y-auto ${selectedTemplate && !showMobilePreview ? 'hidden lg:block' : ''}`}>
             {filteredTemplates.length === 0 ? (
               <div className="text-center py-12">
                 <Search size={48} className="mx-auto text-slate-300 mb-4" />
@@ -213,12 +220,12 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
                 {filteredTemplates.map(template => (
                   <button
                     key={template.id}
                     onClick={() => handleSelectTemplate(template)}
-                    className={`p-4 rounded-lg border-2 text-left transition-all hover:shadow-md ${
+                    className={`p-3 md:p-4 rounded-lg border-2 text-left transition-all hover:shadow-md ${
                       selectedTemplate?.id === template.id
                         ? 'border-indigo-500 bg-indigo-50'
                         : 'border-slate-200 hover:border-slate-300'
@@ -282,9 +289,9 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
             )}
           </div>
 
-          {/* Template Preview Sidebar */}
+          {/* Template Preview Sidebar - Desktop */}
           {selectedTemplate && (
-            <div className="w-96 border-l border-slate-200 p-6 overflow-y-auto bg-slate-50">
+            <div className="hidden lg:block w-96 border-l border-slate-200 p-6 overflow-y-auto bg-slate-50">
               <div className="mb-4">
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-4xl">{selectedTemplate.thumbnail}</span>
@@ -366,6 +373,108 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
               >
                 Use This Template
               </Button>
+            </div>
+          )}
+
+          {/* Mobile Template Preview - Full Screen Overlay */}
+          {selectedTemplate && showMobilePreview && (
+            <div className="lg:hidden fixed inset-0 bg-white z-50 overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between">
+                <button
+                  onClick={handleCloseMobilePreview}
+                  className="flex items-center gap-2 text-slate-600 hover:text-slate-900"
+                >
+                  ← Back
+                </button>
+                <span className="text-sm font-semibold text-slate-900">Template Details</span>
+                <div className="w-16"></div>
+              </div>
+
+              <div className="p-4">
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-4xl">{selectedTemplate.thumbnail}</span>
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900">
+                        {selectedTemplate.name}
+                      </h3>
+                      <p className="text-sm text-slate-600">
+                        {selectedTemplate.category}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-slate-700 leading-relaxed">
+                    {selectedTemplate.description}
+                  </p>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
+                      Use Cases
+                    </label>
+                    <ul className="space-y-1">
+                      {selectedTemplate.useCases.map((useCase, idx) => (
+                        <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
+                          <span className="text-indigo-600 mt-1">•</span>
+                          <span>{useCase}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
+                      Details
+                    </label>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Difficulty:</span>
+                        <span className="font-semibold text-slate-900 capitalize">
+                          {selectedTemplate.difficulty}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Time:</span>
+                        <span className="font-semibold text-slate-900">
+                          ~{selectedTemplate.estimatedTime} minutes
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Industry:</span>
+                        <span className="font-semibold text-slate-900 capitalize">
+                          {selectedTemplate.industry}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
+                      Tags
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedTemplate.tags.map(tag => (
+                        <span
+                          key={tag}
+                          className="text-xs px-2 py-1 bg-slate-200 text-slate-700 rounded"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="sticky bottom-0 bg-white pt-4 pb-safe">
+                  <Button
+                    onClick={handleUseTemplate}
+                    className="w-full"
+                  >
+                    Use This Template
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>

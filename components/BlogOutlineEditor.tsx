@@ -150,32 +150,32 @@ export const BlogOutlineEditor: React.FC<BlogOutlineEditorProps> = ({
       )}
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-4 gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 p-3 md:p-4 bg-slate-50 rounded-lg border border-slate-200">
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <List size={14} className="text-slate-500" />
-            <span className="text-xs font-semibold text-slate-600">Sections</span>
+            <List size={12} className="text-slate-500 md:w-3.5 md:h-3.5" />
+            <span className="text-[10px] md:text-xs font-semibold text-slate-600">Sections</span>
           </div>
-          <div className="text-2xl font-bold text-slate-900">{stats.totalSections}</div>
+          <div className="text-xl md:text-2xl font-bold text-slate-900">{stats.totalSections}</div>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Hash size={14} className="text-slate-500" />
-            <span className="text-xs font-semibold text-slate-600">Subheadings</span>
+            <Hash size={12} className="text-slate-500 md:w-3.5 md:h-3.5" />
+            <span className="text-[10px] md:text-xs font-semibold text-slate-600">Subheadings</span>
           </div>
-          <div className="text-2xl font-bold text-slate-900">{stats.totalSubheadings}</div>
+          <div className="text-xl md:text-2xl font-bold text-slate-900">{stats.totalSubheadings}</div>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <FileText size={14} className="text-slate-500" />
-            <span className="text-xs font-semibold text-slate-600">Words</span>
+            <FileText size={12} className="text-slate-500 md:w-3.5 md:h-3.5" />
+            <span className="text-[10px] md:text-xs font-semibold text-slate-600">Words</span>
           </div>
-          <div className="text-2xl font-bold text-slate-900">~{stats.estimatedWords}</div>
+          <div className="text-xl md:text-2xl font-bold text-slate-900">~{stats.estimatedWords}</div>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-1">
-            <Clock size={14} className="text-slate-500" />
-            <span className="text-xs font-semibold text-slate-600">Read Time</span>
+            <Clock size={12} className="text-slate-500 md:w-3.5 md:h-3.5" />
+            <span className="text-[10px] md:text-xs font-semibold text-slate-600">Read Time</span>
           </div>
           <div className="text-2xl font-bold text-slate-900">{stats.estimatedReadTime}m</div>
         </div>
