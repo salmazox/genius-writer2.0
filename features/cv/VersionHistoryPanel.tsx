@@ -34,6 +34,7 @@ import {
 } from '../../services/versionHistory';
 import { CVData } from '../../types';
 import SuccessMetricsTracker from './SuccessMetricsTracker';
+import MetricsComparisonChart from './MetricsComparisonChart';
 
 // ============================================================================
 // INTERFACES
@@ -241,6 +242,9 @@ const VersionHistoryPanel: React.FC<VersionHistoryPanelProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Metrics Comparison Chart */}
+            <MetricsComparisonChart versions={versions} />
 
             {/* Version List */}
             <div className="space-y-3">
