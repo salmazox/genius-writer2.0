@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
-    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square, Copy, Shield, Clock, BookOpen, List, FileText
+    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square, Copy, Shield, Clock, BookOpen, List, FileText, Palette
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
@@ -13,6 +13,8 @@ import ActivityFeed from '../components/ActivityFeed';
 import DocumentOutline from '../components/DocumentOutline';
 import ChapterManager from '../components/ChapterManager';
 import TableOfContents from '../components/TableOfContents';
+import BrandKitManager from '../components/BrandKitManager';
+import BrandConsistencyPanel from '../components/BrandConsistencyPanel';
 import PlagiarismPanel from '../components/PlagiarismPanel';
 import SEOPanel from '../components/SEOPanel';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -46,7 +48,7 @@ const SmartEditor: React.FC = () => {
     const [content, setContent] = useLocalStorage<string>('smart_editor_content', '');
     const [title, setTitle] = useLocalStorage<string>('smart_editor_title', 'Untitled Document');
     const [currentDoc, setCurrentDoc] = useState<SavedDocument | null>(null);
-    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | 'plagiarism' | 'activity' | 'outline' | 'chapters' | 'toc' | null>(null); // Default closed
+    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | 'plagiarism' | 'activity' | 'outline' | 'chapters' | 'toc' | 'brandkit' | 'brandcheck' | null>(null); // Default closed
 
     // Collaboration state
     const [showCollaborationShare, setShowCollaborationShare] = useState(false);
@@ -437,6 +439,25 @@ const SmartEditor: React.FC = () => {
                         
                         <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
 
+                        {/* Brand Kit Tools */}
+                        <button
+                            onClick={() => setActiveSidebar(activeSidebar === 'brandkit' ? null : 'brandkit')}
+                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'brandkit' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                            title="Brand Kit"
+                        >
+                            <Palette size={20} />
+                        </button>
+
+                        <button
+                            onClick={() => setActiveSidebar(activeSidebar === 'brandcheck' ? null : 'brandcheck')}
+                            className={`p-2 rounded-lg transition-colors ${activeSidebar === 'brandcheck' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                            title="Brand Consistency"
+                        >
+                            <ShieldCheck size={20} />
+                        </button>
+
+                        <div className="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
                         {/* Long-Form Writing Tools */}
                         <button
                             onClick={() => setActiveSidebar(activeSidebar === 'chapters' ? null : 'chapters')}
@@ -671,6 +692,25 @@ const SmartEditor: React.FC = () => {
                     {activeSidebar === 'toc' && (
                         <div className="h-full overflow-hidden">
                             <TableOfContents
+                                content={content}
+                                onClose={() => setActiveSidebar(null)}
+                            />
+                        </div>
+                    )}
+
+                    {/* Brand Kit Manager Sidebar Content */}
+                    {activeSidebar === 'brandkit' && (
+                        <div className="h-full overflow-hidden">
+                            <BrandKitManager
+                                onClose={() => setActiveSidebar(null)}
+                            />
+                        </div>
+                    )}
+
+                    {/* Brand Consistency Panel Sidebar Content */}
+                    {activeSidebar === 'brandcheck' && (
+                        <div className="h-full overflow-hidden">
+                            <BrandConsistencyPanel
                                 content={content}
                                 onClose={() => setActiveSidebar(null)}
                             />
