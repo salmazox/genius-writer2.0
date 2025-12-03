@@ -16,9 +16,10 @@ export const ToolGridItem: React.FC<ToolGridItemProps> = React.memo(({ tool, onC
 
     return (
         <div className="relative group h-full">
-            <button 
+            <button
                 onClick={onClick}
                 className="w-full flex flex-col items-start p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:shadow-lg hover:-translate-y-1 hover:border-indigo-500/50 transition-all duration-300 text-left h-full"
+                data-tour="tool-card"
             >
                 <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors mb-4">
                     <Icon size={24} />

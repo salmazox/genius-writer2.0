@@ -49,7 +49,7 @@ export const DashboardDocuments: React.FC<DashboardDocumentsProps> = ({
     };
 
     return (
-        <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-180px)] md:h-[calc(100vh-200px)] animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-180px)] md:h-[calc(100vh-200px)] animate-in fade-in duration-500" data-tour="documents-section">
             {/* Folders & Tags Sidebar */}
             {/* Mobile: Constrained height to allow grid visibility. Desktop: Full height sidebar */}
             <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1 max-h-[35vh] md:max-h-full border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-800 pb-4 md:pb-0">

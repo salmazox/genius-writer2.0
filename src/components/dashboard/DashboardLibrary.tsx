@@ -27,7 +27,7 @@ export const DashboardLibrary: React.FC<DashboardLibraryProps> = ({
     }
 
     return (
-       <div className="space-y-10 pb-10 animate-in slide-in-from-bottom-4 duration-500">
+       <div className="space-y-10 pb-10 animate-in slide-in-from-bottom-4 duration-500" data-tour="tools-grid">
 
         {/* Tool Count Banner */}
         {!searchQuery && (

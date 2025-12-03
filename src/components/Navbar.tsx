@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Sun, Moon, User } from 'lucide-react';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { Logo } from './Logo';
+import { HelpButton } from './help/HelpButton';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -99,11 +100,14 @@ const Navbar: React.FC = () => {
               </button>
             </div>
 
-            <Link 
-              to="/user-dashboard" 
-              className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors" 
+            <HelpButton variant="icon" />
+
+            <Link
+              to="/user-dashboard"
+              className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors"
               title="My Account"
               aria-label="User Dashboard"
+              data-tour="user-menu"
             >
                 <User size={20} />
             </Link>
