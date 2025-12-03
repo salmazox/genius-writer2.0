@@ -18,6 +18,7 @@ import { Watermark } from '../components/Watermark';
 import { sanitizeHtml } from '../utils/security';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { usePdfExport } from '../hooks/usePdfExport';
+import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import HashtagSuggestions from '../components/HashtagSuggestions';
 import SocialMediaPreview from '../components/SocialMediaPreview';
 import { SocialPlatform } from '../services/hashtagGenerator';
@@ -55,6 +56,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const { brandVoices, selectedVoiceId, setSelectedVoiceId, user } = useUser();
     const copyToClipboard = useCopyToClipboard();
     const exportToPdf = usePdfExport();
+    const { isPlaying, isGenerating: isGeneratingAudio, play: playAudio, stop: stopAudio } = useAudioPlayer();
     const [mobileTab, setMobileTab] = useState<'input' | 'result'>('input');
 
     // Updated type to support nested arrays from repeater
@@ -64,13 +66,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [showVoiceManager, setShowVoiceManager] = useState(false);
-    
-    // TTS State
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
-    
+
     // Design Template State
     const [template, setTemplate] = useState<'modern' | 'classic' | 'minimal'>('modern');
     const [accentColor, setAccentColor] = useState<string>('#4f46e5');
@@ -128,15 +124,6 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             readTime: Math.ceil(text.trim().split(/\s+/).length / 200)
         };
     }, [documentContent, isImageTool]);
-
-    // Cleanup audio on unmount
-    useEffect(() => {
-        return () => {
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
-            }
-        };
-    }, []);
 
     // Load draft on mount/tool change and cleanup abort controller
     useEffect(() => {
@@ -428,47 +415,9 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         }
     };
 
-    // --- Audio Logic ---
-    const stopAudio = () => {
-        if (audioSourceRef.current) {
-            audioSourceRef.current.stop();
-            audioSourceRef.current = null;
-        }
-        setIsPlaying(false);
-    };
-
+    // Audio playback handler
     const handleListen = async () => {
-        if (isPlaying) {
-            stopAudio();
-            return;
-        }
-
-        if (!documentContent) return;
-        
-        // Strip markdown/HTML for TTS
-        const plainText = documentContent.replace(/<[^>]*>/g, ' ').replace(/[#*_`]/g, '');
-        if (!plainText.trim()) return;
-
-        setIsGeneratingAudio(true);
-        try {
-            const buffer = await generateSpeech(plainText);
-            const ctx = audioContextRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
-            audioContextRef.current = ctx;
-
-            const audioBuffer = await ctx.decodeAudioData(buffer);
-            const source = ctx.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(ctx.destination);
-            
-            source.onended = () => setIsPlaying(false);
-            source.start();
-            audioSourceRef.current = source;
-            setIsPlaying(true);
-        } catch (e) {
-            showToast(t('dashboard.toasts.audioFail'), "error");
-        } finally {
-            setIsGeneratingAudio(false);
-        }
+        await playAudio(documentContent, (error) => showToast(t('dashboard.toasts.audioFail'), "error"));
     };
 
     // --- Template Styles ---
