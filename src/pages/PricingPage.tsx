@@ -93,7 +93,9 @@ const PricingPage: React.FC = () => {
                 <FeatureItem text={t('pricing.features.modelFlash')} />
                 <FeatureItem text={t('pricing.features.templatesBasic')} />
                 <FeatureItem text="1 Project" />
+                <FeatureItem text="Basic SEO analysis" />
                 <FeatureItem text={t('pricing.features.imagesNo')} included={false} />
+                <FeatureItem text="Brand Voice" included={false} />
               </ul>
             </div>
           </div>
@@ -122,10 +124,12 @@ const PricingPage: React.FC = () => {
               <ul className="space-y-3">
                 <FeatureItem text={t('pricing.features.words50k')} />
                 <FeatureItem text={t('pricing.features.modelPro')} />
+                <FeatureItem text="Smart Editor with full SEO analysis" />
                 <FeatureItem text={t('pricing.features.atsAccess')} />
+                <FeatureItem text="Plagiarism detection & readability" />
                 <FeatureItem text={t('pricing.features.images50')} />
                 <FeatureItem text={t('pricing.features.templatesAll')} />
-                <FeatureItem text={t('pricing.features.brandVoices1')} />
+                <FeatureItem text="1 Custom Brand Voice" />
               </ul>
             </div>
           </div>
@@ -150,9 +154,10 @@ const PricingPage: React.FC = () => {
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">Everything in Pro, plus:</p>
                 <ul className="space-y-3">
                     <FeatureItem text={t('pricing.features.words200k')} />
-                    <FeatureItem text={t('pricing.features.seats3')} />
+                    <FeatureItem text="3 Team seats with collaboration" />
                     <FeatureItem text={t('pricing.features.images200')} />
-                    <FeatureItem text={t('pricing.features.brandVoicesUnlim')} />
+                    <FeatureItem text="Unlimited Brand Voices" />
+                    <FeatureItem text="Advanced analysis & reporting" />
                     <FeatureItem text={t('pricing.features.supportPrio')} />
                     <FeatureItem text={t('pricing.features.apiAccess')} />
                 </ul>
@@ -227,6 +232,10 @@ const PricingPage: React.FC = () => {
                             {[
                                 { name: 'Word Limit (Monthly)', free: '2,000', pro: '50,000', agency: '200,000', ent: 'Unlimited' },
                                 { name: 'AI Model', free: 'Gemini Flash', pro: 'Gemini Pro + Flash', agency: 'Gemini Pro + Flash', ent: 'Custom / Ultra' },
+                                { name: 'Smart Editor', free: true, pro: true, agency: true, ent: true },
+                                { name: 'SEO & Readability', free: 'Basic', pro: 'Full', agency: 'Full + Reports', ent: 'Advanced' },
+                                { name: 'ATS Optimization', free: false, pro: true, agency: true, ent: true },
+                                { name: 'Plagiarism Detection', free: false, pro: true, agency: true, ent: true },
                                 { name: 'Image Generation', free: false, pro: '50 / mo', agency: '200 / mo', ent: 'Unlimited' },
                                 { name: 'Brand Voices', free: '0', pro: '1', agency: 'Unlimited', ent: 'Unlimited' },
                                 { name: 'Team Seats', free: '1', pro: '1', agency: '3', ent: 'Unlimited' },

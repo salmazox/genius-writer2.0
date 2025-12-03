@@ -174,8 +174,8 @@ const LandingPage: React.FC = () => {
           <div className="flex flex-wrap justify-center gap-4 md:gap-8 text-sm font-medium text-slate-600 dark:text-slate-400 animate-in slide-in-from-bottom-4 duration-700 delay-100">
               <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> 2,000 FREE words/month</div>
               <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> No credit card</div>
-              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> 18 specialized tools</div>
-              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> Works in browser</div>
+              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> ATS + SEO analysis</div>
+              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> 18 AI tools</div>
           </div>
         </div>
       </section>
@@ -211,10 +211,10 @@ const LandingPage: React.FC = () => {
                       <div className="absolute top-4 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">{t('landing.comparison.bestValue')}</div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t('landing.comparison.withTitle')}</h3>
                       <ul className="space-y-4 mb-8">
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landing.comparison.features.content')}</span></li>
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landing.comparison.features.editor')}</span></li>
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landing.comparison.features.cv')}</span></li>
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landing.comparison.features.trans')}</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>18 AI Tools + Templates</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>Smart Editor + SEO Analysis</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>ATS-Optimized CV Builder</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>Translator + Brand Voice</span></li>
                       </ul>
                       <div className="pt-6 border-t border-indigo-200 dark:border-indigo-800/50">
                           <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider mb-1">{t('landing.comparison.total')}</p>
@@ -360,35 +360,35 @@ const LandingPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FeatureCard 
-              icon={<Globe />} 
+            <FeatureCard
+              icon={<FileText />}
+              title="Smart Long-Form Editor"
+              description="Professional document editor with real-time SEO analysis, plagiarism detection, and readability scoring. Write better content faster."
+            />
+            <FeatureCard
+              icon={<Briefcase />}
+              title="ATS-Optimized CV Builder"
+              description="Build professional resumes with 5 modern templates. Get real-time ATS scoring and keyword optimization to land more interviews."
+            />
+            <FeatureCard
+              icon={<Globe />}
               title={t('features.translate')}
-              description={t('features.translateDesc')}
+              description="Context-aware translation in 50+ languages. Preserves tone, nuance, and formatting for professional communications."
             />
-            <FeatureCard 
-              icon={<FileText />} 
-              title={t('features.cv')}
-              description={t('features.cvDesc')}
-            />
-            <FeatureCard 
-              icon={<Mail />} 
+            <FeatureCard
+              icon={<Mail />}
               title={t('features.email')}
               description={t('features.emailDesc')}
             />
-            <FeatureCard 
-              icon={<PenTool />} 
-              title={t('features.blog')} 
-              description={t('features.blogDesc')}
+            <FeatureCard
+              icon={<PenTool />}
+              title="Brand Voice & Kit"
+              description="Define your brand voice once, use it everywhere. Consistent tone and style across all your AI-generated content."
             />
-            <FeatureCard 
-              icon={<Share2 />} 
+            <FeatureCard
+              icon={<Share2 />}
               title={t('features.social')}
               description={t('features.socialDesc')}
-            />
-            <FeatureCard 
-              icon={<Layers />} 
-              title="And 12 More Tools"
-              description="From Interview Prep to Startup Validator. We have a template for everything."
             />
           </div>
         </div>
@@ -402,9 +402,9 @@ const LandingPage: React.FC = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
-                    { name: "Sarah K.", role: "Content Creator", text: "I cancelled my Jasper subscription. This has everything I need." },
-                    { name: "Marcus T.", role: "Software Engineer", text: "The CV builder got me 3 interviews in one week. ATS optimization works!" },
-                    { name: "Elena R.", role: "Freelancer", text: "I translate client docs daily. This is faster than DeepL and it's included." }
+                    { name: "Sarah K.", role: "Content Creator", text: "The Smart Editor with SEO analysis is a game-changer. I see what needs fixing in real-time." },
+                    { name: "Marcus T.", role: "Software Engineer", text: "The CV builder got me 3 interviews in one week. ATS scoring shows exactly what recruiters want!" },
+                    { name: "Elena R.", role: "Freelancer", text: "Brand Voice saves me hours. Write once, applies everywhere. My clients love the consistency." }
                 ].map((t, i) => (
                     <div key={i} className="bg-slate-50 dark:bg-slate-900 p-8 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-1 text-yellow-400 mb-4">
