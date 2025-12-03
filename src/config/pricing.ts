@@ -16,9 +16,9 @@ export interface SubscriptionPlan {
   name: string;
   tagline: string;
   price: {
-    monthly: number;
-    yearly: number;
-    yearlyMonthly: number; // Monthly price when billed yearly
+    monthly: number; // In EUR
+    yearly: number; // In EUR
+    yearlyMonthly: number; // Monthly price when billed yearly (EUR)
   };
   stripePriceId: {
     monthly: string;
@@ -40,6 +40,9 @@ export interface SubscriptionPlan {
   popular?: boolean;
   badge?: string;
 }
+
+// Currency conversion rate (EUR to USD)
+export const EUR_TO_USD_RATE = 1.09; // Update this regularly or fetch from API
 
 export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
   [SubscriptionTier.FREE]: {
@@ -80,9 +83,9 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     name: 'Starter',
     tagline: 'For individuals and freelancers',
     price: {
-      monthly: 12,
-      yearly: 120,
-      yearlyMonthly: 10
+      monthly: 9.99, // EUR
+      yearly: 99.99, // EUR
+      yearlyMonthly: 8.33 // EUR
     },
     stripePriceId: {
       monthly: 'price_starter_monthly', // Replace with actual Stripe price IDs
@@ -115,9 +118,9 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     name: 'Professional',
     tagline: 'For teams and growing businesses',
     price: {
-      monthly: 29,
-      yearly: 290,
-      yearlyMonthly: 24
+      monthly: 24.99, // EUR
+      yearly: 249.99, // EUR
+      yearlyMonthly: 20.83 // EUR
     },
     stripePriceId: {
       monthly: 'price_pro_monthly',
@@ -150,9 +153,9 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     name: 'Enterprise',
     tagline: 'For large organizations',
     price: {
-      monthly: 99,
-      yearly: 990,
-      yearlyMonthly: 82
+      monthly: 89.99, // EUR
+      yearly: 899.99, // EUR
+      yearlyMonthly: 74.99 // EUR
     },
     stripePriceId: {
       monthly: 'price_enterprise_monthly',
@@ -245,15 +248,37 @@ export function getSavingsPercentage(tier: SubscriptionTier): number {
 }
 
 /**
+ * Convert EUR to USD
+ */
+export function convertEURtoUSD(amountEUR: number): number {
+  return Math.round(amountEUR * EUR_TO_USD_RATE * 100) / 100;
+}
+
+/**
+ * Convert USD to EUR
+ */
+export function convertUSDtoEUR(amountUSD: number): number {
+  return Math.round((amountUSD / EUR_TO_USD_RATE) * 100) / 100;
+}
+
+/**
  * Format price for display
  */
-export function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatPrice(amount: number, currency: 'EUR' | 'USD' = 'EUR'): string {
+  return new Intl.NumberFormat(currency === 'EUR' ? 'de-DE' : 'en-US', {
     style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   }).format(amount);
+}
+
+/**
+ * Format price with currency toggle
+ */
+export function formatPriceWithCurrency(amountEUR: number, displayCurrency: 'EUR' | 'USD'): string {
+  const amount = displayCurrency === 'USD' ? convertEURtoUSD(amountEUR) : amountEUR;
+  return formatPrice(amount, displayCurrency);
 }
 
 /**

@@ -11,7 +11,6 @@ import { Modal } from '../components/ui/Modal';
 import { ShareModal } from '../components/ShareModal';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Forms';
-import { OnboardingTour } from '../components/OnboardingTour';
 import { useDebounce } from '../hooks/useDebounce';
 import { useUser } from '../contexts/UserContext';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -59,9 +58,6 @@ const Dashboard: React.FC = () => {
   const [folders, setFolders] = useState<FolderType[]>([]);
   const [activeFolderId, setActiveFolderId] = useState<string | undefined>(undefined);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  
-  // Onboarding State
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Modal States
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
@@ -89,25 +85,13 @@ const Dashboard: React.FC = () => {
   // Helper to update URL (and thus trigger state update)
   const navigateTo = (params: { tool?: ToolType | null, tab?: 'library' | 'documents' | 'trash' }) => {
       const newParams: Record<string, string> = {};
-      
+
       if (params.tool) {
           newParams.tool = params.tool;
       } else {
           newParams.tab = params.tab || 'library';
       }
       setSearchParams(newParams);
-  };
-
-  useEffect(() => {
-      const hasCompletedOnboarding = localStorage.getItem('genius_writer_onboarding_complete');
-      if (!hasCompletedOnboarding) {
-          setShowOnboarding(true);
-      }
-  }, []);
-
-  const completeOnboarding = () => {
-      localStorage.setItem('genius_writer_onboarding_complete', 'true');
-      setShowOnboarding(false);
   };
 
   const refreshData = () => {
@@ -297,8 +281,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="flex h-full bg-slate-50 dark:bg-slate-950 overflow-hidden font-sans relative">
-      
-      {showOnboarding && <OnboardingTour onComplete={completeOnboarding} />}
 
       {/* Sidebar - Only visible when a tool is active */}
       {activeToolId && (

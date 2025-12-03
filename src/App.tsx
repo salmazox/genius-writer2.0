@@ -6,6 +6,7 @@ import Footer from './components/Footer';
 import { ThemeLanguageProvider } from './contexts/ThemeLanguageContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { UserProvider } from './contexts/UserContext';
+import { OnboardingProvider } from './contexts/OnboardingContext';
 import { Loader2 } from 'lucide-react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -13,6 +14,7 @@ import { ShortcutsModal } from './components/ShortcutsModal';
 import { CommandPalette } from './components/CommandPalette';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { CookieConsent } from './components/CookieConsent';
+import { OnboardingTour } from './components/onboarding/OnboardingTour';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 // Lazy load pages for performance
@@ -94,26 +96,29 @@ const App: React.FC = () => {
     <ThemeLanguageProvider>
       <ToastProvider>
         <UserProvider>
-          <Router>
-            <Layout>
-              <Suspense fallback={<LoadingSpinner />}>
-                <Routes>
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                  <Route path="/user-dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
-                  <Route path="/pricing" element={<PricingPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/product" element={<ProductPage />} />
-                  <Route path="/login" element={<AuthPage />} />
-                  <Route path="/signup" element={<AuthPage />} />
-                  <Route path="/privacy" element={<LegalPage />} />
-                  <Route path="/terms" element={<LegalPage />} />
-                  <Route path="/imprint" element={<LegalPage />} />
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </Suspense>
-            </Layout>
-          </Router>
+          <OnboardingProvider>
+            <Router>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <Routes>
+                    <Route path="/" element={<LandingPage />} />
+                    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                    <Route path="/user-dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+                    <Route path="/pricing" element={<PricingPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/product" element={<ProductPage />} />
+                    <Route path="/login" element={<AuthPage />} />
+                    <Route path="/signup" element={<AuthPage />} />
+                    <Route path="/privacy" element={<LegalPage />} />
+                    <Route path="/terms" element={<LegalPage />} />
+                    <Route path="/imprint" element={<LegalPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </Suspense>
+                <OnboardingTour />
+              </Layout>
+            </Router>
+          </OnboardingProvider>
         </UserProvider>
       </ToastProvider>
     </ThemeLanguageProvider>

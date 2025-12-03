@@ -99,11 +99,12 @@ const Navbar: React.FC = () => {
               </button>
             </div>
 
-            <Link 
-              to="/user-dashboard" 
-              className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors" 
+            <Link
+              to="/user-dashboard"
+              className="text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors"
               title="My Account"
               aria-label="User Dashboard"
+              data-tour="user-menu"
             >
                 <User size={20} />
             </Link>
