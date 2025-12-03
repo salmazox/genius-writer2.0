@@ -58,8 +58,15 @@
       }
     </script>
     <!-- Google Fonts removed for GDPR compliance. Using system font stack in tailwind config. -->
-    <!-- Add html2pdf for PDF export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Add html2pdf for PDF export - Lazy loaded when needed -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+
+    <!-- Preconnect to external domains for faster resource loading -->
+    <link rel="preconnect" href="https://aistudiocdn.com" crossorigin>
+    <link rel="dns-prefetch" href="https://aistudiocdn.com">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
     <style>
       body {
         font-family: 'Inter', sans-serif;

@@ -1,15 +1,17 @@
 
-import React, { useState } from 'react';
-import { 
-    User as UserIcon, Settings, CreditCard, 
-    LogOut, Link as LinkIcon, LayoutDashboard, Menu, X 
+import React, { useState, Suspense, lazy } from 'react';
+import {
+    User as UserIcon, Settings, CreditCard,
+    LogOut, Link as LinkIcon, LayoutDashboard, Menu, X, Loader2
 } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
-import { OverviewView } from '../features/dashboard/OverviewView';
-import { ProfileView } from '../features/dashboard/ProfileView';
-import { BillingView } from '../features/dashboard/BillingView';
-import { IntegrationsView } from '../features/dashboard/IntegrationsView';
-import { SettingsView } from '../features/dashboard/SettingsView';
+
+// Lazy load dashboard views for better performance
+const OverviewView = lazy(() => import('../features/dashboard/OverviewView').then(m => ({ default: m.OverviewView })));
+const ProfileView = lazy(() => import('../features/dashboard/ProfileView').then(m => ({ default: m.ProfileView })));
+const BillingView = lazy(() => import('../features/dashboard/BillingView').then(m => ({ default: m.BillingView })));
+const IntegrationsView = lazy(() => import('../features/dashboard/IntegrationsView').then(m => ({ default: m.IntegrationsView })));
+const SettingsView = lazy(() => import('../features/dashboard/SettingsView').then(m => ({ default: m.SettingsView })));
 
 type DashboardTab = 'overview' | 'profile' | 'billing' | 'integrations' | 'settings';
 
@@ -78,14 +80,20 @@ const UserDashboard: React.FC = () => {
                     <div className="hidden lg:block mb-6 pb-6 border-b border-slate-200 dark:border-slate-800">
                         <h1 className="text-2xl font-bold text-slate-900 dark:text-white capitalize">{activeTab}</h1>
                     </div>
-                    
-                    <div className="min-h-[400px]">
-                        {activeTab === 'overview' && <OverviewView user={user} />}
-                        {activeTab === 'profile' && <ProfileView user={user} updateUser={updateUser} />}
-                        {activeTab === 'billing' && <BillingView />}
-                        {activeTab === 'integrations' && <IntegrationsView user={user} toggleLinkedAccount={toggleLinkedAccount} />}
-                        {activeTab === 'settings' && <SettingsView />}
-                    </div>
+
+                    <Suspense fallback={
+                        <div className="flex items-center justify-center min-h-[400px]">
+                            <Loader2 className="animate-spin text-indigo-600" size={40} />
+                        </div>
+                    }>
+                        <div className="min-h-[400px]">
+                            {activeTab === 'overview' && <OverviewView user={user} />}
+                            {activeTab === 'profile' && <ProfileView user={user} updateUser={updateUser} />}
+                            {activeTab === 'billing' && <BillingView />}
+                            {activeTab === 'integrations' && <IntegrationsView user={user} toggleLinkedAccount={toggleLinkedAccount} />}
+                            {activeTab === 'settings' && <SettingsView />}
+                        </div>
+                    </Suspense>
                 </div>
             </div>
         </div>
