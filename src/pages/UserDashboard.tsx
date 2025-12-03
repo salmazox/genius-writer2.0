@@ -61,7 +61,10 @@ const UserDashboard: React.FC = () => {
                             {user.avatar ? <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" /> : <UserIcon size={40} className="text-slate-400 m-auto mt-4"/>}
                          </div>
                          <h2 className="font-bold text-slate-900 dark:text-white text-lg">{user.name}</h2>
-                         <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 truncate w-full">{user.email}</p>
+                         <p className="text-slate-500 dark:text-slate-400 text-sm truncate w-full">{user.email}</p>
+                         <div className="mt-3 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full text-xs font-bold uppercase tracking-wide shadow-lg">
+                            {user.plan === 'free' ? 'Free Plan' : user.plan === 'pro' ? 'Pro Plan' : user.plan === 'agency' ? 'Agency Plan' : 'Enterprise'}
+                         </div>
                     </div>
                     <nav className="space-y-1 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                         <SidebarItem id="overview" icon={LayoutDashboard} label="Overview" />
