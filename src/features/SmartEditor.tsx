@@ -21,7 +21,8 @@ import { ContentAnalysisPanel } from '../components/ContentAnalysisPanel';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { chatWithAI, factCheck, generateSpeech } from '../services/gemini';
+import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { chatWithAI, factCheck } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { logActivity } from '../services/collaboration';
 import { useToast } from '../contexts/ToastContext';
@@ -43,7 +44,8 @@ const SmartEditor: React.FC = () => {
     const { t } = useThemeLanguage();
     const [searchParams, setSearchParams] = useSearchParams();
     const copyToClipboard = useCopyToClipboard();
-    
+    const { isPlaying, isGenerating: isGeneratingAudio, play: playAudio } = useAudioPlayer();
+
     // --- State ---
     // Initialize with empty string for cleaner word count/placeholder logic
     const [content, setContent] = useLocalStorage<string>('smart_editor_content', '');
@@ -75,12 +77,6 @@ const SmartEditor: React.FC = () => {
     const [newComment, setNewComment] = useState('');
     const [selectedTextForComment, setSelectedTextForComment] = useState('');
 
-    // TTS State
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
-
     // Modals
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -88,17 +84,8 @@ const SmartEditor: React.FC = () => {
     const debouncedContent = useDebounce(content, 1000);
     const debouncedTitle = useDebounce(title, 1000);
     const chatEndRef = useRef<HTMLDivElement>(null);
-    
-    const isPro = user.plan !== 'free';
 
-    // Cleanup effect
-    useEffect(() => {
-        return () => {
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
-            }
-        };
-    }, []);
+    const isPro = user.plan !== 'free';
 
     // --- Load Current Doc ---
     useEffect(() => {
@@ -262,47 +249,9 @@ const SmartEditor: React.FC = () => {
         }
     };
 
-    // --- Audio Logic ---
-    const stopAudio = () => {
-        if (audioSourceRef.current) {
-            audioSourceRef.current.stop();
-            audioSourceRef.current = null;
-        }
-        setIsPlaying(false);
-    };
-
+    // Audio playback handler
     const handleListen = async () => {
-        if (isPlaying) {
-            stopAudio();
-            return;
-        }
-
-        if (!content) return;
-        
-        // Strip HTML for TTS
-        const plainText = content.replace(/<[^>]*>/g, ' ').replace(/[#*_`]/g, '');
-        if (!plainText.trim()) return;
-
-        setIsGeneratingAudio(true);
-        try {
-            const buffer = await generateSpeech(plainText);
-            const ctx = audioContextRef.current || new (window.AudioContext || (window as any).webkitAudioContext)();
-            audioContextRef.current = ctx;
-
-            const audioBuffer = await ctx.decodeAudioData(buffer);
-            const source = ctx.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(ctx.destination);
-            
-            source.onended = () => setIsPlaying(false);
-            source.start();
-            audioSourceRef.current = source;
-            setIsPlaying(true);
-        } catch (e) {
-            showToast("Failed to play audio", "error");
-        } finally {
-            setIsGeneratingAudio(false);
-        }
+        await playAudio(content, (error) => showToast("Failed to play audio", "error"));
     };
 
     const handleExport = (format: 'html' | 'txt' | 'doc') => {
