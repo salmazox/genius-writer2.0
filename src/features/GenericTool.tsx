@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon, Palette, PenTool, Mail, Volume2, Square, AlertTriangle } from 'lucide-react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon, Palette, PenTool, Mail, Volume2, Square, AlertTriangle, BarChart3, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig, ToolType } from '../types';
@@ -35,6 +35,7 @@ import {
 } from '../services/imageStylePresets';
 import TemplateBrowser from '../components/TemplateBrowser';
 import { ContentTemplate } from '../services/contentTemplates';
+import { ContentAnalysisPanel } from '../components/ContentAnalysisPanel';
 
 interface GenericToolProps {
     tool: ToolConfig;
@@ -87,6 +88,9 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
     // Template Browser State
     const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
+
+    // Content Analysis State
+    const [showAnalysis, setShowAnalysis] = useState(false);
 
     const previewRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -801,13 +805,23 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                              ) : (
                                 <>
                                     {/* TTS Button */}
-                                    <Button 
-                                        variant="ghost" 
-                                        size="sm" 
-                                        onClick={handleListen} 
-                                        title={isPlaying ? "Stop" : "Read Aloud"} 
-                                        icon={isGeneratingAudio ? Sparkles : isPlaying ? Square : Volume2} 
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleListen}
+                                        title={isPlaying ? "Stop" : "Read Aloud"}
+                                        icon={isGeneratingAudio ? Sparkles : isPlaying ? Square : Volume2}
                                         className={isPlaying ? "text-red-500 animate-pulse" : ""}
+                                    />
+                                    <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
+                                    {/* Content Analysis Toggle */}
+                                    <Button
+                                        variant={showAnalysis ? "secondary" : "ghost"}
+                                        size="sm"
+                                        onClick={() => setShowAnalysis(!showAnalysis)}
+                                        title="Content Analysis"
+                                        icon={BarChart3}
+                                        className={showAnalysis ? "bg-indigo-100 text-indigo-600" : ""}
                                     />
                                     <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
                                     <Button variant="ghost" size="sm" onClick={handleCopy} title="Copy Content" icon={Copy} />
@@ -947,6 +961,24 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Content Analysis Sidebar */}
+            {showAnalysis && !isImageTool && documentContent && (
+                <div className="w-full lg:w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl fixed lg:relative right-0 top-0 h-full z-50 lg:z-40 animate-in slide-in-from-right duration-300">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
+                        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <BarChart3 size={16} className="text-indigo-600" /> Content Analysis
+                        </h3>
+                        <button onClick={() => setShowAnalysis(false)} className="lg:hidden" aria-label="Close Analysis">
+                            <X size={20} className="text-slate-400" />
+                        </button>
+                    </div>
+
+                    <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
+                        <ContentAnalysisPanel content={documentContent} compact={false} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

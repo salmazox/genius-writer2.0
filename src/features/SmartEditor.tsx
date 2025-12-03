@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
-    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square, Copy, Shield, Clock, BookOpen, List, FileText, Palette
+    MessageSquare, X, Send, Sparkles, Sidebar, Check, Loader2, Download, Save, ShieldCheck, History, RotateCcw, MessageCircle, Share2, Quote, Lock, Search, AlertCircle, ArrowLeft, FileType, Volume2, Square, Copy, Shield, Clock, BookOpen, List, FileText, Palette, BarChart3
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
@@ -17,6 +17,7 @@ import BrandKitManager from '../components/BrandKitManager';
 import BrandConsistencyPanel from '../components/BrandConsistencyPanel';
 import PlagiarismPanel from '../components/PlagiarismPanel';
 import SEOPanel from '../components/SEOPanel';
+import { ContentAnalysisPanel } from '../components/ContentAnalysisPanel';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
@@ -48,7 +49,7 @@ const SmartEditor: React.FC = () => {
     const [content, setContent] = useLocalStorage<string>('smart_editor_content', '');
     const [title, setTitle] = useLocalStorage<string>('smart_editor_title', 'Untitled Document');
     const [currentDoc, setCurrentDoc] = useState<SavedDocument | null>(null);
-    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | 'plagiarism' | 'activity' | 'outline' | 'chapters' | 'toc' | 'brandkit' | 'brandcheck' | null>(null); // Default closed
+    const [activeSidebar, setActiveSidebar] = useState<'ai' | 'comments' | 'seo' | 'plagiarism' | 'activity' | 'outline' | 'chapters' | 'toc' | 'brandkit' | 'brandcheck' | 'analysis' | null>(null); // Default closed
 
     // Collaboration state
     const [showCollaborationShare, setShowCollaborationShare] = useState(false);
@@ -555,6 +556,14 @@ const SmartEditor: React.FC = () => {
 
                             {/* Sidebar Toggles */}
                             <button
+                                onClick={() => setActiveSidebar(activeSidebar === 'analysis' ? null : 'analysis')}
+                                className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'analysis' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                title="Content Analysis"
+                            >
+                                <BarChart3 size={18} />
+                            </button>
+
+                            <button
                                 onClick={() => setActiveSidebar(activeSidebar === 'plagiarism' ? null : 'plagiarism')}
                                 className={`p-2 rounded-lg transition-colors relative ${activeSidebar === 'plagiarism' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
                                 title="Originality Check"
@@ -784,6 +793,20 @@ const SmartEditor: React.FC = () => {
                                 onClose={() => setActiveSidebar(null)}
                             />
                         </div>
+                    )}
+
+                    {/* Content Analysis Sidebar Content */}
+                    {activeSidebar === 'analysis' && (
+                        <>
+                            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/30">
+                                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2"><BarChart3 size={16} className="text-indigo-600"/> Content Analysis</h3>
+                                <button onClick={() => setActiveSidebar(null)} className="lg:hidden" aria-label="Close Sidebar"><X size={20} className="text-slate-400"/></button>
+                            </div>
+
+                            <div className="p-4 flex-1 overflow-y-auto">
+                                <ContentAnalysisPanel content={content} compact={false} />
+                            </div>
+                        </>
                     )}
                 </div>
             )}
