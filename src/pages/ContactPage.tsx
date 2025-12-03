@@ -33,17 +33,17 @@ const ContactPage: React.FC = () => {
             <div className="space-y-6">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t('contact.infoTitle')}</h2>
                 
-                <ContactInfoCard 
+                <ContactInfoCard
                     icon={<Building size={20}/>}
                     title={t('contact.sales')}
                     value={t('contact.salesEmail')}
-                    subtext="For enterprise inquiries & demos"
+                    subtext={t('contactExtended.subtexts.enterprise')}
                 />
-                <ContactInfoCard 
+                <ContactInfoCard
                     icon={<Users size={20}/>}
                     title={t('contact.support')}
                     value={t('contact.supportEmail')}
-                    subtext="For technical issues & billing"
+                    subtext={t('contactExtended.subtexts.support')}
                 />
                 <ContactInfoCard 
                     icon={<MapPin size={20}/>}
@@ -58,10 +58,10 @@ const ContactPage: React.FC = () => {
 
                 {/* Enterprise Box */}
                 <div className="mt-8 p-6 bg-indigo-600 rounded-2xl text-white shadow-lg">
-                    <h3 className="font-bold text-lg mb-2">Enterprise Needs?</h3>
-                    <p className="text-indigo-100 text-sm mb-4">Need custom integrations, SSO, or unlimited seats? Talk to our sales team directly.</p>
+                    <h3 className="font-bold text-lg mb-2">{t('contactExtended.enterprise.title')}</h3>
+                    <p className="text-indigo-100 text-sm mb-4">{t('contactExtended.enterprise.desc')}</p>
                     <button className="w-full py-2 bg-white text-indigo-600 rounded-lg font-bold text-sm hover:bg-indigo-50 transition-colors">
-                        Schedule Demo
+                        {t('contactExtended.enterprise.button')}
                     </button>
                 </div>
             </div>
@@ -80,12 +80,12 @@ const ContactPage: React.FC = () => {
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="subject" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Subject</label>
+                        <label htmlFor="subject" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('contactExtended.form.subject')}</label>
                         <select id="subject" className="block w-full rounded-xl border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3 border transition-colors">
-                            <option>General Inquiry</option>
-                            <option>Support Request</option>
-                            <option>Enterprise Sales</option>
-                            <option>Partnership</option>
+                            <option>{t('contactExtended.form.options.general')}</option>
+                            <option>{t('contactExtended.form.options.support')}</option>
+                            <option>{t('contactExtended.form.options.enterprise')}</option>
+                            <option>{t('contactExtended.form.options.partnership')}</option>
                         </select>
                     </div>
                     <div>
