@@ -7,6 +7,7 @@ import { ThemeLanguageProvider } from './contexts/ThemeLanguageContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { UserProvider } from './contexts/UserContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
+import { HelpProvider } from './contexts/HelpContext';
 import { Loader2 } from 'lucide-react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -15,6 +16,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { CookieConsent } from './components/CookieConsent';
 import { OnboardingTour } from './components/onboarding/OnboardingTour';
+import { HelpPanel } from './components/help/HelpPanel';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 // Lazy load pages for performance
@@ -59,6 +61,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <CookieConsent />
       <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
+      <HelpPanel />
 
       {!isDashboard && !isAuth && !is404 && <Navbar />}
       {isDashboard && !isAuth && <Navbar />}
@@ -68,9 +71,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {children}
         </ErrorBoundary>
       </main>
-      
+
       {!isDashboard && !isAuth && !is404 && <Footer />}
-      
+
       {/* Mobile Bottom Navigation - Visible only on mobile, and not on auth pages */}
       {!isAuth && <MobileBottomNav onOpenCommandPalette={() => setIsCommandPaletteOpen(true)} />}
     </div>
@@ -97,27 +100,29 @@ const App: React.FC = () => {
       <ToastProvider>
         <UserProvider>
           <OnboardingProvider>
-            <Router>
-              <Layout>
-                <Suspense fallback={<LoadingSpinner />}>
-                  <Routes>
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                    <Route path="/user-dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="/contact" element={<ContactPage />} />
-                    <Route path="/product" element={<ProductPage />} />
-                    <Route path="/login" element={<AuthPage />} />
-                    <Route path="/signup" element={<AuthPage />} />
-                    <Route path="/privacy" element={<LegalPage />} />
-                    <Route path="/terms" element={<LegalPage />} />
-                    <Route path="/imprint" element={<LegalPage />} />
-                    <Route path="*" element={<NotFoundPage />} />
-                  </Routes>
-                </Suspense>
-                <OnboardingTour />
-              </Layout>
-            </Router>
+            <HelpProvider>
+              <Router>
+                <Layout>
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Routes>
+                      <Route path="/" element={<LandingPage />} />
+                      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                      <Route path="/user-dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+                      <Route path="/pricing" element={<PricingPage />} />
+                      <Route path="/contact" element={<ContactPage />} />
+                      <Route path="/product" element={<ProductPage />} />
+                      <Route path="/login" element={<AuthPage />} />
+                      <Route path="/signup" element={<AuthPage />} />
+                      <Route path="/privacy" element={<LegalPage />} />
+                      <Route path="/terms" element={<LegalPage />} />
+                      <Route path="/imprint" element={<LegalPage />} />
+                      <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                  </Suspense>
+                  <OnboardingTour />
+                </Layout>
+              </Router>
+            </HelpProvider>
           </OnboardingProvider>
         </UserProvider>
       </ToastProvider>
