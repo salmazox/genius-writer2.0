@@ -3,6 +3,7 @@ import React from 'react';
 import { Star } from 'lucide-react';
 import { ToolGridItem } from './ToolGridItem';
 import { ToolConfig, ToolType } from '../../types';
+import { NoSearchResultsState } from '../ui/EmptyState';
 
 interface DashboardLibraryProps {
     tools: ToolConfig[];
@@ -10,6 +11,7 @@ interface DashboardLibraryProps {
     onSelectTool: (id: ToolType) => void;
     favoriteToolIds: ToolType[];
     onToggleFavorite: (id: ToolType) => void;
+    onClearSearch?: () => void;
 }
 
 export const DashboardLibrary: React.FC<DashboardLibraryProps> = ({
@@ -17,13 +19,19 @@ export const DashboardLibrary: React.FC<DashboardLibraryProps> = ({
     searchQuery,
     onSelectTool,
     favoriteToolIds,
-    onToggleFavorite
+    onToggleFavorite,
+    onClearSearch
 }) => {
     const categories = Array.from(new Set(tools.map(t => t.category)));
     const favoriteTools = tools.filter(t => favoriteToolIds.includes(t.id));
 
     if (tools.length === 0) {
-        return <div className="p-8 text-center text-slate-500">No tools found matching "{searchQuery}"</div>;
+        return (
+            <NoSearchResultsState
+                searchQuery={searchQuery}
+                onClearSearch={onClearSearch}
+            />
+        );
     }
 
     return (
