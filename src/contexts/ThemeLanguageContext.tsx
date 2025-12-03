@@ -19,7 +19,7 @@ interface ThemeLanguageContextType {
 const ThemeLanguageContext = createContext<ThemeLanguageContextType | undefined>(undefined);
 
 export const ThemeLanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useLocalStorage<Language>('language', 'en');
+  const [language, setLanguage] = useLocalStorage<Language>('language', 'de');
   const [theme, setTheme] = useLocalStorage<Theme>('theme', 'light');
   const [currency, setCurrency] = useLocalStorage<Currency>('currency', 'EUR');
 
