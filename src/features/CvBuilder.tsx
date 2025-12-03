@@ -14,7 +14,6 @@ import RichTextEditor from '../components/RichTextEditor';
 import { useUser } from '../contexts/UserContext';
 import { Watermark } from '../components/Watermark';
 import { usePdfExport } from '../hooks/usePdfExport';
-import { useMobileTabs } from '../hooks/useMobileTabs';
 import { calculateRealTimeATSScore, type ATSScoreBreakdown } from '../services/atsScoring';
 import { saveVersion, autoSaveCheckpoint } from '../services/versionHistory';
 
@@ -54,8 +53,8 @@ const CvBuilder: React.FC = () => {
     const { user } = useUser();
     const [searchParams, setSearchParams] = useSearchParams();
     const exportToPdf = usePdfExport();
-    const { activeTab: mobileTab, setActiveTab: setMobileTab } = useMobileTabs<'editor' | 'preview'>('editor');
-    
+    const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
+
     // State
     const [viewMode, setViewMode] = useState<'cv' | 'cover_letter' | 'linkedin_posts'>('cv');
     const [cvData, setCvData] = useState<CVData>(INITIAL_CV);

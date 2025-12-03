@@ -91,11 +91,8 @@ const SmartEditor: React.FC = () => {
     
     const isPro = user.plan !== 'free';
 
-    // Migration Effect for old default content
+    // Cleanup effect
     useEffect(() => {
-        if (content === '<h1>Untitled Document</h1><p>Start writing here...</p>') {
-            setContent('');
-        }
         return () => {
             if (audioContextRef.current) {
                 audioContextRef.current.close();

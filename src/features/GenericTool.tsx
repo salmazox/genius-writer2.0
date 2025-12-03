@@ -18,7 +18,6 @@ import { Watermark } from '../components/Watermark';
 import { sanitizeHtml } from '../utils/security';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { usePdfExport } from '../hooks/usePdfExport';
-import { useMobileTabs } from '../hooks/useMobileTabs';
 import HashtagSuggestions from '../components/HashtagSuggestions';
 import SocialMediaPreview from '../components/SocialMediaPreview';
 import { SocialPlatform } from '../services/hashtagGenerator';
@@ -56,8 +55,8 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const { brandVoices, selectedVoiceId, setSelectedVoiceId, user } = useUser();
     const copyToClipboard = useCopyToClipboard();
     const exportToPdf = usePdfExport();
-    const { activeTab: mobileTab, setActiveTab: setMobileTab } = useMobileTabs<'input' | 'result'>('input');
-    
+    const [mobileTab, setMobileTab] = useState<'input' | 'result'>('input');
+
     // Updated type to support nested arrays from repeater
     const [formValues, setFormValues] = useState<Record<string, any>>({});
     const [documentContent, setDocumentContent] = useState<string>('');
