@@ -19,6 +19,7 @@ import { sanitizeHtml } from '../utils/security';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { usePdfExport } from '../hooks/usePdfExport';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useAbortController } from '../hooks/useAbortController';
 import HashtagSuggestions from '../components/HashtagSuggestions';
 import SocialMediaPreview from '../components/SocialMediaPreview';
 import { SocialPlatform } from '../services/hashtagGenerator';
@@ -57,6 +58,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const copyToClipboard = useCopyToClipboard();
     const exportToPdf = usePdfExport();
     const { isPlaying, isGenerating: isGeneratingAudio, play: playAudio, stop: stopAudio } = useAudioPlayer();
+    const { abort: abortRequest, reset: resetAbortController, isCurrent, clear: clearAbortController } = useAbortController();
     const [mobileTab, setMobileTab] = useState<'input' | 'result'>('input');
 
     // Updated type to support nested arrays from repeater
@@ -89,7 +91,6 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     const [showAnalysis, setShowAnalysis] = useState(false);
 
     const previewRef = useRef<HTMLDivElement>(null);
-    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Debounce state for auto-save
     const debouncedForm = useDebounce(formValues, 1000);
@@ -150,19 +151,10 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
         loadDraft();
         setMobileTab('input');
-        
-        // Clean up previous requests if any
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-        stopAudio(); // Stop any playing audio on tool switch
 
-        // Cleanup on unmount or tool change
-        return () => {
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-            }
-        };
+        // Clean up previous requests if any
+        abortRequest();
+        stopAudio(); // Stop any playing audio on tool switch
     }, [tool.id]);
 
     // Auto-save effect
@@ -246,10 +238,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
             return;
         }
 
-        if (abortControllerRef.current) abortControllerRef.current.abort();
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
-
+        const controller = resetAbortController();
         setIsLoading(true);
         // Clear content if not streaming images (images replace all at once)
         if (!isImageTool) setDocumentContent('');
@@ -314,9 +303,9 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 showToast(msg, 'error');
             }
         } finally {
-            if (abortControllerRef.current === controller) {
+            if (isCurrent(controller)) {
                 setIsLoading(false);
-                abortControllerRef.current = null;
+                clearAbortController();
             }
         }
     };

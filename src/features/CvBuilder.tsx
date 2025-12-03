@@ -9,6 +9,7 @@ import { ToolType, CVData, CVTheme, ATSAnalysis, CVExperience } from '../types';
 import { Button } from '../components/ui/Button';
 import { useDebounce } from '../hooks/useDebounce';
 import { useSwipe } from '../hooks/useSwipe';
+import { useAbortController } from '../hooks/useAbortController';
 import { validateImageFile } from '../utils/security';
 import RichTextEditor from '../components/RichTextEditor';
 import { useUser } from '../contexts/UserContext';
@@ -53,6 +54,7 @@ const CvBuilder: React.FC = () => {
     const { user } = useUser();
     const [searchParams, setSearchParams] = useSearchParams();
     const exportToPdf = usePdfExport();
+    const { abort: abortRequest, reset: resetAbortController, isCurrent, clear: clearAbortController } = useAbortController();
     const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
 
     // State
@@ -76,7 +78,6 @@ const CvBuilder: React.FC = () => {
     const coverLetterRef = useRef<HTMLDivElement>(null);
     const importInputRef = useRef<HTMLInputElement>(null);
     const linkedinImportInputRef = useRef<HTMLInputElement>(null);
-    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Debounce for Auto-Save (Longer delay)
     const debouncedCvDataForSave = useDebounce(cvData, 1500);
@@ -109,10 +110,6 @@ const CvBuilder: React.FC = () => {
         } catch (e) {
             console.error("Failed to load CV draft", e);
         }
-
-        return () => {
-            if (abortControllerRef.current) abortControllerRef.current.abort();
-        };
     }, []);
 
     // Auto-Save
@@ -269,11 +266,8 @@ const CvBuilder: React.FC = () => {
 
     const generateCvDescription = async (id: string, item: CVExperience) => {
         if(!item || !item.title) { showToast(t('dashboard.toasts.titleMissing'), "error"); return; }
-        
-        if (abortControllerRef.current) abortControllerRef.current.abort();
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
 
+        const controller = resetAbortController();
         setIsLoading(true);
         try {
             const prompt = `Write a professional, bulleted job description for a ${item.title} at ${item.company || 'a company'}.`;
@@ -285,34 +279,31 @@ const CvBuilder: React.FC = () => {
             }));
             
             showToast(t('dashboard.toasts.descGenerated'), "success");
-        } catch (e: any) { 
-            if (e.name !== 'AbortError') showToast(e.message || "Failed to generate", "error"); 
-        } finally { 
-            if (abortControllerRef.current === controller) {
-                setIsLoading(false); 
-                abortControllerRef.current = null;
+        } catch (e: any) {
+            if (e.name !== 'AbortError') showToast(e.message || "Failed to generate", "error");
+        } finally {
+            if (isCurrent(controller)) {
+                setIsLoading(false);
+                clearAbortController();
             }
         }
     };
 
     const runAtsAnalysis = async () => {
         if(!jobDescription) { showToast(t('dashboard.toasts.jobDescMissing'), "error"); return; }
-        
-        if (abortControllerRef.current) abortControllerRef.current.abort();
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
 
+        const controller = resetAbortController();
         setIsLoading(true);
         try {
             const result = await analyzeATS(cvData, jobDescription, controller.signal);
             setAtsAnalysis(result);
             showToast(t('dashboard.toasts.analysisComplete'), "success");
-        } catch(e: any) { 
-            if (e.name !== 'AbortError') showToast(e.message || t('dashboard.toasts.analysisFail'), "error"); 
-        } finally { 
-            if (abortControllerRef.current === controller) {
+        } catch(e: any) {
+            if (e.name !== 'AbortError') showToast(e.message || t('dashboard.toasts.analysisFail'), "error");
+        } finally {
+            if (isCurrent(controller)) {
                 setIsLoading(false);
-                abortControllerRef.current = null;
+                clearAbortController();
             }
         }
     };
