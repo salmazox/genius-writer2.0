@@ -6,7 +6,8 @@
  */
 
 // Export types and utilities
-export { UsageData, LIMITS, getUsageData } from './usageTracking';
+export type { UsageData } from './usageTracking';
+export { LIMITS, getUsageData } from './usageTracking';
 export type { LinkedInPost } from './cv';
 
 // Export content generation functions
