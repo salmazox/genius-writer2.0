@@ -4,6 +4,7 @@ import { Download, Upload, AlertTriangle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { documentService } from '../../services/documentService';
 import { useToast } from '../../contexts/ToastContext';
+import { DataManagement } from '../../components/DataManagement';
 
 export const SettingsView: React.FC = () => {
     const { showToast } = useToast();
@@ -52,8 +53,12 @@ export const SettingsView: React.FC = () => {
 
     return (
         <div className="space-y-6 animate-in slide-in-from-right duration-300">
+            {/* GDPR Data Management */}
+            <DataManagement />
+
+            {/* Document Backup & Restore */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Data Management</h2>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Document Backup & Restore</h2>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
                     Manage your local data. Since Genius Writer runs in your browser, your data is stored on this device.
                     Create backups to prevent data loss.
