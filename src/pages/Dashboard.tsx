@@ -1,7 +1,7 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Menu, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder, Mic } from 'lucide-react';
+import { Menu, LayoutTemplate, FileText, Globe, Search, FileEdit, ArrowLeft, Grid, Folder, Mic, Loader2 } from 'lucide-react';
 import { ToolType, SavedDocument, Folder as FolderType } from '../types';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { useToast } from '../contexts/ToastContext';
@@ -16,16 +16,19 @@ import { useDebounce } from '../hooks/useDebounce';
 import { useUser } from '../contexts/UserContext';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
-// Import refactored features
-import CvBuilder from '../features/CvBuilder';
-import Translator from '../features/Translator';
-import GenericTool from '../features/GenericTool';
-import SmartEditor from '../features/SmartEditor';
-import LiveInterview from '../features/LiveInterview'; // New Import
+// Lazy load heavy feature components for better performance
+const CvBuilder = lazy(() => import('../features/CvBuilder'));
+const Translator = lazy(() => import('../features/Translator'));
+const GenericTool = lazy(() => import('../features/GenericTool'));
+const SmartEditor = lazy(() => import('../features/SmartEditor'));
+const LiveInterview = lazy(() => import('../features/LiveInterview'));
 
-// Import New Dashboard Components
-import { DashboardLibrary } from '../components/dashboard/DashboardLibrary';
-import { DashboardDocuments, SortOrder } from '../components/dashboard/DashboardDocuments';
+// Lazy load dashboard components
+const DashboardLibrary = lazy(() => import('../components/dashboard/DashboardLibrary').then(m => ({ default: m.DashboardLibrary })));
+const DashboardDocuments = lazy(() => import('../components/dashboard/DashboardDocuments').then(m => ({ default: m.DashboardDocuments })));
+
+// Re-export SortOrder type for use in this file
+type SortOrder = 'newest' | 'oldest' | 'az' | 'za';
 
 const Dashboard: React.FC = () => {
   const { t } = useThemeLanguage();
@@ -393,55 +396,67 @@ const Dashboard: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                    
-                    {viewMode === 'library' ? (
-                        <DashboardLibrary 
-                            tools={filteredTools} 
-                            searchQuery={debouncedSearchQuery} 
-                            onSelectTool={(id) => navigateTo({ tool: id })}
-                            favoriteToolIds={user.favorites || []}
-                            onToggleFavorite={toggleFavoriteTool}
-                        />
-                    ) : (
-                        <DashboardDocuments 
-                            documents={filteredDocs}
-                            folders={folders}
-                            viewMode={viewMode === 'trash' ? 'trash' : 'documents'}
-                            activeFolderId={activeFolderId}
-                            searchQuery={debouncedSearchQuery}
-                            selectedTags={selectedTags}
-                            allTags={allTags}
-                            sortOrder={sortOrder}
-                            
-                            setViewMode={(mode) => navigateTo({ tab: mode })}
-                            setActiveFolderId={setActiveFolderId}
-                            onToggleTag={toggleTag}
-                            onCreateFolder={() => setIsNewFolderModalOpen(true)}
-                            onDeleteFolder={handleDeleteFolder}
-                            onSortChange={setSortOrder}
-                            
-                            onOpenDoc={handleOpenDoc}
-                            onShareDoc={(doc, e) => { e.stopPropagation(); setDocToShare(doc); }}
-                            onDuplicateDoc={handleDuplicateDoc}
-                            onMoveDoc={(doc, e) => { e.stopPropagation(); setDocToMove(doc); }}
-                            onDeleteDoc={handleDeleteDoc}
-                            onRestoreDoc={handleRestoreDoc}
-                            onPermanentDelete={handlePermanentDelete}
-                        />
-                    )}
+
+                    <Suspense fallback={
+                        <div className="flex items-center justify-center h-64">
+                            <Loader2 className="animate-spin text-indigo-600" size={32} />
+                        </div>
+                    }>
+                        {viewMode === 'library' ? (
+                            <DashboardLibrary
+                                tools={filteredTools}
+                                searchQuery={debouncedSearchQuery}
+                                onSelectTool={(id) => navigateTo({ tool: id })}
+                                favoriteToolIds={user.favorites || []}
+                                onToggleFavorite={toggleFavoriteTool}
+                            />
+                        ) : (
+                            <DashboardDocuments
+                                documents={filteredDocs}
+                                folders={folders}
+                                viewMode={viewMode === 'trash' ? 'trash' : 'documents'}
+                                activeFolderId={activeFolderId}
+                                searchQuery={debouncedSearchQuery}
+                                selectedTags={selectedTags}
+                                allTags={allTags}
+                                sortOrder={sortOrder}
+
+                                setViewMode={(mode) => navigateTo({ tab: mode })}
+                                setActiveFolderId={setActiveFolderId}
+                                onToggleTag={toggleTag}
+                                onCreateFolder={() => setIsNewFolderModalOpen(true)}
+                                onDeleteFolder={handleDeleteFolder}
+                                onSortChange={setSortOrder}
+
+                                onOpenDoc={handleOpenDoc}
+                                onShareDoc={(doc, e) => { e.stopPropagation(); setDocToShare(doc); }}
+                                onDuplicateDoc={handleDuplicateDoc}
+                                onMoveDoc={(doc, e) => { e.stopPropagation(); setDocToMove(doc); }}
+                                onDeleteDoc={handleDeleteDoc}
+                                onRestoreDoc={handleRestoreDoc}
+                                onPermanentDelete={handlePermanentDelete}
+                            />
+                        )}
+                    </Suspense>
                 </div>
             ) : (
                 // Tool View Wrapped in ErrorBoundary
                 <ErrorBoundary>
-                    <div className="h-full flex flex-col">
-                        {activeToolId === ToolType.CV_BUILDER && <CvBuilder />}
-                        {activeToolId === ToolType.TRANSLATE && <Translator />}
-                        {activeToolId === ToolType.SMART_EDITOR && <SmartEditor />}
-                        {activeToolId === ToolType.LIVE_INTERVIEW && <LiveInterview />}
-                        {!isFullWidthTool(activeToolId) && activeTool && (
-                            <GenericTool tool={activeTool} />
-                        )}
-                    </div>
+                    <Suspense fallback={
+                        <div className="flex items-center justify-center h-screen">
+                            <Loader2 className="animate-spin text-indigo-600" size={48} />
+                        </div>
+                    }>
+                        <div className="h-full flex flex-col">
+                            {activeToolId === ToolType.CV_BUILDER && <CvBuilder />}
+                            {activeToolId === ToolType.TRANSLATE && <Translator />}
+                            {activeToolId === ToolType.SMART_EDITOR && <SmartEditor />}
+                            {activeToolId === ToolType.LIVE_INTERVIEW && <LiveInterview />}
+                            {!isFullWidthTool(activeToolId) && activeTool && (
+                                <GenericTool tool={activeTool} />
+                            )}
+                        </div>
+                    </Suspense>
                 </ErrorBoundary>
             )}
         </div>
