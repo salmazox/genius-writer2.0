@@ -375,26 +375,60 @@ const SmartEditor: React.FC = () => {
         }
     };
 
-    return (
-        <div className="flex h-full bg-slate-200 dark:bg-slate-950 overflow-hidden relative">
-            {/* Mobile Warning Banner - Only visible on mobile/tablet */}
-            <div className="lg:hidden absolute top-0 left-0 right-0 z-50 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-3">
-                <div className="flex items-start gap-3">
-                    <AlertCircle size={20} className="text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                        <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100 mb-1">
-                            Use Desktop for Better Experience
-                        </p>
-                        <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                            The Smart Editor works best on desktop devices. Some features may be limited on mobile.
+    // Check if mobile/tablet - block access
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 1024); // lg breakpoint
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // If mobile, show blocking message instead of editor
+    if (isMobile) {
+        return (
+            <div className="flex items-center justify-center h-full bg-slate-50 dark:bg-slate-950 p-6">
+                <div className="max-w-md text-center">
+                    <div className="mb-6 flex justify-center">
+                        <div className="p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-3xl">
+                            <Sparkles size={48} className="text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+                        Desktop Required
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+                        The Smart Editor requires a desktop or laptop computer for the best experience.
+                        Advanced features like real-time collaboration, SEO analysis, and the rich text editor
+                        need a larger screen.
+                    </p>
+                    <div className="space-y-3">
+                        <button
+                            onClick={handleBack}
+                            className="w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <ArrowLeft size={18} />
+                            Back to Dashboard
+                        </button>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Try other tools like CV Builder and Translator that work great on mobile!
                         </p>
                     </div>
                 </div>
             </div>
+        );
+    }
+
+    return (
+        <div className="flex h-full bg-slate-200 dark:bg-slate-950 overflow-hidden relative">
             {/* Main Editor Area */}
             <div className="flex-1 flex flex-col h-full min-w-0">
                 {/* Top Bar */}
-                <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 lg:px-8 shrink-0 z-30 shadow-sm gap-2 lg:mt-0 mt-[72px]">
+                <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 lg:px-8 shrink-0 z-30 shadow-sm gap-2">
                     
                     {/* Left: Back (Mobile) & Title */}
                     <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0">
