@@ -5,7 +5,7 @@
  * with category filtering, search, and preview functionality.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   X,
@@ -39,9 +39,39 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<ImageStylePreset['category'] | 'all' | 'popular'>('popular');
   const [showPromptPreview, setShowPromptPreview] = useState(false);
 
-  const categories = getCategoriesWithCounts();
+  // State for async loaded data
+  const [allPresets, setAllPresets] = useState<ImageStylePreset[]>([]);
+  const [categories, setCategories] = useState<Array<{
+    category: ImageStylePreset['category'];
+    name: string;
+    icon: string;
+    count: number;
+  }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load presets and categories on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const [presetsData, categoriesData] = await Promise.all([
+          getAllPresets(),
+          getCategoriesWithCounts()
+        ]);
+        setAllPresets(presetsData);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Failed to load image style presets:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   const selectedPreset = selectedStyleId
-    ? getAllPresets().find(p => p.id === selectedStyleId)
+    ? allPresets.find(p => p.id === selectedStyleId)
     : null;
 
   // Filter presets based on category and search
@@ -49,21 +79,24 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
     let presets: ImageStylePreset[];
 
     if (selectedCategory === 'all') {
-      presets = getAllPresets();
+      presets = allPresets;
     } else if (selectedCategory === 'popular') {
-      presets = getPopularPresets();
+      presets = allPresets.filter(p => p.popular);
     } else {
-      presets = getPresetsByCategory(selectedCategory);
+      presets = allPresets.filter(p => p.category === selectedCategory);
     }
 
     if (searchQuery.trim()) {
-      presets = searchPresets(searchQuery).filter(p =>
-        selectedCategory === 'all' || selectedCategory === 'popular' || p.category === selectedCategory
+      const lowerQuery = searchQuery.toLowerCase();
+      presets = presets.filter(p =>
+        p.name.toLowerCase().includes(lowerQuery) ||
+        p.description.toLowerCase().includes(lowerQuery) ||
+        p.keywords.some(keyword => keyword.includes(lowerQuery))
       );
     }
 
     return presets;
-  }, [selectedCategory, searchQuery]);
+  }, [allPresets, selectedCategory, searchQuery]);
 
   const handleSelectPreset = (preset: ImageStylePreset) => {
     if (selectedPreset?.id === preset.id) {
@@ -105,32 +138,34 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
       </div>
 
       {/* Category Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-        <CategoryTab
-          label="Popular"
-          icon="⭐"
-          count={getPopularPresets().length}
-          active={selectedCategory === 'popular'}
-          onClick={() => setSelectedCategory('popular')}
-        />
-        <CategoryTab
-          label="All"
-          icon="📁"
-          count={getAllPresets().length}
-          active={selectedCategory === 'all'}
-          onClick={() => setSelectedCategory('all')}
-        />
-        {categories.map(cat => (
+      {!isLoading && (
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <CategoryTab
-            key={cat.category}
-            label={cat.name}
-            icon={cat.icon}
-            count={cat.count}
-            active={selectedCategory === cat.category}
-            onClick={() => setSelectedCategory(cat.category)}
+            label="Popular"
+            icon="⭐"
+            count={allPresets.filter(p => p.popular).length}
+            active={selectedCategory === 'popular'}
+            onClick={() => setSelectedCategory('popular')}
           />
-        ))}
-      </div>
+          <CategoryTab
+            label="All"
+            icon="📁"
+            count={allPresets.length}
+            active={selectedCategory === 'all'}
+            onClick={() => setSelectedCategory('all')}
+          />
+          {categories.map(cat => (
+            <CategoryTab
+              key={cat.category}
+              label={cat.name}
+              icon={cat.icon}
+              count={cat.count}
+              active={selectedCategory === cat.category}
+              onClick={() => setSelectedCategory(cat.category)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Selected Style Info */}
       {selectedPreset && (
@@ -176,8 +211,14 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
       )}
 
       {/* Style Grid */}
-      <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
-        {filteredPresets.map(preset => (
+      {isLoading ? (
+        <div className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-2"></div>
+          <p className="text-sm text-slate-600">Loading styles...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
+          {filteredPresets.map(preset => (
           <button
             key={preset.id}
             onClick={() => handleSelectPreset(preset)}
@@ -207,14 +248,15 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
               {preset.description}
             </p>
           </button>
-        ))}
-      </div>
+          ))}
 
-      {/* No Results */}
-      {filteredPresets.length === 0 && (
-        <div className="text-center py-8 text-slate-400 text-sm">
-          <Search size={32} className="mx-auto mb-2 text-slate-300" />
-          No styles found for "{searchQuery}"
+          {/* No Results */}
+          {filteredPresets.length === 0 && (
+            <div className="col-span-2 text-center py-8 text-slate-400 text-sm">
+              <Search size={32} className="mx-auto mb-2 text-slate-300" />
+              No styles found for "{searchQuery}"
+            </div>
+          )}
         </div>
       )}
 

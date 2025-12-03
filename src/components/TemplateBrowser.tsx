@@ -5,7 +5,7 @@
  * with search, filtering, and preview functionality.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   X,
@@ -50,7 +50,38 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
   const [difficultyFilter, setDifficultyFilter] = useState<string[]>([]);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
-  const categories = getCategoriesWithCounts();
+  // State for async loaded data
+  const [allTemplates, setAllTemplates] = useState<ContentTemplate[]>([]);
+  const [categories, setCategories] = useState<Array<{
+    category: TemplateCategory;
+    name: string;
+    icon: string;
+    count: number;
+  }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load templates and categories on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const [templatesData, categoriesData] = await Promise.all([
+          getAllTemplates(),
+          getCategoriesWithCounts()
+        ]);
+        setAllTemplates(templatesData);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Failed to load templates:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      loadData();
+    }
+  }, [isOpen]);
 
   // Filter templates
   const filteredTemplates = useMemo(() => {
@@ -58,13 +89,13 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
 
     // Filter by tool type first if provided
     if (currentToolType) {
-      templates = getAllTemplates().filter(t => t.toolType === currentToolType);
+      templates = allTemplates.filter(t => t.toolType === currentToolType);
     } else if (selectedCategory === 'all') {
-      templates = getAllTemplates();
+      templates = allTemplates;
     } else if (selectedCategory === 'popular') {
-      templates = getPopularTemplates();
+      templates = allTemplates.filter(t => t.popular);
     } else {
-      templates = getTemplatesByCategory(selectedCategory);
+      templates = allTemplates.filter(t => t.category === selectedCategory);
     }
 
     // Apply search
@@ -83,7 +114,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
     }
 
     return templates;
-  }, [selectedCategory, searchQuery, difficultyFilter, currentToolType]);
+  }, [allTemplates, selectedCategory, searchQuery, difficultyFilter, currentToolType]);
 
   const handleSelectTemplate = (template: ContentTemplate) => {
     setSelectedTemplate(template);
@@ -177,19 +208,19 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
           )}
 
           {/* Category Tabs */}
-          {!currentToolType && (
+          {!currentToolType && !isLoading && (
             <div className="flex gap-2 overflow-x-auto pb-2 mt-4 scrollbar-hide">
               <CategoryTab
                 label="Popular"
                 icon="⭐"
-                count={getPopularTemplates().length}
+                count={allTemplates.filter(t => t.popular).length}
                 active={selectedCategory === 'popular'}
                 onClick={() => setSelectedCategory('popular')}
               />
               <CategoryTab
                 label="All"
                 icon="📁"
-                count={getAllTemplates().length}
+                count={allTemplates.length}
                 active={selectedCategory === 'all'}
                 onClick={() => setSelectedCategory('all')}
               />
@@ -211,7 +242,12 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
         <div className="flex-1 overflow-hidden flex">
           {/* Template Grid */}
           <div className={`flex-1 p-4 md:p-6 overflow-y-auto ${selectedTemplate && !showMobilePreview ? 'hidden lg:block' : ''}`}>
-            {filteredTemplates.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+                <p className="text-slate-600">Loading templates...</p>
+              </div>
+            ) : filteredTemplates.length === 0 ? (
               <div className="text-center py-12">
                 <Search size={48} className="mx-auto text-slate-300 mb-4" />
                 <p className="text-slate-600 mb-2">No templates found</p>

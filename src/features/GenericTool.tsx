@@ -263,7 +263,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     );
 
                     if (promptField && imageInputs[promptField]) {
-                        const { enhancedPrompt } = applyStyleToPrompt(
+                        const { enhancedPrompt } = await applyStyleToPrompt(
                             imageInputs[promptField],
                             selectedImageStyle.id
                         );
