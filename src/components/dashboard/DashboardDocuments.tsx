@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { 
+import {
     Folder, Grid, Trash2, Plus, X, Tag, FileText, RefreshCw, Copy, MoveRight, Share2, FilePlus, Ghost, ChevronDown
 } from 'lucide-react';
 import { SavedDocument, Folder as FolderType } from '../../types';
 import { Button } from '../ui/Button';
 import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
+import { NoDocumentsState, NoSearchResultsState, EmptyState } from '../ui/EmptyState';
 
 export type SortOrder = 'newest' | 'oldest' | 'az' | 'za';
 
@@ -34,12 +35,17 @@ interface DashboardDocumentsProps {
     onDeleteDoc: (id: string, e: React.MouseEvent) => void;
     onRestoreDoc: (id: string, e: React.MouseEvent) => void;
     onPermanentDelete: (id: string, e: React.MouseEvent) => void;
+
+    // Empty State Actions
+    onBrowseTemplates?: () => void;
+    onClearSearch?: () => void;
 }
 
 export const DashboardDocuments: React.FC<DashboardDocumentsProps> = ({
     documents, folders, viewMode, activeFolderId, searchQuery, selectedTags, allTags, sortOrder,
     setViewMode, setActiveFolderId, onToggleTag, onCreateFolder, onDeleteFolder, onSortChange,
-    onOpenDoc, onShareDoc, onDuplicateDoc, onMoveDoc, onDeleteDoc, onRestoreDoc, onPermanentDelete
+    onOpenDoc, onShareDoc, onDuplicateDoc, onMoveDoc, onDeleteDoc, onRestoreDoc, onPermanentDelete,
+    onBrowseTemplates, onClearSearch
 }) => {
     const { t } = useThemeLanguage();
     const isEmpty = documents.length === 0;
@@ -146,31 +152,24 @@ export const DashboardDocuments: React.FC<DashboardDocumentsProps> = ({
                 )}
 
                 {isEmpty ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 min-h-[300px] md:min-h-[400px]">
-                        <div className="w-24 h-24 bg-indigo-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 relative">
-                            {viewMode === 'trash' ? (
-                                <Trash2 size={40} className="text-slate-400"/>
-                            ) : (
-                                <>
-                                    <FilePlus size={40} className="text-indigo-400"/>
-                                    <div className="absolute -bottom-2 -right-2 bg-white dark:bg-slate-900 p-1.5 rounded-full border border-slate-100 dark:border-slate-800">
-                                        <Ghost size={20} className="text-indigo-300"/>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                            {viewMode === 'trash' ? "Trash is empty" : "No documents found"}
-                        </h3>
-                        <p className="text-slate-500 mb-8 max-w-xs leading-relaxed">
-                            {viewMode === 'trash' 
-                                ? "Items you delete will appear here. Keep your workspace tidy!" 
-                                : searchQuery 
-                                    ? `We couldn't find anything matching "${searchQuery}".` 
-                                    : "Start your journey by creating your first document from the Template Library."}
-                        </p>
-                        {viewMode !== 'trash' && !searchQuery && (
-                            <Button onClick={() => window.location.reload()} variant="primary">Browse Templates</Button>
+                    <div className="h-full flex items-center justify-center min-h-[300px] md:min-h-[400px]">
+                        {viewMode === 'trash' ? (
+                            <EmptyState
+                                icon={Trash2}
+                                title="Trash is empty"
+                                description="Items you delete will appear here. Keep your workspace tidy!"
+                                size="md"
+                            />
+                        ) : searchQuery ? (
+                            <NoSearchResultsState
+                                searchQuery={searchQuery}
+                                onClearSearch={onClearSearch}
+                            />
+                        ) : (
+                            <NoDocumentsState
+                                onCreateDocument={onBrowseTemplates}
+                                onBrowseTemplates={onBrowseTemplates}
+                            />
                         )}
                     </div>
                 ) : (

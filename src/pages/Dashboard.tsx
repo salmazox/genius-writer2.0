@@ -14,6 +14,8 @@ import { Input } from '../components/ui/Forms';
 import { useDebounce } from '../hooks/useDebounce';
 import { useUser } from '../contexts/UserContext';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { LoadingState } from '../components/ui/LoadingState';
+import { ToolGridSkeleton } from '../components/ui/SkeletonLoaders';
 
 // Lazy load heavy feature components for better performance
 const CvBuilder = lazy(() => import('../features/CvBuilder'));
@@ -380,9 +382,11 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     <Suspense fallback={
-                        <div className="flex items-center justify-center h-64">
-                            <Loader2 className="animate-spin text-indigo-600" size={32} />
-                        </div>
+                        viewMode === 'library' ? (
+                            <ToolGridSkeleton count={8} />
+                        ) : (
+                            <LoadingState message="Loading documents..." />
+                        )
                     }>
                         {viewMode === 'library' ? (
                             <DashboardLibrary
@@ -391,6 +395,7 @@ const Dashboard: React.FC = () => {
                                 onSelectTool={(id) => navigateTo({ tool: id })}
                                 favoriteToolIds={user.favorites || []}
                                 onToggleFavorite={toggleFavoriteTool}
+                                onClearSearch={() => setSearchQuery('')}
                             />
                         ) : (
                             <DashboardDocuments
@@ -417,6 +422,9 @@ const Dashboard: React.FC = () => {
                                 onDeleteDoc={handleDeleteDoc}
                                 onRestoreDoc={handleRestoreDoc}
                                 onPermanentDelete={handlePermanentDelete}
+
+                                onBrowseTemplates={() => navigateTo({ tab: 'library' })}
+                                onClearSearch={() => setSearchQuery('')}
                             />
                         )}
                     </Suspense>
@@ -425,9 +433,11 @@ const Dashboard: React.FC = () => {
                 // Tool View Wrapped in ErrorBoundary
                 <ErrorBoundary>
                     <Suspense fallback={
-                        <div className="flex items-center justify-center h-screen">
-                            <Loader2 className="animate-spin text-indigo-600" size={48} />
-                        </div>
+                        <LoadingState
+                            message={`Loading ${activeTool?.name || 'tool'}...`}
+                            size="lg"
+                            fullscreen
+                        />
                     }>
                         <div className="h-full flex flex-col">
                             {activeToolId === ToolType.CV_BUILDER && <CvBuilder />}
