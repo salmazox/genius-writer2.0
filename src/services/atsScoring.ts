@@ -113,6 +113,60 @@ export const calculateRealTimeATSScore = (
   cvData: CVData,
   jobDescription?: string
 ): ATSScoreBreakdown => {
+  // Check if CV is essentially empty - early return to avoid misleading scores
+  const allText = extractAllText(cvData);
+  if (!allText || allText.trim().length < 10) {
+    return {
+      overall: 0,
+      criteria: {
+        keywords: {
+          score: 0,
+          weight: 25,
+          details: ['❌ CV is empty - start adding your information'],
+          passed: false
+        },
+        formatting: {
+          score: 0,
+          weight: 20,
+          details: ['❌ Add contact information and personal details'],
+          passed: false
+        },
+        quantification: {
+          score: 0,
+          weight: 15,
+          details: ['❌ Add work experience with quantified achievements'],
+          passed: false
+        },
+        actionVerbs: {
+          score: 0,
+          weight: 15,
+          details: ['❌ Add experience descriptions with strong action verbs'],
+          passed: false
+        },
+        length: {
+          score: 0,
+          weight: 10,
+          details: ['❌ CV is empty - aim for 400-800 words'],
+          passed: false
+        },
+        structure: {
+          score: 0,
+          weight: 15,
+          details: ['❌ Add all required sections: Summary, Experience, Education, Skills'],
+          passed: false
+        }
+      },
+      suggestions: [
+        '🎯 Start by adding your personal information and contact details',
+        '📝 Add your professional summary (50-100 words)',
+        '💼 Add at least 2-3 recent work experiences',
+        '🎓 Include your education background',
+        '⚡ List your key skills and technologies'
+      ],
+      grade: 'Poor'
+    };
+  }
+
   // Calculate individual criteria scores
   const keywordScore = analyzeKeywordDensity(cvData, jobDescription);
   const formatScore = checkFormatting(cvData);
