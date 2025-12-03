@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Layers, Shield, Zap, Users, Briefcase, PenTool, Lock, Server, EyeOff, Check, Cpu, Sparkles, MessageSquare } from 'lucide-react';
+import { Layers, Shield, Zap, Users, Briefcase, PenTool, Lock, Server, EyeOff, Check, Cpu, Sparkles, MessageSquare, FileText, BarChart3, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
@@ -135,6 +135,77 @@ const ProductPage: React.FC = () => {
                     ))}
                 </div>
              </div>
+          </div>
+
+          {/* Feature 3: Smart Editor & Analysis Tools */}
+          <div className="group relative">
+            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-green-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity blur-2xl"></div>
+            <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div className="order-1 lg:order-1">
+                <div className="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg shadow-green-500/30 rotate-3">
+                  <FileText size={28} />
+                </div>
+                <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">Smart Editor with Real-Time Analysis</h2>
+                <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-8">
+                  Write long-form content with confidence. Our Smart Editor provides instant feedback on SEO, readability, plagiarism, and ATS scoring as you type.
+                </p>
+                <ul className="space-y-4">
+                    <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                        <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400"><BarChart3 size={14} strokeWidth={3}/></div>
+                        <span className="font-medium">Real-time SEO & readability scoring</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                        <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400"><Search size={14} strokeWidth={3}/></div>
+                        <span className="font-medium">AI plagiarism detection</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
+                        <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400"><Briefcase size={14} strokeWidth={3}/></div>
+                        <span className="font-medium">ATS optimization for CVs</span>
+                    </li>
+                </ul>
+              </div>
+
+              <div className="order-2 lg:order-2 relative">
+                <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden transform group-hover:scale-[1.02] transition-transform duration-500">
+                    <div className="bg-slate-50 dark:bg-slate-800/50 p-4 border-b border-slate-100 dark:border-slate-800 flex gap-2 items-center">
+                        <div className="flex gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                        </div>
+                        <span className="ml-4 text-xs font-bold text-slate-600 dark:text-slate-400">SmartEditor.docx</span>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg border border-slate-100 dark:border-slate-700">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-bold text-slate-500">SEO Score</span>
+                                <span className="text-lg font-bold text-green-600">82/100</span>
+                            </div>
+                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                                <div className="bg-green-500 h-2 rounded-full" style={{width: '82%'}}></div>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
+                                <div className="text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">Readability</div>
+                                <div className="text-lg font-bold text-slate-900 dark:text-white">Grade 8</div>
+                            </div>
+                            <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-100 dark:border-purple-800">
+                                <div className="text-xs text-purple-600 dark:text-purple-400 font-bold mb-1">ATS Score</div>
+                                <div className="text-lg font-bold text-slate-900 dark:text-white">94%</div>
+                            </div>
+                        </div>
+                        <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-100 dark:border-green-800 flex items-start gap-2">
+                            <Check size={16} className="text-green-600 mt-0.5"/>
+                            <div className="text-xs text-green-700 dark:text-green-400">
+                                <span className="font-bold">No plagiarism detected</span>
+                                <p className="text-green-600 dark:text-green-500 mt-1">Content is 98% original</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Section: Personas */}
