@@ -568,9 +568,54 @@ export function calculateSEOScore(
 ): SEOScore {
   const { title, metaDescription } = options || {};
 
+  // Check for empty content - return zeros to avoid misleading scores
+  const plainText = stripHtml(content).trim();
+  if (!plainText || plainText.length < 10) {
+    return {
+      overall: 0,
+      breakdown: {
+        keywords: 0,
+        readability: 0,
+        structure: 0,
+        meta: 0,
+        technical: 0
+      },
+      keywordAnalysis: [],
+      readability: {
+        fleschScore: 0,
+        fleschLevel: 'N/A',
+        averageWordsPerSentence: 0,
+        averageSyllablesPerWord: 0,
+        sentenceCount: 0,
+        wordCount: 0
+      },
+      structure: {
+        h1Count: 0,
+        h2Count: 0,
+        h3Count: 0,
+        paragraphCount: 0,
+        listCount: 0,
+        averageParagraphLength: 0,
+        imageCount: 0,
+        imagesWithAlt: 0,
+        linkCount: 0,
+        internalLinks: 0,
+        externalLinks: 0
+      },
+      recommendations: [
+        {
+          category: 'critical',
+          title: 'Content is Empty',
+          message: 'Start writing content to see SEO analysis and recommendations.',
+          impact: 'high'
+        }
+      ]
+    };
+  }
+
   // Analyze all aspects
   const keywordAnalysis = analyzeKeywords(content, keywords, title);
-  const readability = analyzeReadability(stripHtml(content));
+  const readability = analyzeReadability(plainText);
   const structure = analyzeStructure(content);
   const recommendations = generateRecommendations(
     keywordAnalysis,

@@ -377,10 +377,24 @@ const SmartEditor: React.FC = () => {
 
     return (
         <div className="flex h-full bg-slate-200 dark:bg-slate-950 overflow-hidden relative">
+            {/* Mobile Warning Banner - Only visible on mobile/tablet */}
+            <div className="lg:hidden absolute top-0 left-0 right-0 z-50 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-3">
+                <div className="flex items-start gap-3">
+                    <AlertCircle size={20} className="text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100 mb-1">
+                            Use Desktop for Better Experience
+                        </p>
+                        <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                            The Smart Editor works best on desktop devices. Some features may be limited on mobile.
+                        </p>
+                    </div>
+                </div>
+            </div>
             {/* Main Editor Area */}
             <div className="flex-1 flex flex-col h-full min-w-0">
                 {/* Top Bar */}
-                <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 lg:px-8 shrink-0 z-30 shadow-sm gap-2">
+                <div className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 lg:px-8 shrink-0 z-30 shadow-sm gap-2 lg:mt-0 mt-[72px]">
                     
                     {/* Left: Back (Mobile) & Title */}
                     <div className="flex items-center gap-2 lg:gap-4 flex-1 min-w-0">

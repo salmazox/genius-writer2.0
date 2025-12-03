@@ -12,12 +12,12 @@ interface DashboardLibraryProps {
     onToggleFavorite: (id: ToolType) => void;
 }
 
-export const DashboardLibrary: React.FC<DashboardLibraryProps> = ({ 
-    tools, 
-    searchQuery, 
-    onSelectTool, 
-    favoriteToolIds, 
-    onToggleFavorite 
+export const DashboardLibrary: React.FC<DashboardLibraryProps> = ({
+    tools,
+    searchQuery,
+    onSelectTool,
+    favoriteToolIds,
+    onToggleFavorite
 }) => {
     const categories = Array.from(new Set(tools.map(t => t.category)));
     const favoriteTools = tools.filter(t => favoriteToolIds.includes(t.id));
@@ -28,7 +28,35 @@ export const DashboardLibrary: React.FC<DashboardLibraryProps> = ({
 
     return (
        <div className="space-y-10 pb-10 animate-in slide-in-from-bottom-4 duration-500">
-           
+
+        {/* Tool Count Banner */}
+        {!searchQuery && (
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/10 dark:to-purple-900/10 p-6 rounded-3xl border border-indigo-100 dark:border-indigo-900/20">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
+                            {tools.length} AI-Powered Tools
+                        </h3>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Professional templates for every writing task - from CVs to contracts, blog posts to social media
+                        </p>
+                    </div>
+                    <div className="hidden md:flex items-center gap-4">
+                        {categories.map((cat, idx) => (
+                            <div key={cat} className="text-center">
+                                <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                                    {tools.filter(t => t.category === cat).length}
+                                </div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                                    {cat}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )}
+
         {/* Favorites Section */}
         {favoriteTools.length > 0 && !searchQuery && (
             <div className="bg-indigo-50/50 dark:bg-indigo-900/10 p-6 rounded-3xl border border-indigo-100 dark:border-indigo-900/20">
