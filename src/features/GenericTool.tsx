@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon, Palette, PenTool, Mail, Volume2, Square, AlertTriangle, BarChart3, X } from 'lucide-react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon, Palette, PenTool, Mail, Volume2, Square, AlertTriangle, BarChart3, X, Undo } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig, ToolType } from '../types';
@@ -61,6 +61,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
     // Updated type to support nested arrays from repeater
     const [formValues, setFormValues] = useState<Record<string, any>>({});
     const [documentContent, setDocumentContent] = useState<string>('');
+    const [contentHistory, setContentHistory] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [showVoiceManager, setShowVoiceManager] = useState(false);
@@ -415,7 +416,17 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
 
     const insertSignature = () => {
         const signatureBlock = `<div style="margin-top: 40px; display: flex; gap: 40px;"><div style="border-top: 1px solid currentColor; width: 200px; padding-top: 8px;">Signature (Provider)</div><div style="border-top: 1px solid currentColor; width: 200px; padding-top: 8px;">Signature (Client)</div></div>`;
+        setContentHistory(prev => [...prev, documentContent]);
         setDocumentContent(prev => prev + signatureBlock);
+    };
+
+    const handleUndo = () => {
+        if (contentHistory.length > 0) {
+            const previous = contentHistory[contentHistory.length - 1];
+            setContentHistory(prev => prev.slice(0, -1));
+            setDocumentContent(previous);
+            showToast('Undone', 'info');
+        }
     };
 
     // --- Audio Logic ---
@@ -787,6 +798,15 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                             )}
                         </div>
                         <div className="flex items-center gap-2">
+                             {/* Undo Button */}
+                             {contentHistory.length > 0 && (
+                                <>
+                                    <Button variant="ghost" size="sm" onClick={handleUndo} title="Undo Last Change" icon={Undo}>
+                                        Undo
+                                    </Button>
+                                    <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
+                                </>
+                             )}
                              <Button variant="secondary" size="sm" onClick={handleSaveToDocuments} title="Save to Documents" icon={Save}>
                                  Save
                              </Button>

@@ -80,12 +80,12 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
 
   [SubscriptionTier.STARTER]: {
     id: SubscriptionTier.STARTER,
-    name: 'Starter',
+    name: 'Pro',
     tagline: 'For individuals and freelancers',
     price: {
-      monthly: 9.99, // EUR
-      yearly: 99.99, // EUR
-      yearlyMonthly: 8.33 // EUR
+      monthly: 39, // EUR
+      yearly: 384, // EUR (32 * 12)
+      yearlyMonthly: 32 // EUR
     },
     stripePriceId: {
       monthly: 'price_starter_monthly', // Replace with actual Stripe price IDs
@@ -115,12 +115,12 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
 
   [SubscriptionTier.PROFESSIONAL]: {
     id: SubscriptionTier.PROFESSIONAL,
-    name: 'Professional',
+    name: 'Agency',
     tagline: 'For teams and growing businesses',
     price: {
-      monthly: 24.99, // EUR
-      yearly: 249.99, // EUR
-      yearlyMonthly: 20.83 // EUR
+      monthly: 129, // EUR
+      yearly: 1308, // EUR (109 * 12)
+      yearlyMonthly: 109 // EUR
     },
     stripePriceId: {
       monthly: 'price_pro_monthly',
@@ -153,9 +153,9 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     name: 'Enterprise',
     tagline: 'For large organizations',
     price: {
-      monthly: 89.99, // EUR
-      yearly: 899.99, // EUR
-      yearlyMonthly: 74.99 // EUR
+      monthly: 0, // EUR - Custom pricing
+      yearly: 0, // EUR - Custom pricing
+      yearlyMonthly: 0 // EUR - Custom pricing
     },
     stripePriceId: {
       monthly: 'price_enterprise_monthly',

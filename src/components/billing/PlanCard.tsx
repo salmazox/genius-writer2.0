@@ -76,6 +76,10 @@ export const PlanCard: React.FC<PlanCardProps> = ({
             <div className="text-4xl font-bold text-slate-900 dark:text-white">
               Free
             </div>
+          ) : price === 0 ? (
+            <div className="text-3xl font-bold text-slate-900 dark:text-white">
+              Contact Us
+            </div>
           ) : (
             <>
               <div className="flex items-baseline justify-center gap-1">
@@ -99,7 +103,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
         </div>
 
         {/* Savings Badge for Yearly */}
-        {billingCycle === 'yearly' && !isFree && (
+        {billingCycle === 'yearly' && !isFree && price > 0 && (
           <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
             <Zap size={12} />
             Save {Math.round(((plan.price.monthly * 12 - totalYearly) / (plan.price.monthly * 12)) * 100)}%
@@ -147,7 +151,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
               : 'bg-indigo-600 text-white hover:bg-indigo-700'
           }`}
         >
-          {isCurrentPlan ? 'Current Plan' : isFree ? 'Get Started' : `Upgrade to ${plan.name}`}
+          {isCurrentPlan ? 'Current Plan' : isFree ? 'Get Started' : price === 0 ? 'Contact Sales' : `Upgrade to ${plan.name}`}
         </button>
       )}
     </div>
