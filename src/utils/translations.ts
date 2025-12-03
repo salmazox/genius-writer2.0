@@ -437,6 +437,261 @@ export const translations = {
         customize: 'Customize',
         save: 'Save Preferences',
         settings: 'Cookie Settings',
+    },
+    landingExtended: {
+        allTools: 'All 18 Tools',
+        valueProof: {
+            freeWords: '2,000 FREE words/month',
+            noCard: 'No credit card',
+            atsAnalysis: 'ATS + SEO analysis',
+            aiTools: '18 AI tools'
+        },
+        comparisonFeatures: {
+            allTools: '18 AI Tools + Templates',
+            smartEditor: 'Smart Editor + SEO Analysis',
+            atsCV: 'ATS-Optimized CV Builder',
+            translator: 'Translator + Brand Voice'
+        },
+        demo: {
+            title: 'See It In Action',
+            cvBuilder: 'CV Builder',
+            translator: 'Translator',
+            socialPost: 'Social Post',
+            aiAnalysis: 'AI Analysis',
+            englishDetected: 'English (Detected)',
+            german: 'German',
+            aiTranslated: 'AI Translated',
+            justNow: 'Just now',
+            examplePost: 'Example Post',
+            tryYourself: 'Try it yourself →'
+        },
+        features: {
+            smartEditor: 'Smart Long-Form Editor',
+            smartEditorDesc: 'Professional document editor with real-time SEO analysis, plagiarism detection, and readability scoring. Write better content faster.',
+            atsCV: 'ATS-Optimized CV Builder',
+            atsCVDesc: 'Build professional resumes with 5 modern templates. Get real-time ATS scoring and keyword optimization to land more interviews.',
+            translateDesc: 'Context-aware translation in 50+ languages. Preserves tone, nuance, and formatting for professional communications.',
+            brandVoice: 'Brand Voice & Kit',
+            brandVoiceDesc: 'Define your brand voice once, use it everywhere. Consistent tone and style across all your AI-generated content.'
+        },
+        testimonials: {
+            title: 'Join 5,000+ writers who switched',
+            subtitle: "Don't just take our word for it.",
+            sarah: 'The Smart Editor with SEO analysis is a game-changer. I see what needs fixing in real-time.',
+            marcus: 'The CV builder got me 3 interviews in one week. ATS scoring shows exactly what recruiters want!',
+            elena: 'Brand Voice saves me hours. Write once, applies everywhere. My clients love the consistency.',
+            sarahRole: 'Content Creator',
+            marcusRole: 'Software Engineer',
+            elenaRole: 'Freelancer'
+        }
+    },
+    productExtended: {
+        badge: 'Genius Writer Platform',
+        geminiDescExtended: "We've fine-tuned the model to understand nuance, tone, and context better than standard chatbots.",
+        features: {
+            contextAware: 'Context-aware generation',
+            toneAdjustment: 'Real-time tone adjustment',
+            chatExample: 'Write a witty tweet about coffee being life fuel.',
+            chatResponse: '"Decaf is just brown sadness water. ☕️ Give me the high-octane bean juice or give me sleep! #MondayMotivation #CoffeeLover"'
+        },
+        tools: {
+            cvBuilder: 'CV Builder',
+            cvBuilderDesc: 'ATS-Optimized Resumes',
+            blogPost: 'Blog Post',
+            blogPostDesc: 'SEO Article Generator',
+            social: 'Social',
+            socialDesc: 'Viral Posts & Threads',
+            translator: 'Translator',
+            translatorDesc: 'Nuance-aware Translate'
+        },
+        tags: {
+            marketing: 'Marketing',
+            sales: 'Sales',
+            hr: 'HR',
+            engineering: 'Engineering',
+            founders: 'Founders'
+        },
+        templatesExtended: 'Our library is constantly expanding with specialized tools for every profession.',
+        smartEditor: {
+            title: 'Smart Editor with Real-Time Analysis',
+            desc: 'Write long-form content with confidence. Our Smart Editor provides instant feedback on SEO, readability, plagiarism, and ATS scoring as you type.',
+            seoScoring: 'Real-time SEO & readability scoring',
+            plagiarism: 'AI plagiarism detection',
+            atsOptimization: 'ATS optimization for CVs',
+            seoScore: 'SEO Score',
+            readability: 'Readability',
+            atsScore: 'ATS Score',
+            noPlagiarism: 'No plagiarism detected',
+            originalContent: 'Content is 98% original',
+            grade: 'Grade 8'
+        },
+        personas: {
+            subtitle: 'Tailored experiences for every type of writer.'
+        },
+        security: {
+            uptime: '99.9% Uptime SLA',
+            encryptionStatus: 'Encryption Status',
+            encryptionEnabled: 'AES-256 Enabled',
+            dataResidency: 'Data Residency',
+            euFrankfurt: 'EU (Frankfurt)',
+            accessLogs: 'Access Logs',
+            retention: 'Retention: 30 Days',
+            compliance: 'Compliance',
+            soc2: 'SOC2',
+            gdpr: 'GDPR',
+            ccpa: 'CCPA'
+        },
+        cta: {
+            noCard: 'No credit card required for free tier.'
+        }
+    },
+    pricingExtended: {
+        badge: 'Flexible Plans for Everyone',
+        savePercent: 'Save ~20%',
+        coreFeatures: 'Core Features',
+        everythingFree: 'Everything in Free, plus:',
+        everythingPro: 'Everything in Pro, plus:',
+        ultimatePower: 'Ultimate Power',
+        features: {
+            oneProject: '1 Project',
+            basicSEO: 'Basic SEO analysis',
+            brandVoice: 'Brand Voice',
+            smartEditorFull: 'Smart Editor with full SEO analysis',
+            plagiarism: 'Plagiarism detection & readability',
+            customBrandVoice: '1 Custom Brand Voice',
+            teamSeats: '3 Team seats with collaboration',
+            unlimitedBrandVoices: 'Unlimited Brand Voices',
+            advancedAnalysis: 'Advanced analysis & reporting',
+            customAI: 'Custom AI Model Tuning'
+        },
+        comparison: {
+            subtitle: 'Detailed feature breakdown for all plans.',
+            wordLimit: 'Word Limit (Monthly)',
+            aiModel: 'AI Model',
+            smartEditor: 'Smart Editor',
+            seoReadability: 'SEO & Readability',
+            atsOptimization: 'ATS Optimization',
+            plagiarismDetection: 'Plagiarism Detection',
+            imageGeneration: 'Image Generation',
+            brandVoices: 'Brand Voices',
+            teamSeats: 'Team Seats',
+            support: 'Support',
+            values: {
+                twoK: '2,000',
+                geminiFlash: 'Gemini Flash',
+                geminiPro: 'Gemini Pro + Flash',
+                customUltra: 'Custom / Ultra',
+                basic: 'Basic',
+                full: 'Full',
+                fullReports: 'Full + Reports',
+                advanced: 'Advanced',
+                fifty: '50 / mo',
+                twoHundred: '200 / mo',
+                community: 'Community',
+                standard: 'Standard',
+                priority: 'Priority',
+                dedicated: 'Dedicated'
+            }
+        },
+        help: {
+            question: 'Have more questions?',
+            visit: 'Visit our Help Center'
+        }
+    },
+    contactExtended: {
+        subtexts: {
+            enterprise: 'For enterprise inquiries & demos',
+            support: 'For technical issues & billing'
+        },
+        enterprise: {
+            title: 'Enterprise Needs?',
+            desc: 'Need custom integrations, SSO, or unlimited seats? Talk to our sales team directly.',
+            button: 'Schedule Demo'
+        },
+        form: {
+            subject: 'Subject',
+            options: {
+                general: 'General Inquiry',
+                support: 'Support Request',
+                enterprise: 'Enterprise Sales',
+                partnership: 'Partnership'
+            }
+        }
+    },
+    profile: {
+        title: 'Profile Details',
+        changePhoto: 'Change Photo',
+        uploadSuccess: 'Profile picture updated',
+        uploadFailed: 'Upload failed',
+        fullName: 'Full Name',
+        emailAddress: 'Email Address',
+        bioRole: 'Bio / Role',
+        bioPlaceholder: 'Tell us a bit about yourself...',
+        saveChanges: 'Save Changes',
+        saveSuccess: 'Profile saved successfully'
+    },
+    overview: {
+        greeting: {
+            morning: 'Good morning',
+            afternoon: 'Good afternoon',
+            evening: 'Good evening'
+        },
+        welcome: 'You have generated <strong>{words} words</strong> this month. Keep up the creativity!',
+        stats: {
+            wordUsage: 'Word Usage',
+            imageGen: 'Image Gen',
+            documents: 'Documents',
+            documentsDesc: 'Total active documents across all folders.'
+        },
+        recentActivity: 'Recent Activity',
+        noDocuments: 'No documents yet. Start creating!',
+        edited: 'Edited'
+    },
+    billing: {
+        currentPlan: 'Current Plan',
+        active: 'Active',
+        nextBilling: 'Next billing date:',
+        cancelPlan: 'Cancel Plan',
+        upgradePlan: 'Upgrade Plan',
+        choosePlan: 'Choose Your Plan',
+        hidePlans: 'Hide plans',
+        monthly: 'Monthly',
+        yearly: 'Yearly',
+        saveUpTo: 'Save up to 17%',
+        billed: 'Billed',
+        usage: {
+            aiGenerations: 'AI Generations',
+            documents: 'Documents',
+            storage: 'Storage',
+            teamMembers: 'Team Members',
+            generations: 'generations',
+            gb: 'GB',
+            members: 'members'
+        },
+        payment: {
+            title: 'Payment Method',
+            visaEnding: 'Visa ending in 4242',
+            expires: 'Expires 12/2025',
+            edit: 'Edit'
+        },
+        invoices: {
+            title: 'Invoice History',
+            proMonthly: 'Pro Plan - Monthly',
+            paid: 'Paid'
+        }
+    },
+    integrations: {
+        title: 'Connected Accounts',
+        subtitle: 'Connect your social media accounts to publish content directly.',
+        twitter: 'Twitter / X',
+        twitterDesc: 'Post tweets and threads',
+        linkedin: 'LinkedIn',
+        linkedinDesc: 'Post professional updates',
+        connect: 'Connect',
+        disconnect: 'Disconnect',
+        connecting: 'Connecting to {platform}...',
+        disconnected: 'Disconnected from {platform}',
+        linked: 'Successfully linked {platform}'
     }
   },
   de: {
@@ -876,6 +1131,261 @@ export const translations = {
         customize: 'Anpassen',
         save: 'Einstellungen speichern',
         settings: 'Cookie-Einstellungen',
+    },
+    landingExtended: {
+        allTools: 'Alle 18 Tools',
+        valueProof: {
+            freeWords: '2.000 KOSTENLOSE Wörter/Monat',
+            noCard: 'Keine Kreditkarte',
+            atsAnalysis: 'ATS + SEO Analyse',
+            aiTools: '18 KI-Tools'
+        },
+        comparisonFeatures: {
+            allTools: '18 KI-Tools + Vorlagen',
+            smartEditor: 'Smart Editor + SEO Analyse',
+            atsCV: 'ATS-optimierter CV-Builder',
+            translator: 'Übersetzer + Markenstimme'
+        },
+        demo: {
+            title: 'Erlebe es in Aktion',
+            cvBuilder: 'CV-Builder',
+            translator: 'Übersetzer',
+            socialPost: 'Social-Media-Post',
+            aiAnalysis: 'KI-Analyse',
+            englishDetected: 'Englisch (erkannt)',
+            german: 'Deutsch',
+            aiTranslated: 'KI-übersetzt',
+            justNow: 'Gerade eben',
+            examplePost: 'Beispiel-Post',
+            tryYourself: 'Probiere es selbst aus →'
+        },
+        features: {
+            smartEditor: 'Intelligenter Langform-Editor',
+            smartEditorDesc: 'Professioneller Dokumenteneditor mit Echtzeit-SEO-Analyse, Plagiatserkennung und Lesbarkeits-Bewertung. Schreibe bessere Inhalte schneller.',
+            atsCV: 'ATS-optimierter CV-Builder',
+            atsCVDesc: 'Erstelle professionelle Lebensläufe mit 5 modernen Vorlagen. Erhalte Echtzeit-ATS-Bewertung und Keyword-Optimierung für mehr Vorstellungsgespräche.',
+            translateDesc: 'Kontextbewusste Übersetzung in über 50 Sprachen. Bewahrt Tonfall, Nuancen und Formatierung für professionelle Kommunikation.',
+            brandVoice: 'Markenstimme & Kit',
+            brandVoiceDesc: 'Definiere deine Markenstimme einmal, nutze sie überall. Konsistenter Ton und Stil in allen KI-generierten Inhalten.'
+        },
+        testimonials: {
+            title: '5.000+ Autoren sind bereits gewechselt',
+            subtitle: 'Vertraue nicht nur unserem Wort.',
+            sarah: 'Der Smart Editor mit SEO-Analyse ist ein Game-Changer. Ich sehe in Echtzeit, was korrigiert werden muss.',
+            marcus: 'Der CV-Builder hat mir in einer Woche 3 Vorstellungsgespräche beschert. Das ATS-Scoring zeigt genau, was Recruiter wollen!',
+            elena: 'Markenstimme spart mir Stunden. Einmal schreiben, überall anwenden. Meine Kunden lieben die Konsistenz.',
+            sarahRole: 'Content Creator',
+            marcusRole: 'Software-Ingenieur',
+            elenaRole: 'Freelancerin'
+        }
+    },
+    productExtended: {
+        badge: 'Genius Writer Platform',
+        geminiDescExtended: 'Wir haben das Modell feinabgestimmt, um Nuancen, Tonfall und Kontext besser zu verstehen als Standard-Chatbots.',
+        features: {
+            contextAware: 'Kontextbewusste Generierung',
+            toneAdjustment: 'Echtzeit-Tonanpassung',
+            chatExample: 'Schreibe einen witzigen Tweet über Kaffee als Lebensenergie.',
+            chatResponse: '"Entkoffeiniert ist nur braunes Traurigkeitswasser. ☕️ Gib mir den hochwertigen Bohnen-Saft oder gib mir Schlaf! #MontagsMotivation #KaffeeLovers"'
+        },
+        tools: {
+            cvBuilder: 'CV-Builder',
+            cvBuilderDesc: 'ATS-optimierte Lebensläufe',
+            blogPost: 'Blogbeitrag',
+            blogPostDesc: 'SEO-Artikel Generator',
+            social: 'Social Media',
+            socialDesc: 'Virale Posts & Threads',
+            translator: 'Übersetzer',
+            translatorDesc: 'Nuancenbewusste Übersetzung'
+        },
+        tags: {
+            marketing: 'Marketing',
+            sales: 'Vertrieb',
+            hr: 'HR',
+            engineering: 'Entwicklung',
+            founders: 'Gründer'
+        },
+        templatesExtended: 'Unsere Bibliothek wächst ständig mit spezialisierten Tools für jeden Beruf.',
+        smartEditor: {
+            title: 'Smart Editor mit Echtzeit-Analyse',
+            desc: 'Schreibe Langform-Inhalte mit Vertrauen. Unser Smart Editor bietet sofortiges Feedback zu SEO, Lesbarkeit, Plagiaten und ATS-Bewertung während du tippst.',
+            seoScoring: 'Echtzeit-SEO & Lesbarkeits-Bewertung',
+            plagiarism: 'KI-Plagiatserkennung',
+            atsOptimization: 'ATS-Optimierung für Lebensläufe',
+            seoScore: 'SEO-Bewertung',
+            readability: 'Lesbarkeit',
+            atsScore: 'ATS-Bewertung',
+            noPlagiarism: 'Kein Plagiat erkannt',
+            originalContent: 'Inhalt ist zu 98% original',
+            grade: 'Klasse 8'
+        },
+        personas: {
+            subtitle: 'Maßgeschneiderte Erfahrungen für jeden Autorentyp.'
+        },
+        security: {
+            uptime: '99,9% Verfügbarkeits-SLA',
+            encryptionStatus: 'Verschlüsselungsstatus',
+            encryptionEnabled: 'AES-256 aktiviert',
+            dataResidency: 'Datenstandort',
+            euFrankfurt: 'EU (Frankfurt)',
+            accessLogs: 'Zugriffsprotokolle',
+            retention: 'Aufbewahrung: 30 Tage',
+            compliance: 'Konformität',
+            soc2: 'SOC2',
+            gdpr: 'DSGVO',
+            ccpa: 'CCPA'
+        },
+        cta: {
+            noCard: 'Keine Kreditkarte für die kostenlose Version erforderlich.'
+        }
+    },
+    pricingExtended: {
+        badge: 'Flexible Pläne für alle',
+        savePercent: 'Spare ~20%',
+        coreFeatures: 'Grundfunktionen',
+        everythingFree: 'Alles aus Free, plus:',
+        everythingPro: 'Alles aus Pro, plus:',
+        ultimatePower: 'Ultimative Leistung',
+        features: {
+            oneProject: '1 Projekt',
+            basicSEO: 'Basis-SEO-Analyse',
+            brandVoice: 'Markenstimme',
+            smartEditorFull: 'Smart Editor mit vollständiger SEO-Analyse',
+            plagiarism: 'Plagiatserkennung & Lesbarkeit',
+            customBrandVoice: '1 individuelle Markenstimme',
+            teamSeats: '3 Team-Plätze mit Zusammenarbeit',
+            unlimitedBrandVoices: 'Unbegrenzte Markenstimmen',
+            advancedAnalysis: 'Erweiterte Analyse & Berichte',
+            customAI: 'Individuelle KI-Modell-Anpassung'
+        },
+        comparison: {
+            subtitle: 'Detaillierte Funktionsübersicht für alle Pläne.',
+            wordLimit: 'Wortlimit (Monatlich)',
+            aiModel: 'KI-Modell',
+            smartEditor: 'Smart Editor',
+            seoReadability: 'SEO & Lesbarkeit',
+            atsOptimization: 'ATS-Optimierung',
+            plagiarismDetection: 'Plagiatserkennung',
+            imageGeneration: 'Bildgenerierung',
+            brandVoices: 'Markenstimmen',
+            teamSeats: 'Team-Plätze',
+            support: 'Support',
+            values: {
+                twoK: '2.000',
+                geminiFlash: 'Gemini Flash',
+                geminiPro: 'Gemini Pro + Flash',
+                customUltra: 'Custom / Ultra',
+                basic: 'Basis',
+                full: 'Vollständig',
+                fullReports: 'Vollständig + Berichte',
+                advanced: 'Erweitert',
+                fifty: '50 / Monat',
+                twoHundred: '200 / Monat',
+                community: 'Community',
+                standard: 'Standard',
+                priority: 'Priorisiert',
+                dedicated: 'Dediziert'
+            }
+        },
+        help: {
+            question: 'Weitere Fragen?',
+            visit: 'Besuche unser Hilfecenter'
+        }
+    },
+    contactExtended: {
+        subtexts: {
+            enterprise: 'Für Unternehmensanfragen & Demos',
+            support: 'Für technische Probleme & Abrechnung'
+        },
+        enterprise: {
+            title: 'Enterprise-Anforderungen?',
+            desc: 'Benötigen Sie individuelle Integrationen, SSO oder unbegrenzte Plätze? Sprechen Sie direkt mit unserem Vertriebsteam.',
+            button: 'Demo vereinbaren'
+        },
+        form: {
+            subject: 'Betreff',
+            options: {
+                general: 'Allgemeine Anfrage',
+                support: 'Support-Anfrage',
+                enterprise: 'Enterprise-Vertrieb',
+                partnership: 'Partnerschaft'
+            }
+        }
+    },
+    profile: {
+        title: 'Profildetails',
+        changePhoto: 'Foto ändern',
+        uploadSuccess: 'Profilbild aktualisiert',
+        uploadFailed: 'Upload fehlgeschlagen',
+        fullName: 'Vollständiger Name',
+        emailAddress: 'E-Mail-Adresse',
+        bioRole: 'Bio / Rolle',
+        bioPlaceholder: 'Erzähle uns ein bisschen über dich...',
+        saveChanges: 'Änderungen speichern',
+        saveSuccess: 'Profil erfolgreich gespeichert'
+    },
+    overview: {
+        greeting: {
+            morning: 'Guten Morgen',
+            afternoon: 'Guten Tag',
+            evening: 'Guten Abend'
+        },
+        welcome: 'Du hast diesen Monat <strong>{words} Wörter</strong> generiert. Mach weiter so!',
+        stats: {
+            wordUsage: 'Wortnutzung',
+            imageGen: 'Bildgenerierung',
+            documents: 'Dokumente',
+            documentsDesc: 'Gesamt aktive Dokumente in allen Ordnern.'
+        },
+        recentActivity: 'Letzte Aktivität',
+        noDocuments: 'Noch keine Dokumente. Fang an zu erstellen!',
+        edited: 'Bearbeitet'
+    },
+    billing: {
+        currentPlan: 'Aktueller Plan',
+        active: 'Aktiv',
+        nextBilling: 'Nächstes Abrechnungsdatum:',
+        cancelPlan: 'Plan kündigen',
+        upgradePlan: 'Plan upgraden',
+        choosePlan: 'Wähle deinen Plan',
+        hidePlans: 'Pläne ausblenden',
+        monthly: 'Monatlich',
+        yearly: 'Jährlich',
+        saveUpTo: 'Spare bis zu 17%',
+        billed: 'Abgerechnet',
+        usage: {
+            aiGenerations: 'KI-Generierungen',
+            documents: 'Dokumente',
+            storage: 'Speicher',
+            teamMembers: 'Team-Mitglieder',
+            generations: 'Generierungen',
+            gb: 'GB',
+            members: 'Mitglieder'
+        },
+        payment: {
+            title: 'Zahlungsmethode',
+            visaEnding: 'Visa endend auf 4242',
+            expires: 'Läuft ab 12/2025',
+            edit: 'Bearbeiten'
+        },
+        invoices: {
+            title: 'Rechnungsverlauf',
+            proMonthly: 'Pro-Plan - Monatlich',
+            paid: 'Bezahlt'
+        }
+    },
+    integrations: {
+        title: 'Verbundene Konten',
+        subtitle: 'Verbinde deine Social-Media-Konten, um Inhalte direkt zu veröffentlichen.',
+        twitter: 'Twitter / X',
+        twitterDesc: 'Tweets und Threads posten',
+        linkedin: 'LinkedIn',
+        linkedinDesc: 'Professionelle Updates posten',
+        connect: 'Verbinden',
+        disconnect: 'Trennen',
+        connecting: 'Verbinde mit {platform}...',
+        disconnected: 'Getrennt von {platform}',
+        linked: 'Erfolgreich mit {platform} verbunden'
     }
   }
 };
