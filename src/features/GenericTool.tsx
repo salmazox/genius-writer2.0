@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon, Palette, PenTool, Mail, Volume2, Square, AlertTriangle, BarChart3, X, Undo } from 'lucide-react';
+import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check, Code, Settings2, Tag, Lock, Image as ImageIcon, Palette, PenTool, Mail, Volume2, Square, AlertTriangle, BarChart3, X, Undo, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig, ToolType } from '../types';
@@ -319,11 +319,29 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         // Generate a default title based on tool + date
         const defaultTitle = `${tool.name} - ${new Date().toLocaleDateString()}`;
         const titleCandidate = formValues['topic'] || formValues['productName'] || formValues['prompt'] || formValues['invoiceNumber'] || formValues['contractType'] || defaultTitle;
-        
+
         const tagList = tags.split(',').map(t => t.trim()).filter(Boolean);
 
         documentService.create(titleCandidate, documentContent, tool.id, undefined, tagList);
         showToast(t('dashboard.toasts.saved'), "success");
+    };
+
+    const handleClearDraft = () => {
+        // Clear all state
+        setDocumentContent('');
+        setFormValues({});
+        setContentHistory([]);
+        setTags('');
+        setTemplate('modern');
+        setAccentColor('#4f46e5');
+        setBlogOutline(null);
+        setShowOutlineEditor(false);
+        setSelectedImageStyle(null);
+
+        // Remove from localStorage
+        localStorage.removeItem(`draft_${tool.id}`);
+
+        showToast('Draft cleared', 'success');
     };
 
     const handleCopy = () => {
@@ -530,11 +548,22 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
                             {isImageTool ? <ImageIcon size={24} /> : <FileText size={24} />}
                         </div>
-                        {isAutoSaving ? (
-                            <span className="text-[10px] text-slate-400 flex items-center gap-1"><Save size={10} className="animate-pulse"/> Saving...</span>
-                        ) : (
-                            <span className="text-[10px] text-green-500 flex items-center gap-1"><Check size={10}/> Draft Saved</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {isAutoSaving ? (
+                                <span className="text-[10px] text-slate-400 flex items-center gap-1"><Save size={10} className="animate-pulse"/> Saving...</span>
+                            ) : (
+                                <span className="text-[10px] text-green-500 flex items-center gap-1"><Check size={10}/> Draft Saved</span>
+                            )}
+                            {(documentContent || Object.keys(formValues).length > 0) && (
+                                <button
+                                    onClick={handleClearDraft}
+                                    className="text-[10px] text-red-500 hover:text-red-600 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+                                    title="Clear draft and start over"
+                                >
+                                    <Trash2 size={10}/> Clear
+                                </button>
+                            )}
+                        </div>
                     </div>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">{tool.name}</h2>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">{tool.description}</p>
