@@ -5,8 +5,10 @@ import { Invoice } from '../../types';
 import { UsageCard } from '../../components/billing/UsageCard';
 import { PlanCard } from '../../components/billing/PlanCard';
 import { SubscriptionTier, getAllPlans, getPlan } from '../../config/pricing';
+import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 
 export const BillingView: React.FC = () => {
+    const { t } = useThemeLanguage();
     const [showPlans, setShowPlans] = useState(false);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
@@ -18,31 +20,31 @@ export const BillingView: React.FC = () => {
     // Mock usage data
     const usageMetrics = [
         {
-            label: 'AI Generations',
+            label: t('billing.usage.aiGenerations'),
             current: 423,
             limit: currentPlan.limits.aiGenerations,
-            unit: 'generations',
+            unit: t('billing.usage.generations'),
             icon: <Sparkles size={16} />
         },
         {
-            label: 'Documents',
+            label: t('billing.usage.documents'),
             current: 156,
             limit: currentPlan.limits.documentsPerMonth,
-            unit: 'documents',
+            unit: t('billing.usage.documents').toLowerCase(),
             icon: <FileText size={16} />
         },
         {
-            label: 'Storage',
+            label: t('billing.usage.storage'),
             current: 32,
             limit: currentPlan.limits.storageGB,
-            unit: 'GB',
+            unit: t('billing.usage.gb'),
             icon: <HardDrive size={16} />
         },
         {
-            label: 'Team Members',
+            label: t('billing.usage.teamMembers'),
             current: 3,
             limit: currentPlan.limits.collaborators,
-            unit: 'members',
+            unit: t('billing.usage.members'),
             icon: <Users size={16} />
         }
     ];
@@ -70,22 +72,22 @@ export const BillingView: React.FC = () => {
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
-                             <div className="px-2 py-0.5 bg-white/20 rounded text-xs font-bold uppercase tracking-wider">Current Plan</div>
-                             <span className="text-green-300 flex items-center gap-1 text-xs font-bold"><CheckCircle2 size={12} /> Active</span>
+                             <div className="px-2 py-0.5 bg-white/20 rounded text-xs font-bold uppercase tracking-wider">{t('billing.currentPlan')}</div>
+                             <span className="text-green-300 flex items-center gap-1 text-xs font-bold"><CheckCircle2 size={12} /> {t('billing.active')}</span>
                         </div>
                         <h2 className="text-3xl font-bold mb-1">{currentPlan.name}</h2>
-                        <p className="text-indigo-200 text-sm">Next billing date: November 24, 2023</p>
+                        <p className="text-indigo-200 text-sm">{t('billing.nextBilling')} November 24, 2023</p>
                     </div>
                     <div className="flex gap-3">
                          <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-bold transition-colors backdrop-blur-sm">
-                            Cancel Plan
+                            {t('billing.cancelPlan')}
                          </button>
                          {currentTier !== SubscriptionTier.ENTERPRISE && (
                             <button
                                 onClick={handleUpgradeClick}
                                 className="px-4 py-2 bg-white text-indigo-600 hover:bg-indigo-50 rounded-lg text-sm font-bold transition-colors shadow-lg"
                             >
-                                Upgrade Plan
+                                {t('billing.upgradePlan')}
                             </button>
                          )}
                     </div>
@@ -108,13 +110,13 @@ export const BillingView: React.FC = () => {
                     <div className="mb-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                                Choose Your Plan
+                                {t('billing.choosePlan')}
                             </h3>
                             <button
                                 onClick={() => setShowPlans(false)}
                                 className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-sm"
                             >
-                                Hide plans
+                                {t('billing.hidePlans')}
                             </button>
                         </div>
 
@@ -128,7 +130,7 @@ export const BillingView: React.FC = () => {
                                         : 'text-slate-600 dark:text-slate-400'
                                 }`}
                             >
-                                Monthly
+                                {t('billing.monthly')}
                             </button>
                             <button
                                 onClick={() => setBillingCycle('yearly')}
@@ -138,9 +140,9 @@ export const BillingView: React.FC = () => {
                                         : 'text-slate-600 dark:text-slate-400'
                                 }`}
                             >
-                                Yearly
+                                {t('billing.yearly')}
                                 <span className="ml-2 text-xs text-green-600 dark:text-green-400 font-bold">
-                                    Save up to 17%
+                                    {t('billing.saveUpTo')}
                                 </span>
                             </button>
                         </div>
@@ -164,36 +166,36 @@ export const BillingView: React.FC = () => {
 
              {/* Payment Method */}
              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800">
-                 <h3 className="font-bold text-slate-900 dark:text-white mb-4">Payment Method</h3>
+                 <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('billing.payment.title')}</h3>
                  <div className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50">
                      <div className="flex items-center gap-4">
                          <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded flex items-center justify-center">
                              <CreditCard size={20} className="text-slate-500" />
                          </div>
                          <div>
-                             <p className="font-bold text-slate-900 dark:text-white text-sm">Visa ending in 4242</p>
-                             <p className="text-xs text-slate-500">Expires 12/2025</p>
+                             <p className="font-bold text-slate-900 dark:text-white text-sm">{t('billing.payment.visaEnding')}</p>
+                             <p className="text-xs text-slate-500">{t('billing.payment.expires')}</p>
                          </div>
                      </div>
-                     <button className="text-sm text-indigo-600 font-medium hover:underline">Edit</button>
+                     <button className="text-sm text-indigo-600 font-medium hover:underline">{t('billing.payment.edit')}</button>
                  </div>
              </div>
 
              {/* Invoices */}
              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden" data-tour="invoices">
                  <div className="p-6 border-b border-slate-100 dark:border-slate-800">
-                     <h3 className="font-bold text-lg text-slate-900 dark:text-white">Invoice History</h3>
+                     <h3 className="font-bold text-lg text-slate-900 dark:text-white">{t('billing.invoices.title')}</h3>
                  </div>
                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
                      {mockInvoices.map(invoice => (
                          <div key={invoice.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                              <div className="flex flex-col">
-                                 <span className="font-bold text-slate-900 dark:text-white text-sm">{invoice.items}</span>
+                                 <span className="font-bold text-slate-900 dark:text-white text-sm">{t('billing.invoices.proMonthly')}</span>
                                  <span className="text-xs text-slate-500">{invoice.date}</span>
                              </div>
                              <div className="flex items-center gap-4">
                                  <span className="font-bold text-slate-900 dark:text-white">€{invoice.amount.toFixed(2)}</span>
-                                 <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full font-bold">{invoice.status}</span>
+                                 <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full font-bold">{t('billing.invoices.paid')}</span>
                                  <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Download size={18} /></button>
                              </div>
                          </div>
