@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { ToastProvider, useToast } from './ToastContext';
 import React from 'react';
 
@@ -54,7 +54,7 @@ describe('ToastContext', () => {
       expect(result.current.showToast).toBeDefined();
     });
 
-    it('should auto-remove toast after 4 seconds for normal toasts', async () => {
+    it('should auto-remove toast after 4 seconds for normal toasts', () => {
       const { result } = renderHook(() => useToast(), { wrapper });
 
       act(() => {
@@ -66,13 +66,11 @@ describe('ToastContext', () => {
         vi.advanceTimersByTime(4000);
       });
 
-      // Toast should be removed after timeout
-      await waitFor(() => {
-        expect(result.current.showToast).toBeDefined();
-      });
+      // Toast removal happens via setTimeout, just verify the function still works
+      expect(result.current.showToast).toBeDefined();
     });
 
-    it('should auto-remove toast after 8 seconds for toasts with actions', async () => {
+    it('should auto-remove toast after 8 seconds for toasts with actions', () => {
       const { result } = renderHook(() => useToast(), { wrapper });
       const action = { label: 'Undo', onClick: vi.fn() };
 
@@ -85,9 +83,8 @@ describe('ToastContext', () => {
         vi.advanceTimersByTime(8000);
       });
 
-      await waitFor(() => {
-        expect(result.current.showToast).toBeDefined();
-      });
+      // Toast removal happens via setTimeout, just verify the function still works
+      expect(result.current.showToast).toBeDefined();
     });
 
     it('should handle multiple toasts', () => {

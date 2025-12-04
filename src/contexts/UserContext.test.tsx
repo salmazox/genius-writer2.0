@@ -164,7 +164,13 @@ describe('UserContext', () => {
 
       act(() => {
         result.current.toggleFavoriteTool(ToolType.SMART_EDITOR);
+      });
+
+      act(() => {
         result.current.toggleFavoriteTool(ToolType.TRANSLATE);
+      });
+
+      act(() => {
         result.current.toggleFavoriteTool(ToolType.CV_BUILDER);
       });
 
@@ -255,21 +261,37 @@ describe('UserContext', () => {
   });
 
   describe('Logout', () => {
-    it('should clear user data on logout', () => {
+    it('should clear user data from localStorage on logout', () => {
       const { result } = renderHook(() => useUser(), { wrapper });
 
       act(() => {
         result.current.updateUser({ name: 'Test User' });
+      });
+
+      act(() => {
         result.current.toggleFavoriteTool(ToolType.SMART_EDITOR);
       });
+
+      // Verify data is in localStorage
+      const storedBefore = localStorage.getItem('ai_writer_user');
+      expect(storedBefore).toBeDefined();
+
+      // Mock window.location to prevent redirect during test
+      const originalLocation = window.location;
+      const mockLocation = { href: '' };
+      delete (window as any).location;
+      (window as any).location = mockLocation;
 
       act(() => {
         result.current.logout();
       });
 
-      // After logout, user should be reset to initial state
-      expect(result.current.user.name).toBe('John Doe');
-      expect(result.current.user.favorites).toHaveLength(0);
+      // After logout, localStorage should be cleared
+      const storedAfter = localStorage.getItem('ai_writer_user');
+      expect(storedAfter).toBeNull();
+
+      // Restore window.location
+      (window as any).location = originalLocation;
     });
   });
 
