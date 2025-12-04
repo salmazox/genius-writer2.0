@@ -636,7 +636,9 @@ export const translations = {
             afternoon: 'Good afternoon',
             evening: 'Good evening'
         },
-        welcome: 'You have generated <strong>{words} words</strong> this month. Keep up the creativity!',
+        welcomeBefore: 'You have generated',
+        wordsText: 'words',
+        welcomeAfter: 'this month. Keep up the creativity!',
         stats: {
             wordUsage: 'Word Usage',
             imageGen: 'Image Gen',
@@ -1330,7 +1332,9 @@ export const translations = {
             afternoon: 'Guten Tag',
             evening: 'Guten Abend'
         },
-        welcome: 'Du hast diesen Monat <strong>{words} Wörter</strong> generiert. Mach weiter so!',
+        welcomeBefore: 'Du hast',
+        wordsText: 'Wörter',
+        welcomeAfter: 'diesen Monat generiert. Mach weiter so!',
         stats: {
             wordUsage: 'Wortnutzung',
             imageGen: 'Bildgenerierung',

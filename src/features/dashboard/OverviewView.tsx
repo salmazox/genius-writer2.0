@@ -4,12 +4,14 @@ import { User, SavedDocument } from '../../types';
 import { documentService } from '../../services/documentService';
 import { ToolType } from '../../types';
 import { LIMITS } from '../../services/gemini';
+import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 
 interface OverviewViewProps {
     user: User;
 }
 
 export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
+    const { t } = useThemeLanguage();
     const [stats, setStats] = useState({
         wordsUsed: 0,
         wordsLimit: 2000, 
@@ -65,9 +67,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
 
     const getGreeting = () => {
         const hour = new Date().getHours();
-        if (hour < 12) return "Good morning";
-        if (hour < 18) return "Good afternoon";
-        return "Good evening";
+        if (hour < 12) return t('overview.greeting.morning');
+        if (hour < 18) return t('overview.greeting.afternoon');
+        return t('overview.greeting.evening');
     };
 
     return (
@@ -78,8 +80,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
                 <div className="relative z-10">
                     <h1 className="text-3xl font-bold mb-2">{getGreeting()}, {user.name.split(' ')[0]}!</h1>
                     <p className="text-indigo-100 max-w-lg">
-                        You have generated <span className="font-bold text-white">{stats.wordsUsed.toLocaleString()} words</span> this month. 
-                        Keep up the creativity!
+                        {t('overview.welcomeBefore')} <span className="font-bold text-white">{stats.wordsUsed.toLocaleString()} {t('overview.wordsText')}</span> {t('overview.welcomeAfter')}
                     </p>
                 </div>
             </div>
@@ -88,7 +89,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
                     <div className="flex items-center gap-3 mb-4 text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider">
-                        <Zap size={18} className="text-yellow-500" /> Word Usage
+                        <Zap size={18} className="text-yellow-500" /> {t('overview.stats.wordUsage')}
                     </div>
                     <div className="flex-1 flex flex-col justify-end">
                         <div className="flex items-baseline gap-1 mb-2">
@@ -106,7 +107,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
 
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
                     <div className="flex items-center gap-3 mb-4 text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider">
-                        <ImageIcon size={18} className="text-pink-500" /> Image Gen
+                        <ImageIcon size={18} className="text-pink-500" /> {t('overview.stats.imageGen')}
                     </div>
                     <div className="flex-1 flex flex-col justify-end">
                         <div className="flex items-baseline gap-1 mb-2">
@@ -124,11 +125,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
 
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
                     <div className="flex items-center gap-3 mb-4 text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider">
-                        <FileText size={18} className="text-indigo-500" /> Documents
+                        <FileText size={18} className="text-indigo-500" /> {t('overview.stats.documents')}
                     </div>
                     <div className="flex-1 flex flex-col justify-end">
                         <span className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{stats.savedDocsCount}</span>
-                        <p className="text-xs text-slate-500">Total active documents across all folders.</p>
+                        <p className="text-xs text-slate-500">{t('overview.stats.documentsDesc')}</p>
                     </div>
                 </div>
             </div>
@@ -137,12 +138,12 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <h2 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                        <Clock size={20} className="text-slate-400"/> Recent Activity
+                        <Clock size={20} className="text-slate-400"/> {t('overview.recentActivity')}
                     </h2>
                 </div>
                 {recentDocs.length === 0 ? (
                     <div className="p-8 text-center text-slate-500 text-sm">
-                        No documents yet. Start creating!
+                        {t('overview.noDocuments')}
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -154,7 +155,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({ user }) => {
                                 <div className="flex-1 min-w-0">
                                     <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">{doc.title}</h3>
                                     <p className="text-xs text-slate-500 truncate">
-                                        Edited {new Date(doc.lastModified).toLocaleDateString()}
+                                        {t('overview.edited')} {new Date(doc.lastModified).toLocaleDateString()}
                                     </p>
                                 </div>
                                 <span className="text-xs font-medium px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-slate-500">
