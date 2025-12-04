@@ -56,7 +56,7 @@ const ToolModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen,
     const { t } = useThemeLanguage();
     const tools = getTools(t);
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="All 18 Tools" size="lg">
+        <Modal isOpen={isOpen} onClose={onClose} title={t('landingExtended.allTools')} size="lg">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {tools.map(tool => {
                     const Icon = IconMap[tool.icon] || FileText;
@@ -172,10 +172,10 @@ const LandingPage: React.FC = () => {
 
           {/* Value Proof Bar */}
           <div className="flex flex-wrap justify-center gap-4 md:gap-8 text-sm font-medium text-slate-600 dark:text-slate-400 animate-in slide-in-from-bottom-4 duration-700 delay-100">
-              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> 2,000 FREE words/month</div>
-              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> No credit card</div>
-              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> ATS + SEO analysis</div>
-              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> 18 AI tools</div>
+              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> {t('landingExtended.valueProof.freeWords')}</div>
+              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> {t('landingExtended.valueProof.noCard')}</div>
+              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> {t('landingExtended.valueProof.atsAnalysis')}</div>
+              <div className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-500" /> {t('landingExtended.valueProof.aiTools')}</div>
           </div>
         </div>
       </section>
@@ -211,10 +211,10 @@ const LandingPage: React.FC = () => {
                       <div className="absolute top-4 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">{t('landing.comparison.bestValue')}</div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t('landing.comparison.withTitle')}</h3>
                       <ul className="space-y-4 mb-8">
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>18 AI Tools + Templates</span></li>
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>Smart Editor + SEO Analysis</span></li>
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>ATS-Optimized CV Builder</span></li>
-                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>Translator + Brand Voice</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landingExtended.comparisonFeatures.allTools')}</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landingExtended.comparisonFeatures.smartEditor')}</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landingExtended.comparisonFeatures.atsCV')}</span></li>
+                          <li className="flex items-center gap-3 text-slate-800 dark:text-white font-medium"><CheckCircle2 className="text-green-500 shrink-0" size={20}/> <span>{t('landingExtended.comparisonFeatures.translator')}</span></li>
                       </ul>
                       <div className="pt-6 border-t border-indigo-200 dark:border-indigo-800/50">
                           <p className="text-sm font-semibold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider mb-1">{t('landing.comparison.total')}</p>
@@ -232,9 +232,9 @@ const LandingPage: React.FC = () => {
       <section className="py-20 bg-white dark:bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">See It In Action</h2>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{t('landingExtended.demo.title')}</h2>
             </div>
-            
+
             {/* Tabs */}
             <div className="flex justify-center gap-4 mb-8">
                 {['cv', 'translate', 'social'].map((tab) => (
@@ -243,7 +243,7 @@ const LandingPage: React.FC = () => {
                         onClick={() => setActiveDemoTab(tab as any)}
                         className={`px-6 py-2 rounded-full font-bold text-sm transition-all ${activeDemoTab === tab ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                     >
-                        {tab === 'cv' ? 'CV Builder' : tab === 'translate' ? 'Translator' : 'Social Post'}
+                        {tab === 'cv' ? t('landingExtended.demo.cvBuilder') : tab === 'translate' ? t('landingExtended.demo.translator') : t('landingExtended.demo.socialPost')}
                     </button>
                 ))}
             </div>
@@ -273,7 +273,7 @@ const LandingPage: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg border border-indigo-100 dark:border-indigo-800 mt-4">
-                                    <div className="flex items-center gap-2 text-indigo-600 text-xs font-bold mb-2"><Sparkles size={12}/> AI Analysis</div>
+                                    <div className="flex items-center gap-2 text-indigo-600 text-xs font-bold mb-2"><Sparkles size={12}/> {t('landingExtended.demo.aiAnalysis')}</div>
                                     <div className="h-1.5 w-full bg-indigo-200 dark:bg-indigo-800 rounded mb-1"></div>
                                     <div className="h-1.5 w-3/4 bg-indigo-200 dark:bg-indigo-800 rounded"></div>
                                 </div>
@@ -291,7 +291,7 @@ const LandingPage: React.FC = () => {
                         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in zoom-in-95">
                             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
                                 <div className="flex justify-between mb-4 text-sm font-bold text-slate-500">
-                                    <span>English (Detected)</span>
+                                    <span>{t('landingExtended.demo.englishDetected')}</span>
                                 </div>
                                 <p className="text-xl font-medium text-slate-900 dark:text-white leading-relaxed">
                                     "Our marketing strategy for Q4 focuses on organic growth and community engagement. We need to prioritize authentic storytelling over aggressive sales tactics."
@@ -299,14 +299,14 @@ const LandingPage: React.FC = () => {
                             </div>
                             <div className="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-xl shadow-lg border border-indigo-100 dark:border-indigo-800 relative">
                                 <div className="flex justify-between mb-4 text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                                    <span>German</span>
+                                    <span>{t('landingExtended.demo.german')}</span>
                                     <Copy size={16} className="cursor-pointer"/>
                                 </div>
                                 <p className="text-xl font-medium text-slate-900 dark:text-white leading-relaxed">
                                     "Unsere Marketingstrategie für das 4. Quartal konzentriert sich auf organisches Wachstum und das Engagement der Community. Wir müssen authentisches Storytelling gegenüber aggressiven Verkaufstaktiken priorisieren."
                                 </p>
                                 <div className="absolute bottom-4 right-4 flex items-center gap-1 text-xs text-slate-400">
-                                    <Sparkles size={12}/> AI Translated
+                                    <Sparkles size={12}/> {t('landingExtended.demo.aiTranslated')}
                                 </div>
                             </div>
                         </div>
@@ -319,7 +319,7 @@ const LandingPage: React.FC = () => {
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500"></div>
                                     <div>
                                         <div className="font-bold text-slate-900 dark:text-white">Genius Writer</div>
-                                        <div className="text-xs text-slate-500">@genius_writer • Just now</div>
+                                        <div className="text-xs text-slate-500">@genius_writer • {t('landingExtended.demo.justNow')}</div>
                                     </div>
                                 </div>
                                 <div className="text-slate-400">...</div>
@@ -335,16 +335,16 @@ const LandingPage: React.FC = () => {
                             </div>
                             <div className="flex justify-between text-slate-500 text-sm px-2">
                                 <span>💬 24</span>
-                                <span>Example Post</span>
+                                <span>{t('landingExtended.demo.examplePost')}</span>
                                 <span>❤️ 142</span>
                             </div>
                         </div>
                     )}
                 </div>
             </div>
-            
+
             <div className="text-center mt-8">
-                <Link to="/dashboard" className="text-indigo-600 font-bold hover:underline">Try it yourself &rarr;</Link>
+                <Link to="/dashboard" className="text-indigo-600 font-bold hover:underline">{t('landingExtended.demo.tryYourself')}</Link>
             </div>
         </div>
       </section>
@@ -362,18 +362,18 @@ const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard
               icon={<FileText />}
-              title="Smart Long-Form Editor"
-              description="Professional document editor with real-time SEO analysis, plagiarism detection, and readability scoring. Write better content faster."
+              title={t('landingExtended.features.smartEditor')}
+              description={t('landingExtended.features.smartEditorDesc')}
             />
             <FeatureCard
               icon={<Briefcase />}
-              title="ATS-Optimized CV Builder"
-              description="Build professional resumes with 5 modern templates. Get real-time ATS scoring and keyword optimization to land more interviews."
+              title={t('landingExtended.features.atsCV')}
+              description={t('landingExtended.features.atsCVDesc')}
             />
             <FeatureCard
               icon={<Globe />}
               title={t('features.translate')}
-              description="Context-aware translation in 50+ languages. Preserves tone, nuance, and formatting for professional communications."
+              description={t('landingExtended.features.translateDesc')}
             />
             <FeatureCard
               icon={<Mail />}
@@ -382,8 +382,8 @@ const LandingPage: React.FC = () => {
             />
             <FeatureCard
               icon={<PenTool />}
-              title="Brand Voice & Kit"
-              description="Define your brand voice once, use it everywhere. Consistent tone and style across all your AI-generated content."
+              title={t('landingExtended.features.brandVoice')}
+              description={t('landingExtended.features.brandVoiceDesc')}
             />
             <FeatureCard
               icon={<Share2 />}
@@ -397,27 +397,27 @@ const LandingPage: React.FC = () => {
       {/* Testimonials */}
       <section className="py-20 bg-white dark:bg-slate-950">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-4">Join 5,000+ writers who switched</h2>
-            <p className="text-center text-slate-500 mb-12">Don't just take our word for it.</p>
-            
+            <h2 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-4">{t('landingExtended.testimonials.title')}</h2>
+            <p className="text-center text-slate-500 mb-12">{t('landingExtended.testimonials.subtitle')}</p>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
-                    { name: "Sarah K.", role: "Content Creator", text: "The Smart Editor with SEO analysis is a game-changer. I see what needs fixing in real-time." },
-                    { name: "Marcus T.", role: "Software Engineer", text: "The CV builder got me 3 interviews in one week. ATS scoring shows exactly what recruiters want!" },
-                    { name: "Elena R.", role: "Freelancer", text: "Brand Voice saves me hours. Write once, applies everywhere. My clients love the consistency." }
-                ].map((t, i) => (
+                    { name: "Sarah K.", role: t('landingExtended.testimonials.sarahRole'), text: t('landingExtended.testimonials.sarah') },
+                    { name: "Marcus T.", role: t('landingExtended.testimonials.marcusRole'), text: t('landingExtended.testimonials.marcus') },
+                    { name: "Elena R.", role: t('landingExtended.testimonials.elenaRole'), text: t('landingExtended.testimonials.elena') }
+                ].map((testimonial, i) => (
                     <div key={i} className="bg-slate-50 dark:bg-slate-900 p-8 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-1 text-yellow-400 mb-4">
                             {[1,2,3,4,5].map(s => <Sparkles key={s} size={16} className="fill-current" />)}
                         </div>
-                        <p className="text-slate-700 dark:text-slate-300 mb-6 italic leading-relaxed">"{t.text}"</p>
+                        <p className="text-slate-700 dark:text-slate-300 mb-6 italic leading-relaxed">"{testimonial.text}"</p>
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-slate-800 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400">
-                                {t.name.charAt(0)}
+                                {testimonial.name.charAt(0)}
                             </div>
                             <div>
-                                <p className="font-bold text-slate-900 dark:text-white text-sm">{t.name}</p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">{t.role}</p>
+                                <p className="font-bold text-slate-900 dark:text-white text-sm">{testimonial.name}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{testimonial.role}</p>
                             </div>
                         </div>
                     </div>
