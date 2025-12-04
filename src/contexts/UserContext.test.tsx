@@ -164,13 +164,13 @@ describe('UserContext', () => {
 
       act(() => {
         result.current.toggleFavoriteTool(ToolType.SMART_EDITOR);
-        result.current.toggleFavoriteTool(ToolType.TRANSLATOR);
+        result.current.toggleFavoriteTool(ToolType.TRANSLATE);
         result.current.toggleFavoriteTool(ToolType.CV_BUILDER);
       });
 
       expect(result.current.user.favorites).toHaveLength(3);
       expect(result.current.user.favorites).toContain(ToolType.SMART_EDITOR);
-      expect(result.current.user.favorites).toContain(ToolType.TRANSLATOR);
+      expect(result.current.user.favorites).toContain(ToolType.TRANSLATE);
       expect(result.current.user.favorites).toContain(ToolType.CV_BUILDER);
     });
   });
