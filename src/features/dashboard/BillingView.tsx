@@ -50,9 +50,9 @@ export const BillingView: React.FC = () => {
     ];
 
     const mockInvoices: Invoice[] = [
-        { id: 'INV-2023-001', date: 'Oct 24, 2023', amount: 29.00, status: t('billing.invoices.paid'), items: t('billing.invoices.proMonthly') },
-        { id: 'INV-2023-002', date: 'Sep 24, 2023', amount: 29.00, status: t('billing.invoices.paid'), items: t('billing.invoices.proMonthly') },
-        { id: 'INV-2023-003', date: 'Aug 24, 2023', amount: 29.00, status: t('billing.invoices.paid'), items: t('billing.invoices.proMonthly') },
+        { id: 'INV-2023-001', date: 'Oct 24, 2023', amount: 29.00, status: 'Paid', items: 'Pro Plan - Monthly' },
+        { id: 'INV-2023-002', date: 'Sep 24, 2023', amount: 29.00, status: 'Paid', items: 'Pro Plan - Monthly' },
+        { id: 'INV-2023-003', date: 'Aug 24, 2023', amount: 29.00, status: 'Paid', items: 'Pro Plan - Monthly' },
     ];
 
     const handleUpgradeClick = () => {
@@ -190,12 +190,12 @@ export const BillingView: React.FC = () => {
                      {mockInvoices.map(invoice => (
                          <div key={invoice.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                              <div className="flex flex-col">
-                                 <span className="font-bold text-slate-900 dark:text-white text-sm">{invoice.items}</span>
+                                 <span className="font-bold text-slate-900 dark:text-white text-sm">{t('billing.invoices.proMonthly')}</span>
                                  <span className="text-xs text-slate-500">{invoice.date}</span>
                              </div>
                              <div className="flex items-center gap-4">
                                  <span className="font-bold text-slate-900 dark:text-white">€{invoice.amount.toFixed(2)}</span>
-                                 <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full font-bold">{invoice.status}</span>
+                                 <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full font-bold">{t('billing.invoices.paid')}</span>
                                  <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Download size={18} /></button>
                              </div>
                          </div>
