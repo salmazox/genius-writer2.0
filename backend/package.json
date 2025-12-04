@@ -13,7 +13,7 @@
     "prisma": "^5.5.2",
     "@prisma/client": "^5.5.2",
     "stripe": "^14.4.0",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "^9.0.3",
     "bcryptjs": "^2.4.3"
   }
 }
