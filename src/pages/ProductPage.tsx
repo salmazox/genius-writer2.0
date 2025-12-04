@@ -18,7 +18,7 @@ const ProductPage: React.FC = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-300 text-xs font-bold mb-6 animate-in slide-in-from-bottom-4 fade-in duration-700">
             <Sparkles size={12} />
-            <span>Genius Writer Platform</span>
+            <span>{t('productExtended.badge')}</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 dark:text-white mb-6 tracking-tight animate-in slide-in-from-bottom-6 fade-in duration-700 delay-100">
             {t('product.title')}
@@ -42,16 +42,16 @@ const ProductPage: React.FC = () => {
                 </div>
                 <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">{t('product.geminiTitle')}</h2>
                 <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-8">
-                  {t('product.geminiDesc')} We've fine-tuned the model to understand nuance, tone, and context better than standard chatbots.
+                  {t('product.geminiDesc')} {t('productExtended.geminiDescExtended')}
                 </p>
                 <ul className="space-y-4">
                     <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                         <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400"><Check size={14} strokeWidth={3}/></div>
-                        <span className="font-medium">Context-aware generation</span>
+                        <span className="font-medium">{t('productExtended.features.contextAware')}</span>
                     </li>
                     <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                         <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400"><Check size={14} strokeWidth={3}/></div>
-                        <span className="font-medium">Real-time tone adjustment</span>
+                        <span className="font-medium">{t('productExtended.features.toneAdjustment')}</span>
                     </li>
                 </ul>
               </div>
@@ -68,13 +68,13 @@ const ProductPage: React.FC = () => {
                         <div className="flex gap-4 items-start">
                             <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex-shrink-0"></div>
                             <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl rounded-tl-none text-sm text-slate-600 dark:text-slate-300">
-                                Write a witty tweet about coffee being life fuel.
+                                {t('productExtended.features.chatExample')}
                             </div>
                         </div>
                         <div className="flex gap-4 items-start flex-row-reverse">
                             <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white flex-shrink-0"><Sparkles size={14}/></div>
                             <div className="bg-indigo-600 text-white p-4 rounded-2xl rounded-tr-none text-sm shadow-lg shadow-indigo-500/20">
-                                "Decaf is just brown sadness water. ☕️ Give me the high-octane bean juice or give me sleep! #MondayMotivation #CoffeeLover"
+                                {t('productExtended.features.chatResponse')}
                             </div>
                         </div>
                         <div className="flex gap-2 justify-center pt-2">
@@ -95,25 +95,25 @@ const ProductPage: React.FC = () => {
                     <div className="space-y-4 mt-8">
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 transform hover:-translate-y-1 transition-transform duration-300">
                             <Briefcase className="text-blue-500 mb-3" size={24} />
-                            <h4 className="font-bold text-slate-900 dark:text-white">CV Builder</h4>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">ATS-Optimized Resumes</p>
+                            <h4 className="font-bold text-slate-900 dark:text-white">{t('productExtended.tools.cvBuilder')}</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('productExtended.tools.cvBuilderDesc')}</p>
                         </div>
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 transform hover:-translate-y-1 transition-transform duration-300">
                             <PenTool className="text-pink-500 mb-3" size={24} />
-                            <h4 className="font-bold text-slate-900 dark:text-white">Blog Post</h4>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">SEO Article Generator</p>
+                            <h4 className="font-bold text-slate-900 dark:text-white">{t('productExtended.tools.blogPost')}</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('productExtended.tools.blogPostDesc')}</p>
                         </div>
                     </div>
                     <div className="space-y-4">
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 transform hover:-translate-y-1 transition-transform duration-300">
                             <MessageSquare className="text-green-500 mb-3" size={24} />
-                            <h4 className="font-bold text-slate-900 dark:text-white">Social</h4>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Viral Posts & Threads</p>
+                            <h4 className="font-bold text-slate-900 dark:text-white">{t('productExtended.tools.social')}</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('productExtended.tools.socialDesc')}</p>
                         </div>
                         <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 transform hover:-translate-y-1 transition-transform duration-300">
                             <Cpu className="text-orange-500 mb-3" size={24} />
-                            <h4 className="font-bold text-slate-900 dark:text-white">Translator</h4>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Nuance-aware Translate</p>
+                            <h4 className="font-bold text-slate-900 dark:text-white">{t('productExtended.tools.translator')}</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('productExtended.tools.translatorDesc')}</p>
                         </div>
                     </div>
                  </div>
@@ -125,12 +125,18 @@ const ProductPage: React.FC = () => {
                 </div>
                 <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">{t('product.templatesTitle')}</h2>
                 <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-                  {t('product.templatesDesc')} Our library is constantly expanding with specialized tools for every profession.
+                  {t('product.templatesDesc')} {t('productExtended.templatesExtended')}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                    {['Marketing', 'Sales', 'HR', 'Engineering', 'Founders'].map(tag => (
-                        <span key={tag} className="px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-300 text-sm font-semibold rounded-full border border-purple-100 dark:border-purple-800">
-                            {tag}
+                    {[
+                        { key: 'marketing', label: t('productExtended.tags.marketing') },
+                        { key: 'sales', label: t('productExtended.tags.sales') },
+                        { key: 'hr', label: t('productExtended.tags.hr') },
+                        { key: 'engineering', label: t('productExtended.tags.engineering') },
+                        { key: 'founders', label: t('productExtended.tags.founders') }
+                    ].map(tag => (
+                        <span key={tag.key} className="px-3 py-1 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-300 text-sm font-semibold rounded-full border border-purple-100 dark:border-purple-800">
+                            {tag.label}
                         </span>
                     ))}
                 </div>
@@ -145,22 +151,22 @@ const ProductPage: React.FC = () => {
                 <div className="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg shadow-green-500/30 rotate-3">
                   <FileText size={28} />
                 </div>
-                <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">Smart Editor with Real-Time Analysis</h2>
+                <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">{t('productExtended.smartEditor.title')}</h2>
                 <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-8">
-                  Write long-form content with confidence. Our Smart Editor provides instant feedback on SEO, readability, plagiarism, and ATS scoring as you type.
+                  {t('productExtended.smartEditor.desc')}
                 </p>
                 <ul className="space-y-4">
                     <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                         <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400"><BarChart3 size={14} strokeWidth={3}/></div>
-                        <span className="font-medium">Real-time SEO & readability scoring</span>
+                        <span className="font-medium">{t('productExtended.smartEditor.seoScoring')}</span>
                     </li>
                     <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                         <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400"><Search size={14} strokeWidth={3}/></div>
-                        <span className="font-medium">AI plagiarism detection</span>
+                        <span className="font-medium">{t('productExtended.smartEditor.plagiarism')}</span>
                     </li>
                     <li className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                         <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400"><Briefcase size={14} strokeWidth={3}/></div>
-                        <span className="font-medium">ATS optimization for CVs</span>
+                        <span className="font-medium">{t('productExtended.smartEditor.atsOptimization')}</span>
                     </li>
                 </ul>
               </div>
@@ -212,7 +218,7 @@ const ProductPage: React.FC = () => {
           <div>
               <div className="text-center mb-16">
                    <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">{t('product.personas.title')}</h2>
-                   <p className="text-slate-600 dark:text-slate-400">Tailored experiences for every type of writer.</p>
+                   <p className="text-slate-600 dark:text-slate-400">{t('productExtended.personas.subtitle')}</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   {[
@@ -267,7 +273,7 @@ const ProductPage: React.FC = () => {
                                { icon: Check, text: t('product.security.feature1') },
                                { icon: Lock, text: t('product.security.feature2') },
                                { icon: EyeOff, text: t('product.security.feature3') },
-                               { icon: Server, text: "99.9% Uptime SLA" },
+                               { icon: Server, text: t('productExtended.security.uptime') },
                            ].map((f, i) => (
                                <div key={i} className="flex items-center gap-3 text-slate-300">
                                    <div className="p-1 rounded-full bg-green-500/20 text-green-400"><f.icon size={14} /></div>
@@ -319,7 +325,7 @@ const ProductPage: React.FC = () => {
             >
               {t('hero.startFree')}
             </Link>
-            <p className="mt-6 text-sm text-slate-500">No credit card required for free tier.</p>
+            <p className="mt-6 text-sm text-slate-500">{t('productExtended.cta.noCard')}</p>
        </div>
     </div>
   );

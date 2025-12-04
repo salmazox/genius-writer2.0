@@ -45,7 +45,7 @@ const PricingPage: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-20">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 text-indigo-600 dark:text-indigo-300 text-xs font-bold mb-6 animate-in fade-in zoom-in duration-500">
              <Star size={12} className="fill-indigo-600 dark:fill-indigo-300"/>
-             <span>Flexible Plans for Everyone</span>
+             <span>{t('pricingExtended.badge')}</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6">
             {t('pricing.title')}
@@ -65,7 +65,7 @@ const PricingPage: React.FC = () => {
              </button>
              <span className={`text-sm font-bold flex items-center gap-2 transition-colors ${billingCycle === 'yearly' ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>
                  {t('pricing.yearly')}
-                 <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-extrabold">Save ~20%</span>
+                 <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wide font-extrabold">{t('pricingExtended.savePercent')}</span>
              </span>
           </div>
         </div>
@@ -87,15 +87,15 @@ const PricingPage: React.FC = () => {
               {t('nav.getStarted')}
             </Link>
             <div className="space-y-4 flex-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">Core Features</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">{t('pricingExtended.coreFeatures')}</p>
               <ul className="space-y-3">
                 <FeatureItem text={t('pricing.features.words2k')} />
                 <FeatureItem text={t('pricing.features.modelFlash')} />
                 <FeatureItem text={t('pricing.features.templatesBasic')} />
-                <FeatureItem text="1 Project" />
-                <FeatureItem text="Basic SEO analysis" />
+                <FeatureItem text={t('pricingExtended.features.oneProject')} />
+                <FeatureItem text={t('pricingExtended.features.basicSEO')} />
                 <FeatureItem text={t('pricing.features.imagesNo')} included={false} />
-                <FeatureItem text="Brand Voice" included={false} />
+                <FeatureItem text={t('pricingExtended.features.brandVoice')} included={false} />
               </ul>
             </div>
           </div>
@@ -114,22 +114,22 @@ const PricingPage: React.FC = () => {
                 <span className="text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">{symbol}{currentProPrice}</span>
                 <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
               </div>
-              {billingCycle === 'yearly' && <p className="text-xs text-green-600 font-medium mt-1">Billed {symbol}{currentProPrice * 12} yearly</p>}
+              {billingCycle === 'yearly' && <p className="text-xs text-green-600 font-medium mt-1">{t('billing.billed')} {symbol}{currentProPrice * 12} {t('pricing.yearly').toLowerCase()}</p>}
             </div>
             <Link to="/auth?plan=pro" className="block w-full py-3.5 px-4 bg-indigo-600 text-white font-bold rounded-xl text-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/30 hover:scale-[1.02] mb-8">
               {t('pricing.startTrial')}
             </Link>
             <div className="space-y-4 flex-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">Everything in Free, plus:</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">{t('pricingExtended.everythingFree')}</p>
               <ul className="space-y-3">
                 <FeatureItem text={t('pricing.features.words50k')} />
                 <FeatureItem text={t('pricing.features.modelPro')} />
-                <FeatureItem text="Smart Editor with full SEO analysis" />
+                <FeatureItem text={t('pricingExtended.features.smartEditorFull')} />
                 <FeatureItem text={t('pricing.features.atsAccess')} />
-                <FeatureItem text="Plagiarism detection & readability" />
+                <FeatureItem text={t('pricingExtended.features.plagiarism')} />
                 <FeatureItem text={t('pricing.features.images50')} />
                 <FeatureItem text={t('pricing.features.templatesAll')} />
-                <FeatureItem text="1 Custom Brand Voice" />
+                <FeatureItem text={t('pricingExtended.features.customBrandVoice')} />
               </ul>
             </div>
           </div>
@@ -145,19 +145,19 @@ const PricingPage: React.FC = () => {
                 <span className="text-4xl font-extrabold text-slate-900 dark:text-white">{symbol}{currentAgencyPrice}</span>
                 <span className="text-slate-500 dark:text-slate-400 font-medium">{t('pricing.month')}</span>
               </div>
-              {billingCycle === 'yearly' && <p className="text-xs text-green-600 font-medium mt-1">Billed {symbol}{currentAgencyPrice * 12} yearly</p>}
+              {billingCycle === 'yearly' && <p className="text-xs text-green-600 font-medium mt-1">{t('billing.billed')} {symbol}{currentAgencyPrice * 12} {t('pricing.yearly').toLowerCase()}</p>}
             </div>
              <Link to="/contact" className="block w-full py-3 px-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-center hover:border-indigo-600 hover:text-indigo-600 dark:hover:border-indigo-500 dark:hover:text-indigo-400 transition-colors mb-8">
               {t('pricing.contactSales')}
             </Link>
             <div className="space-y-4 flex-1">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">Everything in Pro, plus:</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">{t('pricingExtended.everythingPro')}</p>
                 <ul className="space-y-3">
                     <FeatureItem text={t('pricing.features.words200k')} />
-                    <FeatureItem text="3 Team seats with collaboration" />
+                    <FeatureItem text={t('pricingExtended.features.teamSeats')} />
                     <FeatureItem text={t('pricing.features.images200')} />
-                    <FeatureItem text="Unlimited Brand Voices" />
-                    <FeatureItem text="Advanced analysis & reporting" />
+                    <FeatureItem text={t('pricingExtended.features.unlimitedBrandVoices')} />
+                    <FeatureItem text={t('pricingExtended.features.advancedAnalysis')} />
                     <FeatureItem text={t('pricing.features.supportPrio')} />
                     <FeatureItem text={t('pricing.features.apiAccess')} />
                 </ul>
@@ -182,7 +182,7 @@ const PricingPage: React.FC = () => {
               {t('pricing.contactSales')}
             </Link>
             <div className="space-y-4 flex-1 relative z-10">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">Ultimate Power</p>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">{t('pricingExtended.ultimatePower')}</p>
                 <ul className="space-y-3">
                     <li className="flex items-start gap-3 text-sm text-slate-300">
                         <ShieldCheck size={16} className="mt-0.5 text-indigo-400 shrink-0" />
@@ -202,7 +202,7 @@ const PricingPage: React.FC = () => {
                     </li>
                      <li className="flex items-start gap-3 text-sm text-slate-300">
                          <ShieldCheck size={16} className="mt-0.5 text-indigo-400 shrink-0" />
-                        <span>Custom AI Model Tuning</span>
+                        <span>{t('pricingExtended.features.customAI')}</span>
                     </li>
                 </ul>
             </div>
@@ -213,7 +213,7 @@ const PricingPage: React.FC = () => {
         <div className="max-w-6xl mx-auto animate-in slide-in-from-bottom-8 duration-700">
             <div className="text-center mb-10">
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{t('pricing.compare.title')}</h2>
-                <p className="text-slate-500 dark:text-slate-400">Detailed feature breakdown for all plans.</p>
+                <p className="text-slate-500 dark:text-slate-400">{t('pricingExtended.comparison.subtitle')}</p>
             </div>
             
             <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -230,16 +230,16 @@ const PricingPage: React.FC = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                             {[
-                                { name: 'Word Limit (Monthly)', free: '2,000', pro: '50,000', agency: '200,000', ent: 'Unlimited' },
-                                { name: 'AI Model', free: 'Gemini Flash', pro: 'Gemini Pro + Flash', agency: 'Gemini Pro + Flash', ent: 'Custom / Ultra' },
-                                { name: 'Smart Editor', free: true, pro: true, agency: true, ent: true },
-                                { name: 'SEO & Readability', free: 'Basic', pro: 'Full', agency: 'Full + Reports', ent: 'Advanced' },
-                                { name: 'ATS Optimization', free: false, pro: true, agency: true, ent: true },
-                                { name: 'Plagiarism Detection', free: false, pro: true, agency: true, ent: true },
-                                { name: 'Image Generation', free: false, pro: '50 / mo', agency: '200 / mo', ent: 'Unlimited' },
-                                { name: 'Brand Voices', free: '0', pro: '1', agency: 'Unlimited', ent: 'Unlimited' },
-                                { name: 'Team Seats', free: '1', pro: '1', agency: '3', ent: 'Unlimited' },
-                                { name: 'Support', free: 'Community', pro: 'Standard', agency: 'Priority', ent: 'Dedicated' },
+                                { name: t('pricingExtended.comparison.wordLimit'), free: t('pricingExtended.comparison.values.twoK'), pro: '50,000', agency: '200,000', ent: t('pricing.features.unlimited') },
+                                { name: t('pricingExtended.comparison.aiModel'), free: t('pricingExtended.comparison.values.geminiFlash'), pro: t('pricingExtended.comparison.values.geminiPro'), agency: t('pricingExtended.comparison.values.geminiPro'), ent: t('pricingExtended.comparison.values.customUltra') },
+                                { name: t('pricingExtended.comparison.smartEditor'), free: true, pro: true, agency: true, ent: true },
+                                { name: t('pricingExtended.comparison.seoReadability'), free: t('pricingExtended.comparison.values.basic'), pro: t('pricingExtended.comparison.values.full'), agency: t('pricingExtended.comparison.values.fullReports'), ent: t('pricingExtended.comparison.values.advanced') },
+                                { name: t('pricingExtended.comparison.atsOptimization'), free: false, pro: true, agency: true, ent: true },
+                                { name: t('pricingExtended.comparison.plagiarismDetection'), free: false, pro: true, agency: true, ent: true },
+                                { name: t('pricingExtended.comparison.imageGeneration'), free: false, pro: t('pricingExtended.comparison.values.fifty'), agency: t('pricingExtended.comparison.values.twoHundred'), ent: t('pricing.features.unlimited') },
+                                { name: t('pricingExtended.comparison.brandVoices'), free: '0', pro: '1', agency: t('pricing.features.unlimited'), ent: t('pricing.features.unlimited') },
+                                { name: t('pricingExtended.comparison.teamSeats'), free: '1', pro: '1', agency: '3', ent: t('pricing.features.unlimited') },
+                                { name: t('pricingExtended.comparison.support'), free: t('pricingExtended.comparison.values.community'), pro: t('pricingExtended.comparison.values.standard'), agency: t('pricingExtended.comparison.values.priority'), ent: t('pricingExtended.comparison.values.dedicated') },
                             ].map((row, i) => (
                                 <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                     <td className="p-6 font-medium text-slate-900 dark:text-white">{row.name}</td>
@@ -264,9 +264,9 @@ const PricingPage: React.FC = () => {
 
             {/* FAQ CTA */}
             <div className="text-center mt-20">
-                <p className="text-slate-600 dark:text-slate-400 mb-4">Have more questions?</p>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">{t('pricingExtended.help.question')}</p>
                 <Link to="/contact" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center justify-center gap-1">
-                    <HelpCircle size={16} /> Visit our Help Center
+                    <HelpCircle size={16} /> {t('pricingExtended.help.visit')}
                 </Link>
             </div>
 
