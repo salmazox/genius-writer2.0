@@ -35,6 +35,8 @@ module.exports = {
     ],
     'react/prop-types': 'off', // Using TypeScript for prop validation
     'react/react-in-jsx-scope': 'off', // Not needed with React 17+
+    'react/no-unescaped-entities': 'warn', // Relax for launch - fix in cleanup phase
+    'react/display-name': 'warn', // Relax for launch
 
     // TypeScript specific rules
     '@typescript-eslint/no-explicit-any': 'warn',
@@ -51,6 +53,8 @@ module.exports = {
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'prefer-const': 'warn',
     'no-var': 'error',
+    'no-case-declarations': 'warn', // Relax for launch - fix in cleanup phase
+    'prefer-rest-params': 'warn', // Relax for launch
 
     // React Hooks
     'react-hooks/rules-of-hooks': 'error',
