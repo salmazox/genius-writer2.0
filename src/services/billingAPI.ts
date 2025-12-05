@@ -38,7 +38,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams): Promi
   error?: string;
 }> {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       throw new Error('Not authenticated');
     }
@@ -75,7 +75,7 @@ export async function createPortalSession(): Promise<{
   error?: string;
 }> {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       throw new Error('Not authenticated');
     }
@@ -108,7 +108,7 @@ export async function createPortalSession(): Promise<{
  */
 export async function getSubscription(): Promise<SubscriptionResponse> {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       throw new Error('Not authenticated');
     }
@@ -144,7 +144,7 @@ export async function cancelSubscription(): Promise<{
   error?: string;
 }> {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     if (!token) {
       throw new Error('Not authenticated');
     }
