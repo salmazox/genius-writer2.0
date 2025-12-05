@@ -55,16 +55,9 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', environment: process.env.NODE_ENV });
 });
 
-// --- Auth Routes Placeholders ---
-app.post('/api/auth/signup', async (req, res) => {
-  // Logic: Hash password, create User in Prisma
-  res.json({ message: "Signup endpoint ready" });
-});
-
-app.post('/api/auth/login', async (req, res) => {
-  // Logic: Verify password, issue JWT
-  res.json({ message: "Login endpoint ready" });
-});
+// --- Auth Routes ---
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
 
 // --- Billing Routes ---
 app.post('/api/billing/create-checkout', async (req, res) => {
