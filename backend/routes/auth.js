@@ -17,7 +17,17 @@ const TOKEN_EXPIRATION_MS = 7 * 24 * 60 * 60 * 1000;
  */
 router.post('/signup', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const {
+      email,
+      password,
+      name,
+      street,
+      city,
+      state,
+      postalCode,
+      country,
+      termsAccepted
+    } = req.body;
 
     console.log('[SIGNUP] Attempt for email:', email);
 
@@ -27,6 +37,15 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({
         error: 'Missing required fields',
         message: 'Email, password, and name are required'
+      });
+    }
+
+    // Terms acceptance validation
+    if (!termsAccepted) {
+      console.log('[SIGNUP] Terms not accepted');
+      return res.status(400).json({
+        error: 'Terms not accepted',
+        message: 'You must accept the Terms of Service and Privacy Policy'
       });
     }
 
@@ -40,12 +59,25 @@ router.post('/signup', async (req, res) => {
       });
     }
 
-    // Password validation (min 8 characters)
-    if (password.length < 8) {
+    // Password validation (min 10 characters with complexity)
+    if (password.length < 10) {
       console.log('[SIGNUP] Password too short');
       return res.status(400).json({
         error: 'Weak password',
-        message: 'Password must be at least 8 characters long'
+        message: 'Password must be at least 10 characters long'
+      });
+    }
+
+    // Password complexity check
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+      console.log('[SIGNUP] Password lacks complexity');
+      return res.status(400).json({
+        error: 'Weak password',
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
       });
     }
 
@@ -75,6 +107,12 @@ router.post('/signup', async (req, res) => {
         email: email.toLowerCase(),
         password: hashedPassword,
         name,
+        street: street || null,
+        city: city || null,
+        state: state || null,
+        postalCode: postalCode || null,
+        country: country || null,
+        termsAcceptedAt: new Date(),
         plan: 'FREE'
       }
     });
