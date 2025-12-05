@@ -16,6 +16,8 @@
     "stripe": "^14.4.0",
     "jsonwebtoken": "^9.0.3",
     "bcryptjs": "^3.0.3",
-    "nodemailer": "^6.9.7"
+    "nodemailer": "^6.9.7",
+    "express-rate-limit": "^7.1.5",
+    "@google/genai": "^1.31.0"
   }
 }

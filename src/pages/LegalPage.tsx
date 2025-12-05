@@ -67,29 +67,38 @@ const LegalPage: React.FC = () => {
 
                         <h3>Contact / Kontakt</h3>
                         <p>
-                            <strong>Email:</strong> [contact@your-company.com]<br/>
-                            <strong>Phone / Telefon:</strong> [+49 (0) XXX XXXXXXX]<br/>
-                            <strong>Fax:</strong> [+49 (0) XXX XXXXXXX] <em>(if applicable)</em>
+                            <strong>Email:</strong> support@geniuswriter.com<br/>
+                            <strong>Phone / Telefon:</strong> +49 (0) 30 12345678<br/>
+                            <em className="text-sm text-amber-600 dark:text-amber-400">
+                                ⚠️ UPDATE: Replace with your actual contact information before launch
+                            </em>
                         </p>
 
                         <h3>Commercial Register / Handelsregister</h3>
                         <p>
-                            <strong>Register Court / Registergericht:</strong> [e.g., Amtsgericht Berlin-Charlottenburg]<br/>
-                            <strong>Registration Number / Registernummer:</strong> [HRB XXXXX]<br/>
-                            <em>(Required for GmbH, UG, AG, KGaA)</em>
+                            <strong>Register Court / Registergericht:</strong> Amtsgericht Berlin-Charlottenburg<br/>
+                            <strong>Registration Number / Registernummer:</strong> HRB 12345<br/>
+                            <em className="text-sm text-amber-600 dark:text-amber-400">
+                                ⚠️ UPDATE: Replace with your actual registration details (Required for GmbH, UG, AG, KGaA)
+                            </em>
                         </p>
 
                         <h3>VAT Identification Number / Umsatzsteuer-Identifikationsnummer</h3>
                         <p>
-                            <strong>VAT ID / USt-IdNr.:</strong> [DE XXX XXX XXX]<br/>
-                            <em>According to § 27a Umsatzsteuergesetz (UStG)</em>
+                            <strong>VAT ID / USt-IdNr.:</strong> DE 123456789<br/>
+                            <em>According to § 27a Umsatzsteuergesetz (UStG)</em><br/>
+                            <em className="text-sm text-amber-600 dark:text-amber-400">
+                                ⚠️ UPDATE: Replace with your actual VAT ID
+                            </em>
                         </p>
 
                         <h3>Tax Number / Steuernummer (Alternative to VAT ID)</h3>
                         <p>
-                            <strong>Tax Number / Steuernummer:</strong> [XX/XXX/XXXXX]<br/>
-                            <strong>Tax Office / Finanzamt:</strong> [Name of your Finanzamt]<br/>
-                            <em>(For businesses not yet having a VAT ID)</em>
+                            <strong>Tax Number / Steuernummer:</strong> 12/345/67890<br/>
+                            <strong>Tax Office / Finanzamt:</strong> Finanzamt Berlin<br/>
+                            <em className="text-sm text-amber-600 dark:text-amber-400">
+                                ⚠️ UPDATE: Replace with your actual tax number (For businesses not yet having a VAT ID)
+                            </em>
                         </p>
 
                         <h3>Professional Liability Insurance / Berufshaftpflichtversicherung (if applicable)</h3>
