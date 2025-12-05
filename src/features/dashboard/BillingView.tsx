@@ -90,8 +90,22 @@ export const BillingView: React.FC = () => {
     const handlePlanSelect = async (tier: SubscriptionTier) => {
         try {
             setError(null);
+
+            // Can't create checkout for free plan
+            if (tier === SubscriptionTier.FREE) {
+                setError('Cannot upgrade to free plan');
+                return;
+            }
+
             // Convert frontend tier to backend plan name
             const backendPlanName = mapTierToBackendPlan(tier);
+
+            // Type guard to ensure only paid plans
+            if (backendPlanName === 'FREE') {
+                setError('Cannot upgrade to free plan');
+                return;
+            }
+
             const result = await billingAPI.createCheckoutSession({
                 plan: backendPlanName,
                 billingPeriod: billingCycle
