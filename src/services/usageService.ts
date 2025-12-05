@@ -103,24 +103,34 @@ class UsageService {
     percentage: number;
   }> {
     const stats = await this.getUsageStats();
-    const usage = stats.usage[limitType];
 
-    // Handle different property names for different limit types
-    let current = 0;
+    // Access the correct property based on limit type
     if (limitType === 'documents') {
-      current = usage.currentMonth;
+      const usage = stats.usage.documents;
+      return {
+        withinLimit: usage.percentage < 100,
+        current: usage.currentMonth,
+        limit: usage.limit,
+        percentage: usage.percentage,
+      };
     } else if (limitType === 'aiGenerations') {
-      current = usage.current;
-    } else if (limitType === 'storage') {
-      current = usage.usedBytes;
+      const usage = stats.usage.aiGenerations;
+      return {
+        withinLimit: usage.percentage < 100,
+        current: usage.current,
+        limit: usage.limit,
+        percentage: usage.percentage,
+      };
+    } else {
+      // storage
+      const usage = stats.usage.storage;
+      return {
+        withinLimit: usage.percentage < 100,
+        current: usage.usedBytes,
+        limit: usage.limit,
+        percentage: usage.percentage,
+      };
     }
-
-    return {
-      withinLimit: usage.percentage < 100,
-      current,
-      limit: usage.limit,
-      percentage: usage.percentage,
-    };
   }
 
   /**
