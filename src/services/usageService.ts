@@ -105,9 +105,19 @@ class UsageService {
     const stats = await this.getUsageStats();
     const usage = stats.usage[limitType];
 
+    // Handle different property names for different limit types
+    let current = 0;
+    if (limitType === 'documents') {
+      current = usage.currentMonth;
+    } else if (limitType === 'aiGenerations') {
+      current = usage.current;
+    } else if (limitType === 'storage') {
+      current = usage.usedBytes;
+    }
+
     return {
       withinLimit: usage.percentage < 100,
-      current: typeof usage.current === 'number' ? usage.current : 0,
+      current,
       limit: usage.limit,
       percentage: usage.percentage,
     };
