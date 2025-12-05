@@ -1,0 +1,150 @@
+// Prisma Schema for Genius Writer Backend
+// Database: PostgreSQL (Railway - Frankfurt, Germany for GDPR compliance)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model - Authentication & Profile
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // bcrypt hashed
+  name      String
+  avatar    String?
+  bio       String?
+  plan      Plan     @default(FREE)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  documents      Document[]
+  subscriptions  Subscription[]
+  apiUsage       ApiUsage[]
+  sessions       Session[]
+
+  @@index([email])
+}
+
+// Subscription & Billing
+model Subscription {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  plan              Plan
+  status            SubscriptionStatus @default(ACTIVE)
+
+  // Stripe
+  stripeCustomerId       String?  @unique
+  stripeSubscriptionId   String?  @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  canceledAt DateTime?
+
+  @@index([userId])
+  @@index([stripeCustomerId])
+}
+
+// User Sessions (JWT)
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token     String   @unique
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
+
+// Document Storage
+model Document {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  content     String   @db.Text
+  templateId  String   // ToolType enum value
+
+  // Metadata
+  folderId    String?
+  tags        String[] // Array of tags
+
+  // Soft delete
+  deletedAt   DateTime?
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  versions    DocumentVersion[]
+
+  @@index([userId])
+  @@index([deletedAt])
+}
+
+// Document Version History
+model DocumentVersion {
+  id          String   @id @default(uuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  content     String   @db.Text
+  description String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([documentId])
+}
+
+// API Usage Tracking
+model ApiUsage {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  endpoint  String   // Which tool/feature was used
+  model     String   // Which AI model was used
+  tokens    Int      // Tokens consumed
+  cost      Float?   // Cost in credits/euros
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  date      DateTime @default(now()) @db.Date // For daily aggregation
+
+  @@index([userId, date])
+  @@index([createdAt])
+}
+
+// Enums
+enum Plan {
+  FREE
+  PRO
+  AGENCY
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  INCOMPLETE
+  TRIALING
+}

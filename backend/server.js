@@ -1,3 +1,6 @@
+// Load environment variables
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
@@ -5,6 +8,13 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const prisma = new PrismaClient();
+
+// CORS Configuration - GDPR Compliant
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
 
 // Stripe Webhook needs raw body, so we define it before JSON parser
 app.post('/api/webhooks/stripe', express.raw({type: 'application/json'}), async (req, res) => {
@@ -31,8 +41,14 @@ app.post('/api/webhooks/stripe', express.raw({type: 'application/json'}), async 
   res.send();
 });
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
 
 // Health Check
 app.get('/api/health', (req, res) => {
