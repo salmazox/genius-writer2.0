@@ -48,11 +48,16 @@ router.post('/create-checkout', authenticate, async (req, res) => {
     // Get price ID
     const priceId = STRIPE_PRICE_IDS[plan][billingPeriod];
 
-    if (!priceId || priceId.includes('placeholder')) {
+    if (!priceId) {
       return res.status(500).json({
         error: 'Configuration error',
         message: 'Stripe price IDs not configured. Please contact support.'
       });
+    }
+
+    // Log warning if using placeholder (for development)
+    if (priceId.includes('placeholder')) {
+      console.warn(`[BILLING] Warning: Using placeholder price ID for ${plan} ${billingPeriod}. Configure STRIPE_PRICE_${plan}_${billingPeriod.toUpperCase()} in environment variables.`);
     }
 
     // Get user
