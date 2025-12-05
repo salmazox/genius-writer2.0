@@ -87,10 +87,10 @@ router.post('/create-checkout', authenticate, async (req, res) => {
       customerId = customer.id;
     }
 
-    // Create checkout session
+    // Create checkout session with multiple payment methods
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'paypal', 'link'], // Enable card, PayPal, and Link
       line_items: [
         {
           price: priceId,
@@ -98,8 +98,8 @@ router.post('/create-checkout', authenticate, async (req, res) => {
         }
       ],
       mode: 'subscription',
-      success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/pricing?payment=cancelled`,
+      success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard/billing?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard/billing?payment=cancelled`,
       metadata: {
         userId: user.id,
         plan,
@@ -110,7 +110,13 @@ router.post('/create-checkout', authenticate, async (req, res) => {
           userId: user.id,
           plan
         }
-      }
+      },
+      // Enable automatic tax calculation if configured
+      automatic_tax: {
+        enabled: false // Set to true if you have Stripe Tax configured
+      },
+      // Allow promotion codes
+      allow_promotion_codes: true
     });
 
     res.json({
@@ -246,6 +252,52 @@ router.post('/cancel-subscription', authenticate, async (req, res) => {
     res.status(500).json({
       error: 'Failed to cancel subscription',
       message: 'An error occurred while cancelling the subscription'
+    });
+  }
+});
+
+/**
+ * POST /api/billing/reactivate-subscription
+ * Reactivate a cancelled subscription
+ */
+router.post('/reactivate-subscription', authenticate, async (req, res) => {
+  try {
+    const subscription = await prisma.subscription.findFirst({
+      where: {
+        userId: req.userId,
+        status: 'CANCELED'
+      }
+    });
+
+    if (!subscription || !subscription.stripeSubscriptionId) {
+      return res.status(404).json({
+        error: 'No cancelled subscription',
+        message: 'You do not have a cancelled subscription to reactivate'
+      });
+    }
+
+    // Reactivate in Stripe
+    await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+      cancel_at_period_end: false
+    });
+
+    // Update in database
+    await prisma.subscription.update({
+      where: { id: subscription.id },
+      data: {
+        status: 'ACTIVE',
+        canceledAt: null
+      }
+    });
+
+    res.json({
+      message: 'Subscription reactivated successfully'
+    });
+  } catch (error) {
+    console.error('[BILLING] Reactivate subscription error:', error);
+    res.status(500).json({
+      error: 'Failed to reactivate subscription',
+      message: 'An error occurred while reactivating the subscription'
     });
   }
 });

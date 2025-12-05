@@ -173,6 +173,42 @@ export async function cancelSubscription(): Promise<{
 }
 
 /**
+ * Reactivate subscription
+ */
+export async function reactivateSubscription(): Promise<{
+  message?: string;
+  error?: string;
+}> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/billing/reactivate-subscription`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to reactivate subscription');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[BILLING API] Reactivate subscription error:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to reactivate subscription'
+    };
+  }
+}
+
+/**
  * Open customer portal (for managing payment methods, invoices, etc.)
  */
 export async function openCustomerPortal(): Promise<void> {
@@ -198,5 +234,6 @@ export default {
   createPortalSession,
   getSubscription,
   cancelSubscription,
+  reactivateSubscription,
   openCustomerPortal
 };
