@@ -8,7 +8,6 @@ export interface SignupData {
   passwordConfirm?: string;
   street?: string;
   city?: string;
-  state?: string;
   postalCode?: string;
   country?: string;
   termsAccepted: boolean;
@@ -66,7 +65,6 @@ class AuthService {
         password: data.password,
         street: data.street,
         city: data.city,
-        state: data.state,
         postalCode: data.postalCode,
         country: data.country,
         termsAccepted: data.termsAccepted,

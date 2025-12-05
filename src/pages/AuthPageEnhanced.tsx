@@ -22,7 +22,6 @@ const AuthPageEnhanced: React.FC = () => {
     passwordConfirm: '',
     street: '',
     city: '',
-    state: '',
     postalCode: '',
     country: '',
     termsAccepted: false,
@@ -348,35 +347,19 @@ const AuthPageEnhanced: React.FC = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label htmlFor="city" className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                        City
-                      </label>
-                      <input
-                        id="city"
-                        name="city"
-                        type="text"
-                        value={formData.city}
-                        onChange={(e) => setFormData({...formData, city: e.target.value})}
-                        className="appearance-none relative block w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
-                        placeholder="New York"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="state" className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                        State/Province
-                      </label>
-                      <input
-                        id="state"
-                        name="state"
-                        type="text"
-                        value={formData.state}
-                        onChange={(e) => setFormData({...formData, state: e.target.value})}
-                        className="appearance-none relative block w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
-                        placeholder="NY"
-                      />
-                    </div>
+                  <div>
+                    <label htmlFor="city" className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                      City
+                    </label>
+                    <input
+                      id="city"
+                      name="city"
+                      type="text"
+                      value={formData.city}
+                      onChange={(e) => setFormData({...formData, city: e.target.value})}
+                      className="appearance-none relative block w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
+                      placeholder="Berlin"
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -391,7 +374,7 @@ const AuthPageEnhanced: React.FC = () => {
                         value={formData.postalCode}
                         onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
                         className="appearance-none relative block w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-all"
-                        placeholder="10001"
+                        placeholder="10115"
                       />
                     </div>
                     <div>
