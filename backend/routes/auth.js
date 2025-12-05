@@ -144,6 +144,12 @@ router.post('/signup', async (req, res) => {
         email: user.email,
         name: user.name,
         plan: user.plan,
+        avatar: user.avatar,
+        bio: user.bio,
+        street: user.street,
+        city: user.city,
+        postalCode: user.postalCode,
+        country: user.country,
         createdAt: user.createdAt
       },
       token
@@ -233,6 +239,10 @@ router.post('/login', async (req, res) => {
         plan: user.plan,
         avatar: user.avatar,
         bio: user.bio,
+        street: user.street,
+        city: user.city,
+        postalCode: user.postalCode,
+        country: user.country,
         createdAt: user.createdAt
       },
       token
@@ -289,6 +299,10 @@ router.get('/me', authenticate, async (req, res) => {
         avatar: true,
         bio: true,
         plan: true,
+        street: true,
+        city: true,
+        postalCode: true,
+        country: true,
         createdAt: true,
         updatedAt: true,
         // Don't return password
