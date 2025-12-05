@@ -6,12 +6,12 @@ import { UsageCard } from '../../components/billing/UsageCard';
 import { PlanCard } from '../../components/billing/PlanCard';
 import { SubscriptionTier, getAllPlans, getPlan } from '../../config/pricing';
 import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
-import { useAuth } from '../../hooks/useAuth';
+import { useUser } from '../../contexts/UserContext';
 import * as billingAPI from '../../services/billingAPI';
 
 export const BillingView: React.FC = () => {
     const { t } = useThemeLanguage();
-    const { user } = useAuth();
+    const { user } = useUser();
     const [showPlans, setShowPlans] = useState(false);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [subscription, setSubscription] = useState<any>(null);
