@@ -25,7 +25,7 @@ const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const PricingPage = React.lazy(() => import('./pages/PricingPage'));
 const ContactPage = React.lazy(() => import('./pages/ContactPage'));
 const ProductPage = React.lazy(() => import('./pages/ProductPage'));
-const AuthPage = React.lazy(() => import('./pages/AuthPage'));
+const AuthPage = React.lazy(() => import('./pages/AuthPageEnhanced'));
 const UserDashboard = React.lazy(() => import('./pages/UserDashboard'));
 const LegalPage = React.lazy(() => import('./pages/LegalPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
