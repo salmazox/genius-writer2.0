@@ -1,21 +1,47 @@
 
-import React, { useState } from 'react';
-import { Download, CreditCard, CheckCircle2, Sparkles, FileText, HardDrive, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Download, CreditCard, CheckCircle2, Sparkles, FileText, HardDrive, Users, AlertCircle } from 'lucide-react';
 import { Invoice } from '../../types';
 import { UsageCard } from '../../components/billing/UsageCard';
 import { PlanCard } from '../../components/billing/PlanCard';
 import { SubscriptionTier, getAllPlans, getPlan } from '../../config/pricing';
 import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
+import { useUser } from '../../contexts/UserContext';
+import * as billingAPI from '../../services/billingAPI';
 
 export const BillingView: React.FC = () => {
     const { t } = useThemeLanguage();
+    const { user } = useUser();
     const [showPlans, setShowPlans] = useState(false);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+    const [subscription, setSubscription] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [canceling, setCanceling] = useState(false);
 
-    // Mock current user data
-    const [currentTier] = useState<SubscriptionTier>(SubscriptionTier.PROFESSIONAL);
-    const currentPlan = getPlan(currentTier);
+    // Determine current tier from subscription or user data
+    const currentTier = subscription?.plan || user?.plan || SubscriptionTier.FREE;
+    const currentPlan = getPlan(currentTier as SubscriptionTier);
     const allPlans = getAllPlans();
+
+    // Load subscription data
+    useEffect(() => {
+        loadSubscription();
+    }, []);
+
+    const loadSubscription = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await billingAPI.getSubscription();
+            setSubscription(data.subscription);
+        } catch (err) {
+            console.error('Failed to load subscription:', err);
+            setError('Failed to load subscription details');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Mock usage data
     const usageMetrics = [
@@ -59,13 +85,86 @@ export const BillingView: React.FC = () => {
         setShowPlans(true);
     };
 
-    const handlePlanSelect = (tier: SubscriptionTier) => {
-        console.log('Selected plan:', tier);
-        // Here you would typically initiate the Stripe checkout or upgrade process
+    const handlePlanSelect = async (tier: SubscriptionTier) => {
+        try {
+            setError(null);
+            const result = await billingAPI.createCheckoutSession({
+                plan: tier.toUpperCase() as 'PRO' | 'AGENCY' | 'ENTERPRISE',
+                billingPeriod: billingCycle
+            });
+
+            if (result.error) {
+                setError(result.error);
+                return;
+            }
+
+            if (result.url) {
+                // Redirect to Stripe checkout
+                window.location.href = result.url;
+            }
+        } catch (err) {
+            console.error('Failed to initiate checkout:', err);
+            setError('Failed to start checkout process');
+        }
     };
+
+    const handleCancelSubscription = async () => {
+        if (!window.confirm(t('billing.confirmCancel') || 'Are you sure you want to cancel your subscription? You will retain access until the end of your billing period.')) {
+            return;
+        }
+
+        try {
+            setCanceling(true);
+            setError(null);
+            const result = await billingAPI.cancelSubscription();
+
+            if (result.error) {
+                setError(result.error);
+                return;
+            }
+
+            // Reload subscription data
+            await loadSubscription();
+            alert(result.message || 'Subscription cancelled successfully');
+        } catch (err) {
+            console.error('Failed to cancel subscription:', err);
+            setError('Failed to cancel subscription');
+        } finally {
+            setCanceling(false);
+        }
+    };
+
+    const handleManagePayment = async () => {
+        try {
+            setError(null);
+            await billingAPI.openCustomerPortal();
+        } catch (err) {
+            console.error('Failed to open customer portal:', err);
+            setError('Failed to open payment management portal');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="text-slate-500">Loading subscription details...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-in slide-in-from-right duration-300">
+             {/* Error Message */}
+             {error && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircle className="text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" size={20} />
+                    <div>
+                        <p className="text-red-800 dark:text-red-200 font-medium">Error</p>
+                        <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
+                    </div>
+                </div>
+             )}
+
              {/* Current Plan */}
              <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden" data-tour="current-plan">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
@@ -76,12 +175,22 @@ export const BillingView: React.FC = () => {
                              <span className="text-green-300 flex items-center gap-1 text-xs font-bold"><CheckCircle2 size={12} /> {t('billing.active')}</span>
                         </div>
                         <h2 className="text-3xl font-bold mb-1">{currentPlan.name}</h2>
-                        <p className="text-indigo-200 text-sm">{t('billing.nextBilling')} November 24, 2023</p>
+                        <p className="text-indigo-200 text-sm">
+                            {subscription?.stripeCurrentPeriodEnd
+                                ? `${t('billing.nextBilling')} ${new Date(subscription.stripeCurrentPeriodEnd).toLocaleDateString()}`
+                                : t('billing.nextBilling')}
+                        </p>
                     </div>
                     <div className="flex gap-3">
-                         <button className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-bold transition-colors backdrop-blur-sm">
-                            {t('billing.cancelPlan')}
-                         </button>
+                         {subscription && subscription.status === 'ACTIVE' && (
+                            <button
+                                onClick={handleCancelSubscription}
+                                disabled={canceling}
+                                className="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-bold transition-colors backdrop-blur-sm"
+                            >
+                                {canceling ? 'Canceling...' : t('billing.cancelPlan')}
+                            </button>
+                         )}
                          {currentTier !== SubscriptionTier.ENTERPRISE && (
                             <button
                                 onClick={handleUpgradeClick}
@@ -177,7 +286,12 @@ export const BillingView: React.FC = () => {
                              <p className="text-xs text-slate-500">{t('billing.payment.expires')}</p>
                          </div>
                      </div>
-                     <button className="text-sm text-indigo-600 font-medium hover:underline">{t('billing.payment.edit')}</button>
+                     <button
+                        onClick={handleManagePayment}
+                        className="text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+                     >
+                        {t('billing.payment.edit')}
+                     </button>
                  </div>
              </div>
 

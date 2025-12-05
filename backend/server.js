@@ -33,6 +33,12 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const prisma = new PrismaClient();
 
+// ============================================================================
+// TRUST PROXY - Required for Railway deployment
+// ============================================================================
+// Railway uses a reverse proxy, so we need to trust the proxy to get correct IPs
+app.set('trust proxy', 1);
+
 // CORS Configuration - Allow multiple origins
 const allowedOrigins = [
   'http://localhost:5173',
@@ -44,20 +50,24 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests) only in development
-    if (!origin && process.env.NODE_ENV === 'development') {
+    // Allow requests with no origin (like mobile apps, Stripe webhooks, or curl) in all environments
+    if (!origin) {
       return callback(null, true);
     }
 
-    // Exact origin matching only - no wildcards for security
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn(`[CORS] Rejected request from origin: ${origin}`);
-      }
-      callback(new Error('Not allowed by CORS'));
+    // Allow all Vercel deployments (preview and production)
+    if (origin.match(/https:\/\/.*\.vercel\.app$/)) {
+      return callback(null, true);
     }
+
+    // Exact origin matching for other allowed origins
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+
+    // Log rejected origin in development for debugging
+    console.warn(`[CORS] Rejected request from origin: ${origin}`);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   optionsSuccessStatus: 200
