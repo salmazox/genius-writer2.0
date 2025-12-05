@@ -130,7 +130,72 @@ If you see database connection errors, verify:
 1. ✅ Health check passes
 2. ✅ Database connected
 3. ✅ Migrations applied
-4. 🔨 Implement Auth endpoints (signup, login)
-5. 🔨 Test authentication flow
-6. 🔨 Add Gemini API proxy (later)
-7. 🔨 Add Stripe integration (later)
+4. ✅ Auth endpoints implemented (signup, login, logout, /me)
+5. **→ TEST AUTHENTICATION (see below)**
+6. 🔨 Connect frontend to backend auth
+7. 🔨 Add Gemini API proxy (later)
+8. 🔨 Add Stripe integration (later)
+
+---
+
+## 🎯 Testing Authentication Endpoints
+
+Once Railway is deployed and running, test the authentication system:
+
+### Step 1: Test User Signup
+
+```bash
+# Replace with your Railway URL
+export API_URL="https://your-backend.railway.app"
+
+curl -X POST $API_URL/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "secure_password_123",
+    "name": "Test User"
+  }'
+```
+
+**Expected:** Returns user data and JWT token
+
+### Step 2: Test User Login
+
+```bash
+curl -X POST $API_URL/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "secure_password_123"
+  }'
+```
+
+**Expected:** Returns user data and JWT token
+
+**Save the token:**
+
+```bash
+export TOKEN="paste_token_here"
+```
+
+### Step 3: Test Protected Route (Get Current User)
+
+```bash
+curl $API_URL/api/auth/me \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Expected:** Returns current user details
+
+### Step 4: Test Logout
+
+```bash
+curl -X POST $API_URL/api/auth/logout \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Expected:** `{ "message": "Logout successful" }`
+
+---
+
+**📖 For complete testing guide with all error cases, see:** `AUTH_TESTING_GUIDE.md`
