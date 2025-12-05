@@ -282,6 +282,53 @@ export function formatPriceWithCurrency(amountEUR: number, displayCurrency: 'EUR
 }
 
 /**
+ * Map backend plan names to SubscriptionTier enum
+ * Backend uses: FREE, PRO, AGENCY, ENTERPRISE
+ * Frontend uses: free, starter, professional, enterprise
+ */
+export function mapBackendPlanToTier(backendPlan: string | null | undefined): SubscriptionTier {
+  if (!backendPlan) {
+    return SubscriptionTier.FREE;
+  }
+
+  const plan = backendPlan.toUpperCase();
+
+  switch (plan) {
+    case 'FREE':
+      return SubscriptionTier.FREE;
+    case 'PRO':
+    case 'STARTER':
+      return SubscriptionTier.STARTER;
+    case 'AGENCY':
+    case 'PROFESSIONAL':
+      return SubscriptionTier.PROFESSIONAL;
+    case 'ENTERPRISE':
+      return SubscriptionTier.ENTERPRISE;
+    default:
+      console.warn(`Unknown plan type: ${backendPlan}, defaulting to FREE`);
+      return SubscriptionTier.FREE;
+  }
+}
+
+/**
+ * Map SubscriptionTier enum to backend plan names
+ */
+export function mapTierToBackendPlan(tier: SubscriptionTier): 'FREE' | 'PRO' | 'AGENCY' | 'ENTERPRISE' {
+  switch (tier) {
+    case SubscriptionTier.FREE:
+      return 'FREE';
+    case SubscriptionTier.STARTER:
+      return 'PRO';
+    case SubscriptionTier.PROFESSIONAL:
+      return 'AGENCY';
+    case SubscriptionTier.ENTERPRISE:
+      return 'ENTERPRISE';
+    default:
+      return 'FREE';
+  }
+}
+
+/**
  * Usage limits display text
  */
 export function formatLimit(limit: number): string {

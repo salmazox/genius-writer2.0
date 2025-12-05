@@ -4,7 +4,7 @@ import { Download, CreditCard, CheckCircle2, Sparkles, FileText, HardDrive, User
 import { Invoice } from '../../types';
 import { UsageCard } from '../../components/billing/UsageCard';
 import { PlanCard } from '../../components/billing/PlanCard';
-import { SubscriptionTier, getAllPlans, getPlan } from '../../config/pricing';
+import { SubscriptionTier, getAllPlans, getPlan, mapBackendPlanToTier, mapTierToBackendPlan } from '../../config/pricing';
 import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 import { useUser } from '../../contexts/UserContext';
 import * as billingAPI from '../../services/billingAPI';
@@ -20,8 +20,10 @@ export const BillingView: React.FC = () => {
     const [canceling, setCanceling] = useState(false);
 
     // Determine current tier from subscription or user data
-    const currentTier = subscription?.plan || user?.plan || SubscriptionTier.FREE;
-    const currentPlan = getPlan(currentTier as SubscriptionTier);
+    // Convert backend plan names (PRO, AGENCY) to frontend enum (starter, professional)
+    const backendPlan = subscription?.plan || user?.plan;
+    const currentTier = mapBackendPlanToTier(backendPlan);
+    const currentPlan = getPlan(currentTier);
     const allPlans = getAllPlans();
 
     // Load subscription data
@@ -88,8 +90,10 @@ export const BillingView: React.FC = () => {
     const handlePlanSelect = async (tier: SubscriptionTier) => {
         try {
             setError(null);
+            // Convert frontend tier to backend plan name
+            const backendPlanName = mapTierToBackendPlan(tier);
             const result = await billingAPI.createCheckoutSession({
-                plan: tier.toUpperCase() as 'PRO' | 'AGENCY' | 'ENTERPRISE',
+                plan: backendPlanName,
                 billingPeriod: billingCycle
             });
 
