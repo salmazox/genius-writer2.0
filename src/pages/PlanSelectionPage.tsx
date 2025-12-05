@@ -209,3 +209,5 @@ export const PlanSelectionPage: React.FC = () => {
     </div>
   );
 };
+
+export default PlanSelectionPage;

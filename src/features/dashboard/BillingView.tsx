@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Download, CreditCard, CheckCircle2, Sparkles, FileText, HardDrive, Users, AlertCircle, RefreshCw } from 'lucide-react';
+import { Download, CreditCard, CheckCircle2, Sparkles, FileText, HardDrive, Users, AlertCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Invoice } from '../../types';
 import { UsageCard } from '../../components/billing/UsageCard';
 import { PlanCard } from '../../components/billing/PlanCard';
