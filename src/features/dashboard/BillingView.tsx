@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Download, CreditCard, CheckCircle2, Sparkles, FileText, HardDrive, Users, AlertCircle, RefreshCw } from 'lucide-react';
 import { Invoice } from '../../types';
 import { UsageCard } from '../../components/billing/UsageCard';
@@ -16,6 +17,8 @@ export const BillingView: React.FC = () => {
     const { t } = useThemeLanguage();
     const { user } = useUser();
     const { showToast } = useToast();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [showPlans, setShowPlans] = useState(false);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [subscription, setSubscription] = useState<any>(null);
@@ -36,6 +39,34 @@ export const BillingView: React.FC = () => {
     useEffect(() => {
         loadSubscription();
     }, []);
+
+    // Handle automatic checkout from plan selection
+    useEffect(() => {
+        const checkoutPending = searchParams.get('checkout');
+        if (checkoutPending === 'pending' && !loading) {
+            // Get selected plan from sessionStorage
+            const selectedPlanData = sessionStorage.getItem('selectedPlan');
+            if (selectedPlanData) {
+                try {
+                    const { plan, billingCycle: cycle } = JSON.parse(selectedPlanData);
+                    // Set billing cycle
+                    setBillingCycle(cycle);
+                    // Clear sessionStorage and URL param
+                    sessionStorage.removeItem('selectedPlan');
+                    searchParams.delete('checkout');
+                    setSearchParams(searchParams, { replace: true });
+                    // Initiate checkout
+                    handlePlanSelect(plan);
+                } catch (err) {
+                    console.error('Failed to parse selected plan:', err);
+                }
+            } else {
+                // No plan data, just remove the param
+                searchParams.delete('checkout');
+                setSearchParams(searchParams, { replace: true });
+            }
+        }
+    }, [loading, searchParams]);
 
     const loadSubscription = async () => {
         try {
