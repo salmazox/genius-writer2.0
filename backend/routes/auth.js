@@ -553,88 +553,95 @@ router.delete('/sessions', authenticate, async (req, res) => {
   }
 });
 
-/**
- * GET /api/auth/debug/users
- * Debug endpoint - list all users (remove in production)
- * This helps verify user creation and password hashing
- */
-router.get('/debug/users', async (req, res) => {
-  try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        plan: true,
-        createdAt: true,
-        // Show first 10 chars of password hash for verification
-        password: true
-      }
-    });
+// ============================================================================
+// DEBUG ENDPOINTS - ONLY AVAILABLE IN DEVELOPMENT
+// ============================================================================
+if (process.env.NODE_ENV === 'development') {
+  /**
+   * GET /api/auth/debug/users
+   * Debug endpoint - list all users (development only)
+   * This helps verify user creation and password hashing
+   */
+  router.get('/debug/users', async (req, res) => {
+    try {
+      const users = await prisma.user.findMany({
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          plan: true,
+          createdAt: true,
+          // Show first 10 chars of password hash for verification
+          password: true
+        }
+      });
 
-    // Show password hash info (for debugging only)
-    const usersWithHashInfo = users.map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      plan: user.plan,
-      createdAt: user.createdAt,
-      passwordHashPrefix: user.password ? user.password.substring(0, 20) + '...' : 'NULL',
-      passwordHashLength: user.password ? user.password.length : 0,
-      isBcryptHash: user.password ? user.password.startsWith('$2a$') || user.password.startsWith('$2b$') : false
-    }));
+      // Show password hash info (for debugging only)
+      const usersWithHashInfo = users.map(user => ({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        plan: user.plan,
+        createdAt: user.createdAt,
+        passwordHashPrefix: user.password ? user.password.substring(0, 20) + '...' : 'NULL',
+        passwordHashLength: user.password ? user.password.length : 0,
+        isBcryptHash: user.password ? user.password.startsWith('$2a$') || user.password.startsWith('$2b$') : false
+      }));
 
-    res.json({
-      count: users.length,
-      users: usersWithHashInfo
-    });
-  } catch (error) {
-    console.error('[DEBUG] Error fetching users:', error);
-    res.status(500).json({
-      error: 'Debug failed',
-      message: error.message
-    });
-  }
-});
-
-/**
- * POST /api/auth/debug/verify-password
- * Debug endpoint - verify password hashing works
- */
-router.post('/debug/verify-password', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
-    });
-
-    if (!user) {
-      return res.json({
-        found: false,
-        message: 'User not found'
+      res.json({
+        count: users.length,
+        users: usersWithHashInfo
+      });
+    } catch (error) {
+      console.error('[DEBUG] Error fetching users:', error);
+      res.status(500).json({
+        error: 'Debug failed',
+        message: error.message
       });
     }
+  });
 
-    const isValid = await bcrypt.compare(password, user.password);
+  /**
+   * POST /api/auth/debug/verify-password
+   * Debug endpoint - verify password hashing works (development only)
+   */
+  router.post('/debug/verify-password', async (req, res) => {
+    try {
+      const { email, password } = req.body;
 
-    res.json({
-      found: true,
-      email: user.email,
-      passwordHashPrefix: user.password.substring(0, 20) + '...',
-      passwordHashLength: user.password.length,
-      isBcryptHash: user.password.startsWith('$2a$') || user.password.startsWith('$2b$'),
-      passwordMatches: isValid,
-      bcryptVersion: user.password.substring(0, 4)
-    });
-  } catch (error) {
-    console.error('[DEBUG] Password verification error:', error);
-    res.status(500).json({
-      error: 'Debug failed',
-      message: error.message
-    });
-  }
-});
+      const user = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() }
+      });
+
+      if (!user) {
+        return res.json({
+          found: false,
+          message: 'User not found'
+        });
+      }
+
+      const isValid = await bcrypt.compare(password, user.password);
+
+      res.json({
+        found: true,
+        email: user.email,
+        passwordHashPrefix: user.password.substring(0, 20) + '...',
+        passwordHashLength: user.password.length,
+        isBcryptHash: user.password.startsWith('$2a$') || user.password.startsWith('$2b$'),
+        passwordMatches: isValid,
+        bcryptVersion: user.password.substring(0, 4)
+      });
+    } catch (error) {
+      console.error('[DEBUG] Password verification error:', error);
+      res.status(500).json({
+        error: 'Debug failed',
+        message: error.message
+      });
+    }
+  });
+
+  console.log('[DEBUG] Debug endpoints enabled in development mode');
+}
 
 /**
  * POST /api/auth/forgot-password
