@@ -39,6 +39,10 @@ export interface User {
   plan: 'free' | 'pro' | 'agency' | 'enterprise';
   avatar?: string;
   bio?: string;
+  street?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
   linkedAccounts: LinkedAccounts;
   favorites: ToolType[]; // New: Tool Favorites
 }
