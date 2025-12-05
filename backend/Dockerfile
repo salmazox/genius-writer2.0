@@ -1,28 +1,21 @@
 FROM node:20-alpine
 
-# Install OpenSSL for Prisma
-RUN apk add --no-cache openssl
+# Install OpenSSL and other dependencies for Prisma
+RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy everything first (simpler approach)
+COPY . .
 
-# Copy Prisma schema before installing dependencies
-# This allows Prisma to generate the client during npm install
-COPY prisma ./prisma/
+# Set dummy DATABASE_URL for build
+ENV DATABASE_URL="postgresql://dummy:dummy@dummy:5432/dummy"
 
-# Set dummy DATABASE_URL for build (Prisma needs this to generate client)
-ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
-
-# Install dependencies (install all deps including devDeps for Prisma to work)
+# Install all dependencies
 RUN npm install
 
-# Generate Prisma Client
+# Generate Prisma Client after install
 RUN npx prisma generate
-
-# Copy application files
-COPY . .
 
 # Expose port
 EXPOSE 3000
