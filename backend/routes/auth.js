@@ -19,8 +19,11 @@ router.post('/signup', async (req, res) => {
   try {
     const { email, password, name } = req.body;
 
+    console.log('[SIGNUP] Attempt for email:', email);
+
     // Validation
     if (!email || !password || !name) {
+      console.log('[SIGNUP] Missing required fields');
       return res.status(400).json({
         error: 'Missing required fields',
         message: 'Email, password, and name are required'
@@ -30,6 +33,7 @@ router.post('/signup', async (req, res) => {
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      console.log('[SIGNUP] Invalid email format:', email);
       return res.status(400).json({
         error: 'Invalid email',
         message: 'Please provide a valid email address'
@@ -38,6 +42,7 @@ router.post('/signup', async (req, res) => {
 
     // Password validation (min 8 characters)
     if (password.length < 8) {
+      console.log('[SIGNUP] Password too short');
       return res.status(400).json({
         error: 'Weak password',
         message: 'Password must be at least 8 characters long'
@@ -50,14 +55,19 @@ router.post('/signup', async (req, res) => {
     });
 
     if (existingUser) {
+      console.log('[SIGNUP] User already exists:', email);
       return res.status(409).json({
         error: 'User already exists',
         message: 'An account with this email already exists'
       });
     }
 
+    console.log('[SIGNUP] Hashing password...');
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    console.log('[SIGNUP] Creating user in database...');
 
     // Create user
     const user = await prisma.user.create({
@@ -86,6 +96,8 @@ router.post('/signup', async (req, res) => {
       }
     });
 
+    console.log('[SIGNUP] User created successfully:', user.email);
+
     // Return user data (without password)
     res.status(201).json({
       message: 'User created successfully',
@@ -99,7 +111,7 @@ router.post('/signup', async (req, res) => {
       token
     });
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error('[SIGNUP] Error:', error);
     res.status(500).json({
       error: 'Signup failed',
       message: 'An error occurred during registration'
@@ -115,8 +127,11 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('[LOGIN] Attempt for email:', email);
+
     // Validation
     if (!email || !password) {
+      console.log('[LOGIN] Missing credentials');
       return res.status(400).json({
         error: 'Missing credentials',
         message: 'Email and password are required'
@@ -129,21 +144,29 @@ router.post('/login', async (req, res) => {
     });
 
     if (!user) {
+      console.log('[LOGIN] User not found:', email);
       return res.status(401).json({
         error: 'Invalid credentials',
         message: 'Email or password is incorrect'
       });
     }
+
+    console.log('[LOGIN] User found, verifying password...');
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
 
+    console.log('[LOGIN] Password valid:', isValidPassword);
+
     if (!isValidPassword) {
+      console.log('[LOGIN] Invalid password for:', email);
       return res.status(401).json({
         error: 'Invalid credentials',
         message: 'Email or password is incorrect'
       });
     }
+
+    console.log('[LOGIN] Login successful for:', email);
 
     // Generate JWT token
     const token = jwt.sign(
@@ -271,6 +294,89 @@ router.delete('/sessions', authenticate, async (req, res) => {
     res.status(500).json({
       error: 'Failed to clear sessions',
       message: 'An error occurred while clearing sessions'
+    });
+  }
+});
+
+/**
+ * GET /api/auth/debug/users
+ * Debug endpoint - list all users (remove in production)
+ * This helps verify user creation and password hashing
+ */
+router.get('/debug/users', async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        plan: true,
+        createdAt: true,
+        // Show first 10 chars of password hash for verification
+        password: true
+      }
+    });
+
+    // Show password hash info (for debugging only)
+    const usersWithHashInfo = users.map(user => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      plan: user.plan,
+      createdAt: user.createdAt,
+      passwordHashPrefix: user.password ? user.password.substring(0, 20) + '...' : 'NULL',
+      passwordHashLength: user.password ? user.password.length : 0,
+      isBcryptHash: user.password ? user.password.startsWith('$2a$') || user.password.startsWith('$2b$') : false
+    }));
+
+    res.json({
+      count: users.length,
+      users: usersWithHashInfo
+    });
+  } catch (error) {
+    console.error('[DEBUG] Error fetching users:', error);
+    res.status(500).json({
+      error: 'Debug failed',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/auth/debug/verify-password
+ * Debug endpoint - verify password hashing works
+ */
+router.post('/debug/verify-password', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+
+    if (!user) {
+      return res.json({
+        found: false,
+        message: 'User not found'
+      });
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+
+    res.json({
+      found: true,
+      email: user.email,
+      passwordHashPrefix: user.password.substring(0, 20) + '...',
+      passwordHashLength: user.password.length,
+      isBcryptHash: user.password.startsWith('$2a$') || user.password.startsWith('$2b$'),
+      passwordMatches: isValid,
+      bcryptVersion: user.password.substring(0, 4)
+    });
+  } catch (error) {
+    console.error('[DEBUG] Password verification error:', error);
+    res.status(500).json({
+      error: 'Debug failed',
+      message: error.message
     });
   }
 });
