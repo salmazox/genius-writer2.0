@@ -29,6 +29,7 @@ const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const emailService = require('./services/emailService');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -130,12 +131,26 @@ app.post('/api/webhooks/stripe', express.raw({type: 'application/json'}), async 
         });
 
         // Update user plan
-        await prisma.user.update({
+        const user = await prisma.user.update({
           where: { id: userId },
           data: { plan }
         });
 
         console.log(`[STRIPE WEBHOOK] Subscription created/updated for user: ${userId}`);
+
+        // Send subscription confirmation email
+        try {
+          const billingPeriod = subscription.items.data[0].price.recurring.interval === 'year' ? 'yearly' : 'monthly';
+          await emailService.sendSubscriptionConfirmation(
+            user.email,
+            user.name,
+            plan,
+            billingPeriod
+          );
+          console.log(`[STRIPE WEBHOOK] Confirmation email sent to: ${user.email}`);
+        } catch (emailError) {
+          console.error('[STRIPE WEBHOOK] Failed to send confirmation email:', emailError);
+        }
         break;
       }
 
@@ -174,10 +189,15 @@ app.post('/api/webhooks/stripe', express.raw({type: 'application/json'}), async 
         console.log('[STRIPE WEBHOOK] Subscription deleted:', subscription.id);
 
         const dbSubscription = await prisma.subscription.findUnique({
-          where: { stripeSubscriptionId: subscription.id }
+          where: { stripeSubscriptionId: subscription.id },
+          include: { user: true }
         });
 
         if (dbSubscription) {
+          const endDate = dbSubscription.stripeCurrentPeriodEnd
+            ? dbSubscription.stripeCurrentPeriodEnd.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+            : 'immediately';
+
           await prisma.subscription.update({
             where: { id: dbSubscription.id },
             data: {
@@ -193,6 +213,19 @@ app.post('/api/webhooks/stripe', express.raw({type: 'application/json'}), async 
           });
 
           console.log(`[STRIPE WEBHOOK] User downgraded to FREE plan`);
+
+          // Send cancellation email
+          try {
+            await emailService.sendSubscriptionCancelled(
+              dbSubscription.user.email,
+              dbSubscription.user.name,
+              dbSubscription.plan,
+              endDate
+            );
+            console.log(`[STRIPE WEBHOOK] Cancellation email sent to: ${dbSubscription.user.email}`);
+          } catch (emailError) {
+            console.error('[STRIPE WEBHOOK] Failed to send cancellation email:', emailError);
+          }
         }
         break;
       }
@@ -202,7 +235,8 @@ app.post('/api/webhooks/stripe', express.raw({type: 'application/json'}), async 
         console.log('[STRIPE WEBHOOK] Payment failed for invoice:', invoice.id);
 
         const subscription = await prisma.subscription.findUnique({
-          where: { stripeSubscriptionId: invoice.subscription }
+          where: { stripeSubscriptionId: invoice.subscription },
+          include: { user: true }
         });
 
         if (subscription) {
@@ -212,6 +246,24 @@ app.post('/api/webhooks/stripe', express.raw({type: 'application/json'}), async 
           });
 
           console.log(`[STRIPE WEBHOOK] Subscription marked as PAST_DUE`);
+
+          // Send payment failed email
+          try {
+            // Calculate retry date (usually 3 days from now for Stripe)
+            const retryDate = new Date();
+            retryDate.setDate(retryDate.getDate() + 3);
+            const retryDateStr = retryDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            await emailService.sendPaymentFailed(
+              subscription.user.email,
+              subscription.user.name,
+              subscription.plan,
+              retryDateStr
+            );
+            console.log(`[STRIPE WEBHOOK] Payment failed email sent to: ${subscription.user.email}`);
+          } catch (emailError) {
+            console.error('[STRIPE WEBHOOK] Failed to send payment failed email:', emailError);
+          }
         }
         break;
       }
