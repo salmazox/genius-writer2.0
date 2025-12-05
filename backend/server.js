@@ -255,6 +255,10 @@ app.use('/api/billing', billingRoutes);
 const aiRoutes = require('./routes/ai');
 app.use('/api/ai', aiRoutes);
 
+// --- Usage Stats Routes ---
+const usageRoutes = require('./routes/usage');
+app.use('/api/usage', usageRoutes);
+
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0'; // Listen on all network interfaces for Docker/Railway
 
