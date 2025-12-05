@@ -31,6 +31,7 @@ const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
 const UserDashboard = React.lazy(() => import('./pages/UserDashboard'));
 const LegalPage = React.lazy(() => import('./pages/LegalPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
+const PlanSelectionPage = React.lazy(() => import('./pages/PlanSelectionPage'));
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -110,6 +111,7 @@ const App: React.FC = () => {
                       <Route path="/" element={<LandingPage />} />
                       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                       <Route path="/user-dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+                      <Route path="/choose-plan" element={<ProtectedRoute><PlanSelectionPage /></ProtectedRoute>} />
                       <Route path="/pricing" element={<PricingPage />} />
                       <Route path="/contact" element={<ContactPage />} />
                       <Route path="/product" element={<ProductPage />} />

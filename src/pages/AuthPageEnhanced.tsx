@@ -95,7 +95,8 @@ const AuthPageEnhanced: React.FC = () => {
         const result = await authService.signup(formData as SignupData);
 
         console.log('Signup successful:', result);
-        navigate('/dashboard');
+        // Redirect to plan selection for new users
+        navigate('/choose-plan');
         window.location.reload();
       }
     } catch (err: any) {

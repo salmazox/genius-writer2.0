@@ -1,23 +1,33 @@
 
 import React, { useState, useEffect } from 'react';
-import { Download, CreditCard, CheckCircle2, Sparkles, FileText, HardDrive, Users, AlertCircle } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Download, CreditCard, CheckCircle2, Sparkles, FileText, HardDrive, Users, AlertCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Invoice } from '../../types';
 import { UsageCard } from '../../components/billing/UsageCard';
 import { PlanCard } from '../../components/billing/PlanCard';
+import { SubscriptionStatusBadge } from '../../components/billing/SubscriptionStatusBadge';
+import { ConfirmModal } from '../../components/modals/ConfirmModal';
+import { UsageAlert } from '../../components/alerts/UsageAlert';
 import { SubscriptionTier, getAllPlans, getPlan, mapBackendPlanToTier, mapTierToBackendPlan } from '../../config/pricing';
 import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 import { useUser } from '../../contexts/UserContext';
+import { useToast } from '../../contexts/ToastContext';
 import * as billingAPI from '../../services/billingAPI';
 
 export const BillingView: React.FC = () => {
     const { t } = useThemeLanguage();
     const { user } = useUser();
+    const { showToast } = useToast();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [showPlans, setShowPlans] = useState(false);
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [subscription, setSubscription] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [canceling, setCanceling] = useState(false);
+    const [reactivating, setReactivating] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
 
     // Determine current tier from subscription or user data
     // Convert backend plan names (PRO, AGENCY) to frontend enum (starter, professional)
@@ -30,6 +40,34 @@ export const BillingView: React.FC = () => {
     useEffect(() => {
         loadSubscription();
     }, []);
+
+    // Handle automatic checkout from plan selection
+    useEffect(() => {
+        const checkoutPending = searchParams.get('checkout');
+        if (checkoutPending === 'pending' && !loading) {
+            // Get selected plan from sessionStorage
+            const selectedPlanData = sessionStorage.getItem('selectedPlan');
+            if (selectedPlanData) {
+                try {
+                    const { plan, billingCycle: cycle } = JSON.parse(selectedPlanData);
+                    // Set billing cycle
+                    setBillingCycle(cycle);
+                    // Clear sessionStorage and URL param
+                    sessionStorage.removeItem('selectedPlan');
+                    searchParams.delete('checkout');
+                    setSearchParams(searchParams, { replace: true });
+                    // Initiate checkout
+                    handlePlanSelect(plan);
+                } catch (err) {
+                    console.error('Failed to parse selected plan:', err);
+                }
+            } else {
+                // No plan data, just remove the param
+                searchParams.delete('checkout');
+                setSearchParams(searchParams, { replace: true });
+            }
+        }
+    }, [loading, searchParams]);
 
     const loadSubscription = async () => {
         try {
@@ -127,10 +165,6 @@ export const BillingView: React.FC = () => {
     };
 
     const handleCancelSubscription = async () => {
-        if (!window.confirm(t('billing.confirmCancel') || 'Are you sure you want to cancel your subscription? You will retain access until the end of your billing period.')) {
-            return;
-        }
-
         try {
             setCanceling(true);
             setError(null);
@@ -138,17 +172,43 @@ export const BillingView: React.FC = () => {
 
             if (result.error) {
                 setError(result.error);
+                showToast(result.error, 'error');
                 return;
             }
 
             // Reload subscription data
             await loadSubscription();
-            alert(result.message || 'Subscription cancelled successfully');
+            showToast(result.message || 'Your subscription will be cancelled at the end of your billing period', 'success');
         } catch (err) {
             console.error('Failed to cancel subscription:', err);
             setError('Failed to cancel subscription');
+            showToast('Failed to cancel subscription', 'error');
         } finally {
             setCanceling(false);
+        }
+    };
+
+    const handleReactivateSubscription = async () => {
+        try {
+            setReactivating(true);
+            setError(null);
+            const result = await billingAPI.reactivateSubscription();
+
+            if (result.error) {
+                setError(result.error);
+                showToast(result.error, 'error');
+                return;
+            }
+
+            // Reload subscription data
+            await loadSubscription();
+            showToast(result.message || 'Subscription reactivated successfully!', 'success');
+        } catch (err) {
+            console.error('Failed to reactivate subscription:', err);
+            setError('Failed to reactivate subscription');
+            showToast('Failed to reactivate subscription', 'error');
+        } finally {
+            setReactivating(false);
         }
     };
 
@@ -180,6 +240,18 @@ export const BillingView: React.FC = () => {
         );
     }
 
+    // Calculate usage percentages for alerts
+    const showUsageAlerts = usageMetrics
+        .map(metric => ({
+            type: metric.label === t('billing.usage.aiGenerations') ? 'aiGenerations' :
+                  metric.label === t('billing.usage.documents') ? 'documents' :
+                  metric.label === t('billing.usage.storage') ? 'storage' : 'collaborators',
+            current: metric.current,
+            limit: metric.limit,
+            percentage: (metric.current / metric.limit) * 100
+        }))
+        .filter(metric => metric.percentage >= 80); // Show alerts for 80%+ usage
+
     return (
         <div className="space-y-6 animate-in slide-in-from-right duration-300">
              {/* Error Message */}
@@ -193,38 +265,72 @@ export const BillingView: React.FC = () => {
                 </div>
              )}
 
+             {/* Usage Alerts */}
+             {showUsageAlerts.length > 0 && (
+                <div className="space-y-3">
+                    {showUsageAlerts.map((alert) => (
+                        <UsageAlert
+                            key={alert.type}
+                            type={alert.type as 'aiGenerations' | 'documents' | 'storage' | 'collaborators'}
+                            current={alert.current}
+                            limit={alert.limit}
+                            onUpgrade={handleUpgradeClick}
+                        />
+                    ))}
+                </div>
+             )}
+
              {/* Current Plan */}
              <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden" data-tour="current-plan">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-3">
                              <div className="px-2 py-0.5 bg-white/20 rounded text-xs font-bold uppercase tracking-wider">{t('billing.currentPlan')}</div>
-                             <span className="text-green-300 flex items-center gap-1 text-xs font-bold"><CheckCircle2 size={12} /> {t('billing.active')}</span>
+                             <SubscriptionStatusBadge
+                                status={subscription?.status || null}
+                                cancelAtPeriodEnd={subscription?.cancelAtPeriodEnd}
+                                currentPeriodEnd={subscription?.stripeCurrentPeriodEnd}
+                             />
                         </div>
                         <h2 className="text-3xl font-bold mb-1">{currentPlan.name}</h2>
                         <p className="text-indigo-200 text-sm">
                             {subscription?.stripeCurrentPeriodEnd
-                                ? `${t('billing.nextBilling')} ${new Date(subscription.stripeCurrentPeriodEnd).toLocaleDateString()}`
-                                : t('billing.nextBilling')}
+                                ? `${subscription?.cancelAtPeriodEnd ? 'Access until' : 'Next billing'} ${new Date(subscription.stripeCurrentPeriodEnd).toLocaleDateString()}`
+                                : 'No billing cycle'}
                         </p>
                     </div>
-                    <div className="flex gap-3">
-                         {subscription && subscription.status === 'ACTIVE' && (
+                    <div className="flex flex-col sm:flex-row gap-3">
+                         {/* Reactivate button for cancelled subscriptions */}
+                         {subscription && subscription.status === 'CANCELED' && subscription.stripeCurrentPeriodEnd && new Date(subscription.stripeCurrentPeriodEnd) > new Date() && (
                             <button
-                                onClick={handleCancelSubscription}
+                                onClick={handleReactivateSubscription}
+                                disabled={reactivating}
+                                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-bold transition-colors shadow-lg flex items-center gap-2"
+                            >
+                                <RefreshCw size={16} className={reactivating ? 'animate-spin' : ''} />
+                                {reactivating ? 'Reactivating...' : 'Reactivate Subscription'}
+                            </button>
+                         )}
+
+                         {/* Cancel button for active subscriptions */}
+                         {subscription && subscription.status === 'ACTIVE' && !subscription.cancelAtPeriodEnd && (
+                            <button
+                                onClick={() => setShowCancelModal(true)}
                                 disabled={canceling}
                                 className="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-bold transition-colors backdrop-blur-sm"
                             >
-                                {canceling ? 'Canceling...' : t('billing.cancelPlan')}
+                                {t('billing.cancelPlan')}
                             </button>
                          )}
+
+                         {/* Upgrade button */}
                          {currentTier !== SubscriptionTier.ENTERPRISE && (
                             <button
                                 onClick={handleUpgradeClick}
                                 className="px-4 py-2 bg-white text-indigo-600 hover:bg-indigo-50 rounded-lg text-sm font-bold transition-colors shadow-lg"
                             >
-                                {t('billing.upgradePlan')}
+                                {currentTier === SubscriptionTier.FREE ? 'Upgrade Plan' : t('billing.upgradePlan')}
                             </button>
                          )}
                     </div>
@@ -368,6 +474,39 @@ export const BillingView: React.FC = () => {
                      ))}
                  </div>
              </div>
+
+             {/* Cancel Subscription Confirmation Modal */}
+             <ConfirmModal
+                isOpen={showCancelModal}
+                onClose={() => setShowCancelModal(false)}
+                onConfirm={handleCancelSubscription}
+                title="Cancel Subscription?"
+                message="Are you sure you want to cancel your subscription? You'll retain access to all features until the end of your current billing period."
+                confirmText="Yes, Cancel Subscription"
+                cancelText="Keep Subscription"
+                type="warning"
+             >
+                <div className="space-y-3">
+                    <div className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-slate-600 dark:text-slate-400">
+                            You'll keep access until {subscription?.stripeCurrentPeriodEnd && new Date(subscription.stripeCurrentPeriodEnd).toLocaleDateString()}
+                        </span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-slate-600 dark:text-slate-400">
+                            You can reactivate anytime before your billing period ends
+                        </span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                        <AlertTriangle size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-slate-600 dark:text-slate-400">
+                            After cancellation, you'll lose access to premium features
+                        </span>
+                    </div>
+                </div>
+             </ConfirmModal>
         </div>
     );
 };
