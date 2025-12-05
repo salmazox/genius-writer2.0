@@ -12,6 +12,9 @@ COPY package*.json ./
 # This allows Prisma to generate the client during npm install
 COPY prisma ./prisma/
 
+# Set dummy DATABASE_URL for build (Prisma needs this to generate client)
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
+
 # Install dependencies (using npm install instead of npm ci for flexibility)
 RUN npm install --production
 
