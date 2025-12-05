@@ -55,26 +55,29 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, updateUser }) =>
                          <button onClick={() => fileInputRef.current?.click()} className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">{t('profile.changePhoto')}</button>
                     </div>
 
-                    <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('profile.fullName')}</label>
-                            <input
-                                type="text"
-                                value={user.name}
-                                onChange={(e) => updateUser({ name: e.target.value })}
-                                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-                            />
+                    <div className="flex-1 w-full space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('profile.fullName')}</label>
+                                <input
+                                    type="text"
+                                    value={user.name}
+                                    onChange={(e) => updateUser({ name: e.target.value })}
+                                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('profile.emailAddress')}</label>
+                                <input
+                                    type="email"
+                                    value={user.email}
+                                    onChange={(e) => updateUser({ email: e.target.value })}
+                                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                />
+                            </div>
                         </div>
+
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('profile.emailAddress')}</label>
-                            <input
-                                type="email"
-                                value={user.email}
-                                onChange={(e) => updateUser({ email: e.target.value })}
-                                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
-                            />
-                        </div>
-                        <div className="md:col-span-2">
                              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">{t('profile.bioRole')}</label>
                             <textarea
                                 value={user.bio || ''}
@@ -82,6 +85,55 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ user, updateUser }) =>
                                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 focus:ring-2 focus:ring-indigo-500 outline-none min-h-[100px]"
                                 placeholder={t('profile.bioPlaceholder')}
                             />
+                        </div>
+
+                        {/* Address Section */}
+                        <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">Address (Optional)</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Street Address</label>
+                                    <input
+                                        type="text"
+                                        value={(user as any).street || ''}
+                                        onChange={(e) => updateUser({ street: e.target.value } as any)}
+                                        className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        placeholder="123 Main Street"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">City</label>
+                                        <input
+                                            type="text"
+                                            value={(user as any).city || ''}
+                                            onChange={(e) => updateUser({ city: e.target.value } as any)}
+                                            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            placeholder="Berlin"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Postal Code</label>
+                                        <input
+                                            type="text"
+                                            value={(user as any).postalCode || ''}
+                                            onChange={(e) => updateUser({ postalCode: e.target.value } as any)}
+                                            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            placeholder="10115"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Country</label>
+                                        <input
+                                            type="text"
+                                            value={(user as any).country || ''}
+                                            onChange={(e) => updateUser({ country: e.target.value } as any)}
+                                            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            placeholder="Germany"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
