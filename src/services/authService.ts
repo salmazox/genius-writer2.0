@@ -158,6 +158,100 @@ class AuthService {
   }
 
   /**
+   * Update user profile
+   */
+  async updateProfile(data: {
+    name?: string;
+    bio?: string;
+    street?: string;
+    city?: string;
+    postalCode?: string;
+    country?: string;
+  }) {
+    if (!this.token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to update profile');
+    }
+
+    // Update local storage
+    localStorage.setItem('ai_writer_user', JSON.stringify(result.user));
+
+    return result;
+  }
+
+  /**
+   * Change password
+   */
+  async changePassword(currentPassword: string, newPassword: string) {
+    if (!this.token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to change password');
+    }
+
+    return result;
+  }
+
+  /**
+   * Delete account
+   */
+  async deleteAccount(password: string) {
+    if (!this.token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/account`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: JSON.stringify({ password }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to delete account');
+    }
+
+    // Clear local data
+    this.logout();
+
+    return result;
+  }
+
+  /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {

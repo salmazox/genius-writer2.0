@@ -314,6 +314,207 @@ router.get('/me', authenticate, async (req, res) => {
 });
 
 /**
+ * PUT /api/auth/profile
+ * Update user profile information
+ */
+router.put('/profile', authenticate, async (req, res) => {
+  try {
+    const {
+      name,
+      bio,
+      street,
+      city,
+      postalCode,
+      country
+    } = req.body;
+
+    console.log('[UPDATE PROFILE] Updating profile for user:', req.userId);
+
+    // Update user
+    const user = await prisma.user.update({
+      where: { id: req.userId },
+      data: {
+        ...(name && { name }),
+        ...(bio !== undefined && { bio }),
+        ...(street !== undefined && { street }),
+        ...(city !== undefined && { city }),
+        ...(postalCode !== undefined && { postalCode }),
+        ...(country !== undefined && { country }),
+        updatedAt: new Date()
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        bio: true,
+        plan: true,
+        street: true,
+        city: true,
+        postalCode: true,
+        country: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    console.log('[UPDATE PROFILE] Profile updated successfully');
+
+    res.json({
+      message: 'Profile updated successfully',
+      user
+    });
+  } catch (error) {
+    console.error('[UPDATE PROFILE] Error:', error);
+    res.status(500).json({
+      error: 'Update failed',
+      message: 'An error occurred while updating your profile'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/change-password
+ * Change user password
+ */
+router.post('/change-password', authenticate, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    console.log('[CHANGE PASSWORD] Attempt for user:', req.userId);
+
+    // Validation
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        message: 'Current password and new password are required'
+      });
+    }
+
+    // Get user with password
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+        message: 'User account no longer exists'
+      });
+    }
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isValidPassword) {
+      console.log('[CHANGE PASSWORD] Invalid current password');
+      return res.status(401).json({
+        error: 'Invalid password',
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Validate new password (min 10 characters with complexity)
+    if (newPassword.length < 10) {
+      return res.status(400).json({
+        error: 'Weak password',
+        message: 'Password must be at least 10 characters long'
+      });
+    }
+
+    const hasUpperCase = /[A-Z]/.test(newPassword);
+    const hasLowerCase = /[a-z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+      return res.status(400).json({
+        error: 'Weak password',
+        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: req.userId },
+      data: { password: hashedPassword }
+    });
+
+    console.log('[CHANGE PASSWORD] Password changed successfully');
+
+    res.json({
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    console.error('[CHANGE PASSWORD] Error:', error);
+    res.status(500).json({
+      error: 'Password change failed',
+      message: 'An error occurred while changing your password'
+    });
+  }
+});
+
+/**
+ * DELETE /api/auth/account
+ * Delete user account permanently
+ */
+router.delete('/account', authenticate, async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    console.log('[DELETE ACCOUNT] Attempt for user:', req.userId);
+
+    if (!password) {
+      return res.status(400).json({
+        error: 'Password required',
+        message: 'Password confirmation is required to delete your account'
+      });
+    }
+
+    // Get user with password
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+        message: 'User account no longer exists'
+      });
+    }
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    if (!isValidPassword) {
+      return res.status(401).json({
+        error: 'Invalid password',
+        message: 'Password is incorrect'
+      });
+    }
+
+    // Delete user (cascading deletes will handle related records)
+    await prisma.user.delete({
+      where: { id: req.userId }
+    });
+
+    console.log('[DELETE ACCOUNT] Account deleted successfully:', user.email);
+
+    res.json({
+      message: 'Account deleted successfully'
+    });
+  } catch (error) {
+    console.error('[DELETE ACCOUNT] Error:', error);
+    res.status(500).json({
+      error: 'Account deletion failed',
+      message: 'An error occurred while deleting your account'
+    });
+  }
+});
+
+/**
  * DELETE /api/auth/sessions
  * Clear all sessions for current user (logout from all devices)
  */
