@@ -38,7 +38,28 @@ const INITIAL_USER: User = {
 };
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useLocalStorage<User>('ai_writer_user', INITIAL_USER);
+  const [storedUser, setStoredUser] = useLocalStorage<User>('ai_writer_user', INITIAL_USER);
+
+  // Ensure linkedAccounts exists (for users who had data saved before this field was added)
+  const user = {
+    ...INITIAL_USER,
+    ...storedUser,
+    linkedAccounts: {
+      twitter: false,
+      linkedin: false,
+      instagram: false,
+      ...storedUser.linkedAccounts
+    }
+  };
+
+  const setUser = (updates: User | ((prev: User) => User)) => {
+    if (typeof updates === 'function') {
+      setStoredUser(prev => updates(prev));
+    } else {
+      setStoredUser(updates);
+    }
+  };
+
   const [brandVoices, setBrandVoices] = useLocalStorage<BrandVoice[]>('ai_writer_voices', DEFAULT_VOICES);
   const [selectedVoiceId, setSelectedVoiceId] = useState<string | null>(null);
 
