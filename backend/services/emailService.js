@@ -73,24 +73,94 @@ class EmailService {
       text: this.getPasswordResetTextVersion(name, resetUrl),
     };
 
+    return await this.sendEmail(mailOptions);
+  }
+
+  /**
+   * Send subscription confirmation email
+   * @param {string} email - Recipient email address
+   * @param {string} name - User's name
+   * @param {string} plan - Subscription plan
+   * @param {string} billingPeriod - monthly or yearly
+   */
+  async sendSubscriptionConfirmation(email, name, plan, billingPeriod) {
+    const mailOptions = {
+      from: `"${this.fromName}" <${this.fromEmail}>`,
+      to: email,
+      subject: `Welcome to ${plan} Plan - Genius Writer`,
+      html: this.getSubscriptionConfirmationTemplate(name, plan, billingPeriod),
+      text: `Hi ${name},\n\nWelcome to Genius Writer ${plan} plan! Your subscription is now active.\n\nThank you for choosing Genius Writer.`
+    };
+
+    return await this.sendEmail(mailOptions);
+  }
+
+  /**
+   * Send subscription cancelled email
+   */
+  async sendSubscriptionCancelled(email, name, plan, endDate) {
+    const mailOptions = {
+      from: `"${this.fromName}" <${this.fromEmail}>`,
+      to: email,
+      subject: 'Your Subscription Has Been Cancelled - Genius Writer',
+      html: this.getSubscriptionCancelledTemplate(name, plan, endDate),
+      text: `Hi ${name},\n\nYour ${plan} subscription has been cancelled. You'll have access until ${endDate}.\n\nYou can reactivate anytime before this date.`
+    };
+
+    return await this.sendEmail(mailOptions);
+  }
+
+  /**
+   * Send payment failed email
+   */
+  async sendPaymentFailed(email, name, plan, retryDate) {
+    const mailOptions = {
+      from: `"${this.fromName}" <${this.fromEmail}>`,
+      to: email,
+      subject: 'Payment Failed - Update Payment Method',
+      html: this.getPaymentFailedTemplate(name, plan, retryDate),
+      text: `Hi ${name},\n\nWe couldn't process your payment for ${plan} plan. Please update your payment method to avoid service interruption.\n\nNext retry: ${retryDate}`
+    };
+
+    return await this.sendEmail(mailOptions);
+  }
+
+  /**
+   * Send usage limit warning
+   */
+  async sendUsageLimitWarning(email, name, limitType, percentage, current, limit) {
+    const mailOptions = {
+      from: `"${this.fromName}" <${this.fromEmail}>`,
+      to: email,
+      subject: `You've Used ${percentage}% of Your ${limitType}`,
+      html: this.getUsageLimitWarningTemplate(name, limitType, percentage, current, limit),
+      text: `Hi ${name},\n\nYou've used ${current}/${limit} of your ${limitType} (${percentage}%).\n\nConsider upgrading to avoid hitting your limit.`
+    };
+
+    return await this.sendEmail(mailOptions);
+  }
+
+  /**
+   * Generic send email method
+   */
+  async sendEmail(mailOptions) {
     try {
       if (this.isConfigured && this.transporter) {
         const info = await this.transporter.sendMail(mailOptions);
-        console.log('[EMAIL] Password reset email sent:', info.messageId);
+        console.log('[EMAIL] Email sent:', info.messageId);
         return { success: true, messageId: info.messageId };
       } else {
         // Development mode - log to console
-        console.log('[EMAIL] Development mode - Password reset link:');
+        console.log('[EMAIL] Development mode - Email:');
         console.log('='.repeat(80));
-        console.log(`To: ${email}`);
+        console.log(`To: ${mailOptions.to}`);
         console.log(`Subject: ${mailOptions.subject}`);
-        console.log(`Reset URL: ${resetUrl}`);
         console.log('='.repeat(80));
-        return { success: true, dev: true, resetUrl };
+        return { success: true, dev: true };
       }
     } catch (error) {
-      console.error('[EMAIL] Failed to send password reset email:', error);
-      throw new Error('Failed to send password reset email');
+      console.error('[EMAIL] Failed to send email:', error);
+      throw new Error('Failed to send email');
     }
   }
 
@@ -205,6 +275,114 @@ The Genius Writer Team
 
 © ${new Date().getFullYear()} Genius Writer. All rights reserved.
     `.trim();
+  }
+
+  /**
+   * HTML template for subscription confirmation
+   */
+  getSubscriptionConfirmationTemplate(name, plan, billingPeriod) {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+          <tr>
+            <td style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 40px 20px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Welcome to ${plan}!</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="font-size: 16px; margin-bottom: 20px;">Hi ${name},</p>
+              <p style="font-size: 16px; margin-bottom: 20px;">Your subscription to Genius Writer <strong>${plan}</strong> plan is now active!</p>
+              <p style="font-size: 16px; margin-bottom: 20px;">You now have access to all premium features. Billing cycle: <strong>${billingPeriod}</strong></p>
+              <a href="${this.frontendUrl}/dashboard" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0;">Go to Dashboard</a>
+              <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">Thank you for choosing Genius Writer!</p>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+  }
+
+  /**
+   * HTML template for subscription cancelled
+   */
+  getSubscriptionCancelledTemplate(name, plan, endDate) {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="font-size: 16px; margin-bottom: 20px;">Hi ${name},</p>
+              <p style="font-size: 16px; margin-bottom: 20px;">Your <strong>${plan}</strong> subscription has been cancelled.</p>
+              <p style="font-size: 16px; margin-bottom: 20px;">You'll have access to all premium features until <strong>${endDate}</strong>.</p>
+              <p style="font-size: 16px; margin-bottom: 20px;">You can reactivate your subscription anytime before this date.</p>
+              <a href="${this.frontendUrl}/dashboard/billing" style="display: inline-block; background: #10b981; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0;">Reactivate Subscription</a>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+  }
+
+  /**
+   * HTML template for payment failed
+   */
+  getPaymentFailedTemplate(name, plan, retryDate) {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+          <tr>
+            <td style="background: #fef3c7; padding: 40px 30px; border-radius: 8px 8px 0 0;">
+              <h1 style="color: #92400e; margin: 0; font-size: 24px;">Payment Failed</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="font-size: 16px; margin-bottom: 20px;">Hi ${name},</p>
+              <p style="font-size: 16px; margin-bottom: 20px;">We couldn't process your payment for your <strong>${plan}</strong> subscription.</p>
+              <p style="font-size: 16px; margin-bottom: 20px;">Please update your payment method to avoid service interruption.</p>
+              <p style="font-size: 14px; color: #6b7280; margin-bottom: 20px;">Next payment retry: ${retryDate}</p>
+              <a href="${this.frontendUrl}/dashboard/billing" style="display: inline-block; background: #ef4444; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0;">Update Payment Method</a>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+  }
+
+  /**
+   * HTML template for usage limit warning
+   */
+  getUsageLimitWarningTemplate(name, limitType, percentage, current, limit) {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+          <tr>
+            <td style="padding: 40px 30px;">
+              <p style="font-size: 16px; margin-bottom: 20px;">Hi ${name},</p>
+              <p style="font-size: 16px; margin-bottom: 20px;">You've used <strong>${current}/${limit}</strong> of your ${limitType} (${percentage}%).</p>
+              <div style="background: #f3f4f6; border-radius: 999px; height: 8px; margin: 20px 0;">
+                <div style="background: ${percentage >= 90 ? '#ef4444' : '#f59e0b'}; width: ${Math.min(percentage, 100)}%; height: 8px; border-radius: 999px;"></div>
+              </div>
+              <p style="font-size: 16px; margin-bottom: 20px;">Upgrade your plan to continue without interruption.</p>
+              <a href="${this.frontendUrl}/dashboard/billing" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0;">View Upgrade Options</a>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
   }
 
   /**
