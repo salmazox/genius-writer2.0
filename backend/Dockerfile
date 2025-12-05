@@ -15,10 +15,10 @@ COPY prisma ./prisma/
 # Set dummy DATABASE_URL for build (Prisma needs this to generate client)
 ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db?schema=public"
 
-# Install dependencies (using npm install instead of npm ci for flexibility)
-RUN npm install --production
+# Install dependencies (install all deps including devDeps for Prisma to work)
+RUN npm install
 
-# Generate Prisma Client explicitly (in case postinstall didn't run)
+# Generate Prisma Client
 RUN npx prisma generate
 
 # Copy application files
