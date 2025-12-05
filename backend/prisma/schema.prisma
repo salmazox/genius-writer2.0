@@ -30,6 +30,10 @@ model User {
   // Terms & Compliance
   termsAcceptedAt DateTime?
 
+  // Password Reset
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
