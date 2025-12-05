@@ -7,6 +7,7 @@ import { UsageCard } from '../../components/billing/UsageCard';
 import { PlanCard } from '../../components/billing/PlanCard';
 import { SubscriptionStatusBadge } from '../../components/billing/SubscriptionStatusBadge';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
+import { UsageAlert } from '../../components/alerts/UsageAlert';
 import { SubscriptionTier, getAllPlans, getPlan, mapBackendPlanToTier, mapTierToBackendPlan } from '../../config/pricing';
 import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 import { useUser } from '../../contexts/UserContext';
@@ -239,6 +240,18 @@ export const BillingView: React.FC = () => {
         );
     }
 
+    // Calculate usage percentages for alerts
+    const showUsageAlerts = usageMetrics
+        .map(metric => ({
+            type: metric.label === t('billing.usage.aiGenerations') ? 'aiGenerations' :
+                  metric.label === t('billing.usage.documents') ? 'documents' :
+                  metric.label === t('billing.usage.storage') ? 'storage' : 'collaborators',
+            current: metric.current,
+            limit: metric.limit,
+            percentage: (metric.current / metric.limit) * 100
+        }))
+        .filter(metric => metric.percentage >= 80); // Show alerts for 80%+ usage
+
     return (
         <div className="space-y-6 animate-in slide-in-from-right duration-300">
              {/* Error Message */}
@@ -249,6 +262,21 @@ export const BillingView: React.FC = () => {
                         <p className="text-red-800 dark:text-red-200 font-medium">Error</p>
                         <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
                     </div>
+                </div>
+             )}
+
+             {/* Usage Alerts */}
+             {showUsageAlerts.length > 0 && (
+                <div className="space-y-3">
+                    {showUsageAlerts.map((alert) => (
+                        <UsageAlert
+                            key={alert.type}
+                            type={alert.type as 'aiGenerations' | 'documents' | 'storage' | 'collaborators'}
+                            current={alert.current}
+                            limit={alert.limit}
+                            onUpgrade={handleUpgradeClick}
+                        />
+                    ))}
                 </div>
              )}
 
