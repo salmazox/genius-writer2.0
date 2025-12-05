@@ -1,6 +1,11 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate } = require('../middleware/auth');
+const {
+  attachPlanInfo,
+  checkDocumentLimit,
+  checkStorageLimit
+} = require('../middleware/planLimits');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -120,7 +125,7 @@ router.get('/:id', authenticate, async (req, res) => {
  * POST /api/documents
  * Create a new document
  */
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authenticate, attachPlanInfo, checkDocumentLimit, checkStorageLimit, async (req, res) => {
   try {
     const {
       title,
@@ -137,9 +142,6 @@ router.post('/', authenticate, async (req, res) => {
         message: 'Title, content, and templateId are required'
       });
     }
-
-    // TODO: Check user plan limits (documents per month)
-    // This should be implemented with usage tracking
 
     const document = await prisma.document.create({
       data: {
@@ -163,7 +165,12 @@ router.post('/', authenticate, async (req, res) => {
 
     res.status(201).json({
       message: 'Document created successfully',
-      document
+      document,
+      // Include usage info from middleware
+      usage: {
+        documents: req.documentUsage,
+        storage: req.storageUsage
+      }
     });
   } catch (error) {
     console.error('[DOCUMENTS] Create error:', error);
