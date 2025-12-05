@@ -155,12 +155,22 @@ export const BillingView: React.FC = () => {
     const handleManagePayment = async () => {
         try {
             setError(null);
+
+            // Check if user has an active subscription
+            if (!subscription || !subscription.stripeCustomerId) {
+                setError('You need an active subscription to manage payment methods. Please upgrade to a paid plan first.');
+                return;
+            }
+
             await billingAPI.openCustomerPortal();
         } catch (err) {
             console.error('Failed to open customer portal:', err);
             setError('Failed to open payment management portal');
         }
     };
+
+    // Check if user has active paid subscription
+    const hasActiveSubscription = subscription && subscription.stripeCustomerId && subscription.status === 'ACTIVE';
 
     if (loading) {
         return (
@@ -291,27 +301,51 @@ export const BillingView: React.FC = () => {
                 </div>
              )}
 
-             {/* Payment Method */}
-             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800">
-                 <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('billing.payment.title')}</h3>
-                 <div className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                     <div className="flex items-center gap-4">
-                         <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded flex items-center justify-center">
-                             <CreditCard size={20} className="text-slate-500" />
-                         </div>
-                         <div>
-                             <p className="font-bold text-slate-900 dark:text-white text-sm">{t('billing.payment.visaEnding')}</p>
-                             <p className="text-xs text-slate-500">{t('billing.payment.expires')}</p>
-                         </div>
-                     </div>
-                     <button
-                        onClick={handleManagePayment}
-                        className="text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
-                     >
-                        {t('billing.payment.edit')}
-                     </button>
-                 </div>
-             </div>
+             {/* Payment Method - Only show for active subscriptions */}
+             {hasActiveSubscription && (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800">
+                    <h3 className="font-bold text-slate-900 dark:text-white mb-4">{t('billing.payment.title')}</h3>
+                    <div className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-8 bg-slate-200 dark:bg-slate-700 rounded flex items-center justify-center">
+                                <CreditCard size={20} className="text-slate-500" />
+                            </div>
+                            <div>
+                                <p className="font-bold text-slate-900 dark:text-white text-sm">{t('billing.payment.visaEnding')}</p>
+                                <p className="text-xs text-slate-500">{t('billing.payment.expires')}</p>
+                            </div>
+                        </div>
+                        <button
+                           onClick={handleManagePayment}
+                           className="text-sm text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+                        >
+                           {t('billing.payment.edit')}
+                        </button>
+                    </div>
+                </div>
+             )}
+
+             {/* Get Started CTA for Free Users */}
+             {!hasActiveSubscription && currentTier === SubscriptionTier.FREE && (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8 border border-blue-200 dark:border-blue-800">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div>
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                                Ready to unlock more features?
+                            </h3>
+                            <p className="text-slate-600 dark:text-slate-400">
+                                Upgrade to a paid plan to access premium features, manage payment methods, and view invoices.
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleUpgradeClick}
+                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold transition-colors whitespace-nowrap"
+                        >
+                            View Plans
+                        </button>
+                    </div>
+                </div>
+             )}
 
              {/* Invoices */}
              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden" data-tour="invoices">
