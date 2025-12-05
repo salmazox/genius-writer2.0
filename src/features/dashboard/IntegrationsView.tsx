@@ -14,6 +14,17 @@ export const IntegrationsView: React.FC<IntegrationsViewProps> = ({ user, toggle
     const { showToast } = useToast();
     const { t } = useThemeLanguage();
 
+    // Safety check for linkedAccounts
+    if (!user || !user.linkedAccounts) {
+        return (
+            <div className="space-y-6 animate-in slide-in-from-right duration-300">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800">
+                    <p className="text-slate-500">Loading integrations...</p>
+                </div>
+            </div>
+        );
+    }
+
     const handleConnectAccount = (platform: 'twitter' | 'linkedin' | 'instagram') => {
         const isConnected = user.linkedAccounts[platform];
         if (isConnected) {
