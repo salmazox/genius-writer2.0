@@ -26,6 +26,8 @@ const PricingPage = React.lazy(() => import('./pages/PricingPage'));
 const ContactPage = React.lazy(() => import('./pages/ContactPage'));
 const ProductPage = React.lazy(() => import('./pages/ProductPage'));
 const AuthPage = React.lazy(() => import('./pages/AuthPageEnhanced'));
+const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
 const UserDashboard = React.lazy(() => import('./pages/UserDashboard'));
 const LegalPage = React.lazy(() => import('./pages/LegalPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
@@ -113,6 +115,8 @@ const App: React.FC = () => {
                       <Route path="/product" element={<ProductPage />} />
                       <Route path="/login" element={<AuthPage />} />
                       <Route path="/signup" element={<AuthPage />} />
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="/privacy" element={<LegalPage />} />
                       <Route path="/terms" element={<LegalPage />} />
                       <Route path="/imprint" element={<LegalPage />} />

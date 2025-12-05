@@ -266,6 +266,48 @@ class AuthService {
   }
 
   /**
+   * Request password reset - sends reset email
+   */
+  async forgotPassword(email: string) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to send reset email');
+    }
+
+    return result;
+  }
+
+  /**
+   * Reset password using token from email
+   */
+  async resetPassword(token: string, newPassword: string) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token, newPassword }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to reset password');
+    }
+
+    return result;
+  }
+
+  /**
    * Validate password strength
    */
   validatePassword(password: string): { valid: boolean; errors: string[] } {
