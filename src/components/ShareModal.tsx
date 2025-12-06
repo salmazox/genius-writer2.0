@@ -53,7 +53,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, documen
 
     const handleCopyLink = () => {
         // Simulate a shareable link
-        const url = `${window.location.origin}/#/share/${document.id}`;
+        const url = `${window.location.origin}/share/${document.id}`;
         navigator.clipboard.writeText(url);
         showToast("Link copied to clipboard", "success");
     };
@@ -87,9 +87,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, documen
 
                     {settings.isPublic && (
                          <div className="flex items-center gap-2 mt-3 animate-in fade-in slide-in-from-top-1">
-                             <input 
-                                readOnly 
-                                value={`${window.location.origin}/#/share/${document.id}`} 
+                             <input
+                                readOnly
+                                value={`${window.location.origin}/share/${document.id}`}
                                 className="flex-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-500"
                              />
                              <Button size="sm" variant="secondary" onClick={handleCopyLink} icon={Copy}>Copy</Button>
