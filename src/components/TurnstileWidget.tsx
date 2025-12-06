@@ -58,7 +58,11 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
 
       // Remove existing widget if any
       if (widgetIdRef.current) {
-        window.turnstile.remove(widgetIdRef.current);
+        try {
+          window.turnstile.remove(widgetIdRef.current);
+        } catch (e) {
+          // Ignore if widget doesn't exist
+        }
       }
 
       // Render new widget
