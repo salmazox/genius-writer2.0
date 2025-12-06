@@ -22,7 +22,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
-import { chatWithAI, factCheck } from '../services/gemini';
+import { aiService } from '../services/aiService';
 import { documentService } from '../services/documentService';
 import { logActivity } from '../services/collaboration';
 import { useToast } from '../contexts/ToastContext';
@@ -174,9 +174,29 @@ const SmartEditor: React.FC = () => {
         setIsChatLoading(true);
 
         try {
-            const apiHistory = chatHistory.map(m => ({ role: m.role, text: m.text }));
-            const response = await chatWithAI(apiHistory, newUserMsg.text, content);
-            const newAiMsg: ChatMessage = { id: (Date.now() + 1).toString(), role: 'model', text: response };
+            // Use secure backend API for chat functionality
+            const systemInstruction = `You are a helpful writing assistant inside a document editor.
+Context of the user's document:\n${content?.substring(0, 5000) || "No content yet."}
+
+Your goal is to help them brainstorm, outline, or rewrite parts of this document. Be concise and helpful.`;
+
+            // Build conversation history for context
+            const conversationContext = chatHistory
+                .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`)
+                .join('\n');
+
+            const prompt = conversationContext
+                ? `${conversationContext}\n\nUser: ${newUserMsg.text}\n\nAssistant:`
+                : `User: ${newUserMsg.text}\n\nAssistant:`;
+
+            const response = await aiService.generate({
+                prompt,
+                model: 'gemini-2.0-flash-exp',
+                systemInstruction,
+                temperature: 0.7
+            });
+
+            const newAiMsg: ChatMessage = { id: (Date.now() + 1).toString(), role: 'model', text: response.text };
             setChatHistory(prev => [...prev, newAiMsg]);
         } catch (e) {
             showToast(t('dashboard.toasts.error'), "error");
@@ -187,14 +207,28 @@ const SmartEditor: React.FC = () => {
 
     const handleFactCheck = async () => {
         if (!content.trim()) return;
-        
+
         setIsChatLoading(true);
         setActiveSidebar('ai');
-        
+
         setChatHistory(prev => [...prev, { id: Date.now().toString(), role: 'user', text: "Fact check this document." }]);
-        
+
         try {
-            const result = await factCheck(content);
+            // Use secure backend API for fact checking
+            const response = await aiService.generate({
+                prompt: `
+                Fact check the following text. Identify any claims that seem dubious or incorrect, and provide corrections or notes.
+
+                TEXT:
+                "${content}"
+
+                Return a bulleted list of potential issues. If none found, say "No major factual issues detected."
+                `,
+                model: 'gemini-2.5-flash',
+                temperature: 0.3
+            });
+
+            const result = response.text || "No response.";
             setChatHistory(prev => [...prev, { id: Date.now().toString(), role: 'model', text: result }]);
         } catch (e) {
             showToast(t('dashboard.toasts.error'), "error");
