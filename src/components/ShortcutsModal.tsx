@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal } from './ui/Modal';
 import { Keyboard } from 'lucide-react';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface ShortcutsModalProps {
     isOpen: boolean;
@@ -21,25 +22,27 @@ const ShortcutRow: React.FC<{ keys: string[], action: string }> = ({ keys, actio
 );
 
 export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
+    const { t } = useThemeLanguage();
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Keyboard Shortcuts" size="sm">
+        <Modal isOpen={isOpen} onClose={onClose} title={t('ui.shortcuts.title')} size="sm">
             <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4 text-indigo-600 dark:text-indigo-400">
                     <Keyboard size={20} />
-                    <span className="font-bold text-sm">Productivity Boosters</span>
+                    <span className="font-bold text-sm">{t('ui.shortcuts.productivityBoosters')}</span>
                 </div>
-                
+
                 <div className="space-y-1">
-                    <ShortcutRow keys={['Ctrl', 'S']} action="Save Document" />
-                    <ShortcutRow keys={['Ctrl', '/']} action="Show Shortcuts" />
-                    <ShortcutRow keys={['Ctrl', 'Z']} action="Undo" />
-                    <ShortcutRow keys={['Ctrl', 'Shift', 'Z']} action="Redo" />
-                    <ShortcutRow keys={['Ctrl', 'B']} action="Bold Text" />
-                    <ShortcutRow keys={['Ctrl', 'I']} action="Italic Text" />
+                    <ShortcutRow keys={['Ctrl', 'S']} action={t('ui.shortcuts.saveDocument')} />
+                    <ShortcutRow keys={['Ctrl', '/']} action={t('ui.shortcuts.showShortcuts')} />
+                    <ShortcutRow keys={['Ctrl', 'Z']} action={t('ui.shortcuts.undo')} />
+                    <ShortcutRow keys={['Ctrl', 'Shift', 'Z']} action={t('ui.shortcuts.redo')} />
+                    <ShortcutRow keys={['Ctrl', 'B']} action={t('ui.shortcuts.boldText')} />
+                    <ShortcutRow keys={['Ctrl', 'I']} action={t('ui.shortcuts.italicText')} />
                 </div>
-                
+
                 <p className="text-xs text-slate-400 mt-4 text-center">
-                    Note: On macOS, use <kbd className="font-bold">Cmd</kbd> instead of <kbd className="font-bold">Ctrl</kbd>.
+                    {t('ui.shortcuts.macOsNote')} <kbd className="font-bold">{t('ui.shortcuts.cmd')}</kbd> {t('ui.shortcuts.insteadOf')} <kbd className="font-bold">{t('ui.shortcuts.ctrl')}</kbd>.
                 </p>
             </div>
         </Modal>

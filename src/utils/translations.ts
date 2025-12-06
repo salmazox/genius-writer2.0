@@ -805,6 +805,38 @@ export const translations = {
             error: 'Error',
             success: 'Success',
             warning: 'Warning'
+        },
+        help: {
+            helpCenter: 'Help Center',
+            backToArticles: 'Back to help articles',
+            closeHelp: 'Close help',
+            watchVideo: 'Watch Video Tutorial',
+            searchPlaceholder: 'Search help articles...',
+            resultFound: 'result found',
+            resultsFound: 'results found',
+            noArticlesFound: 'No articles found',
+            tryDifferentSearch: 'Try different search terms or browse all categories',
+            videoAvailable: 'Video available',
+            needMoreHelp: 'Need more help?',
+            contactSupport: 'Contact Support',
+            helpAndSupport: 'Help & Support',
+            openHelp: 'Open help',
+            help: 'Help',
+            moreInformation: 'More information'
+        },
+        shortcuts: {
+            title: 'Keyboard Shortcuts',
+            productivityBoosters: 'Productivity Boosters',
+            saveDocument: 'Save Document',
+            showShortcuts: 'Show Shortcuts',
+            undo: 'Undo',
+            redo: 'Redo',
+            boldText: 'Bold Text',
+            italicText: 'Italic Text',
+            macOsNote: 'Note: On macOS, use',
+            cmd: 'Cmd',
+            insteadOf: 'instead of',
+            ctrl: 'Ctrl'
         }
     }
   },
@@ -1613,6 +1645,38 @@ export const translations = {
             error: 'Fehler',
             success: 'Erfolg',
             warning: 'Warnung'
+        },
+        help: {
+            helpCenter: 'Hilfe-Center',
+            backToArticles: 'Zurück zu Hilfe-Artikeln',
+            closeHelp: 'Hilfe schließen',
+            watchVideo: 'Video-Tutorial ansehen',
+            searchPlaceholder: 'Hilfe-Artikel durchsuchen...',
+            resultFound: 'Ergebnis gefunden',
+            resultsFound: 'Ergebnisse gefunden',
+            noArticlesFound: 'Keine Artikel gefunden',
+            tryDifferentSearch: 'Versuche andere Suchbegriffe oder durchsuche alle Kategorien',
+            videoAvailable: 'Video verfügbar',
+            needMoreHelp: 'Brauchst du weitere Hilfe?',
+            contactSupport: 'Support kontaktieren',
+            helpAndSupport: 'Hilfe & Support',
+            openHelp: 'Hilfe öffnen',
+            help: 'Hilfe',
+            moreInformation: 'Weitere Informationen'
+        },
+        shortcuts: {
+            title: 'Tastenkombinationen',
+            productivityBoosters: 'Produktivitäts-Booster',
+            saveDocument: 'Dokument speichern',
+            showShortcuts: 'Tastenkombinationen anzeigen',
+            undo: 'Rückgängig',
+            redo: 'Wiederholen',
+            boldText: 'Text fett',
+            italicText: 'Text kursiv',
+            macOsNote: 'Hinweis: Auf macOS verwende',
+            cmd: 'Cmd',
+            insteadOf: 'anstatt',
+            ctrl: 'Strg'
         }
     }
   }

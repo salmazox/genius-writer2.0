@@ -7,8 +7,10 @@
 import React, { useState, useMemo } from 'react';
 import { X, Search, Book, HelpCircle, ChevronRight, Video, ArrowLeft } from 'lucide-react';
 import { useHelp } from '../../contexts/HelpContext';
+import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 
 export const HelpPanel: React.FC = () => {
+  const { t } = useThemeLanguage();
   const {
     isHelpOpen,
     currentArticle,
@@ -53,20 +55,20 @@ export const HelpPanel: React.FC = () => {
               <button
                 onClick={handleBackToList}
                 className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
-                aria-label="Back to help articles"
+                aria-label={t('ui.help.backToArticles')}
               >
                 <ArrowLeft size={20} className="text-slate-600 dark:text-slate-400" />
               </button>
             )}
             <HelpCircle size={24} className="text-indigo-600 dark:text-indigo-400" />
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              {currentArticle ? currentArticle.title : 'Help Center'}
+              {currentArticle ? currentArticle.title : t('ui.help.helpCenter')}
             </h2>
           </div>
           <button
             onClick={closeHelp}
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-            aria-label="Close help"
+            aria-label={t('ui.help.closeHelp')}
           >
             <X size={20} className="text-slate-600 dark:text-slate-400" />
           </button>
@@ -92,7 +94,7 @@ export const HelpPanel: React.FC = () => {
                 >
                   <Video size={20} className="text-indigo-600 dark:text-indigo-400" />
                   <span className="font-medium text-indigo-900 dark:text-indigo-300">
-                    Watch Video Tutorial
+                    {t('ui.help.watchVideo')}
                   </span>
                   <ChevronRight size={16} className="ml-auto text-indigo-600 dark:text-indigo-400" />
                 </a>
@@ -150,7 +152,7 @@ export const HelpPanel: React.FC = () => {
                 <Search size={18} className="absolute left-3 top-3 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search help articles..."
+                  placeholder={t('ui.help.searchPlaceholder')}
                   value={localSearchQuery}
                   onChange={(e) => setLocalSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-slate-900 dark:text-white"
@@ -160,7 +162,7 @@ export const HelpPanel: React.FC = () => {
               {/* Results Count */}
               {localSearchQuery && (
                 <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                  {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'} found
+                  {searchResults.length} {searchResults.length === 1 ? t('ui.help.resultFound') : t('ui.help.resultsFound')}
                 </p>
               )}
 
@@ -193,7 +195,7 @@ export const HelpPanel: React.FC = () => {
                             {article.videoUrl && (
                               <div className="flex items-center gap-1 mt-2 text-xs text-indigo-600 dark:text-indigo-400">
                                 <Video size={12} />
-                                <span>Video available</span>
+                                <span>{t('ui.help.videoAvailable')}</span>
                               </div>
                             )}
                           </div>
@@ -215,10 +217,10 @@ export const HelpPanel: React.FC = () => {
                     <Search size={32} className="text-slate-400" />
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                    No articles found
+                    {t('ui.help.noArticlesFound')}
                   </h3>
                   <p className="text-slate-600 dark:text-slate-400">
-                    Try different search terms or browse all categories
+                    {t('ui.help.tryDifferentSearch')}
                   </p>
                 </div>
               )}
@@ -229,12 +231,12 @@ export const HelpPanel: React.FC = () => {
         {/* Footer */}
         <div className="border-t border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-800/50">
           <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
-            Need more help?{' '}
+            {t('ui.help.needMoreHelp')}{' '}
             <a
               href="/contact"
               className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
             >
-              Contact Support
+              {t('ui.help.contactSupport')}
             </a>
           </p>
         </div>

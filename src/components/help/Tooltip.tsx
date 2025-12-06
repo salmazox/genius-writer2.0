@@ -88,6 +88,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
  * Info Tooltip (with icon)
  */
 import { HelpCircle } from 'lucide-react';
+import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 
 interface InfoTooltipProps {
   content: string;
@@ -102,12 +103,14 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
   iconSize = 16,
   className = ''
 }) => {
+  const { t } = useThemeLanguage();
+
   return (
     <Tooltip content={content} placement={placement} className={className}>
       <button
         type="button"
         className="inline-flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-        aria-label="More information"
+        aria-label={t('ui.help.moreInformation')}
       >
         <HelpCircle size={iconSize} />
       </button>
