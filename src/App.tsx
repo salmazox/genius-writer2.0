@@ -32,6 +32,7 @@ const UserDashboard = React.lazy(() => import('./pages/UserDashboard'));
 const LegalPage = React.lazy(() => import('./pages/LegalPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 const PlanSelectionPage = React.lazy(() => import('./pages/PlanSelectionPage'));
+const TurnstileDebugPage = React.lazy(() => import('./pages/TurnstileDebugPage'));
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -122,6 +123,7 @@ const App: React.FC = () => {
                       <Route path="/privacy" element={<LegalPage />} />
                       <Route path="/terms" element={<LegalPage />} />
                       <Route path="/imprint" element={<LegalPage />} />
+                      <Route path="/debug-turnstile" element={<TurnstileDebugPage />} />
                       <Route path="*" element={<NotFoundPage />} />
                     </Routes>
                   </Suspense>

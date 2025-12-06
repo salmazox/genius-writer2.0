@@ -58,28 +58,48 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
 
       // Remove existing widget if any
       if (widgetIdRef.current) {
-        window.turnstile.remove(widgetIdRef.current);
+        try {
+          window.turnstile.remove(widgetIdRef.current);
+        } catch (e) {
+          // Ignore if widget doesn't exist
+        }
       }
 
       // Render new widget
       try {
+        console.log('[TURNSTILE] Rendering widget with site key:', siteKey.substring(0, 10) + '...');
+        console.log('[TURNSTILE] Current domain:', window.location.hostname);
+
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
           theme,
           size,
           callback: (token: string) => {
-            console.log('[TURNSTILE] Verification successful');
+            console.log('[TURNSTILE] ✅ Verification successful, token received:', token.substring(0, 20) + '...');
             onVerify(token);
           },
-          'error-callback': () => {
-            console.error('[TURNSTILE] Verification error');
+          'error-callback': (errorCode: string) => {
+            console.error('[TURNSTILE] ❌ Verification error. Error code:', errorCode);
+            console.error('[TURNSTILE] Common causes:');
+            console.error('[TURNSTILE] 1. Domain not added in Cloudflare Turnstile settings');
+            console.error('[TURNSTILE] 2. Wrong site key');
+            console.error('[TURNSTILE] 3. Network issues');
+            console.error('[TURNSTILE] Current domain:', window.location.hostname);
+            console.error('[TURNSTILE] Add this domain to your Cloudflare Turnstile allowed domains list');
             if (onError) onError();
           },
           'expired-callback': () => {
-            console.log('[TURNSTILE] Token expired');
+            console.log('[TURNSTILE] ⏱️ Token expired (tokens last 5 minutes)');
             if (onExpire) onExpire();
+          },
+          'timeout-callback': () => {
+            console.error('[TURNSTILE] ⏱️ Verification timeout');
+            console.error('[TURNSTILE] This might indicate domain not configured in Cloudflare');
+            if (onError) onError();
           }
         });
+
+        console.log('[TURNSTILE] Widget rendered with ID:', widgetIdRef.current);
       } catch (error) {
         console.error('[TURNSTILE] Render error:', error);
         if (onError) onError();
