@@ -52,9 +52,8 @@ export const CookieConsent: React.FC = () => {
       timestamp: new Date().toISOString()
     }));
     setIsVisible(false);
-    
+
     if (preferences.analytics) {
-        console.log("Analytics cookies enabled");
         // Mock Plausible integration for GDPR compliance demonstration
         // Fix: Initialize the queue array 'q' if it doesn't exist to prevent "undefined reading push" error
         const w = window as any;

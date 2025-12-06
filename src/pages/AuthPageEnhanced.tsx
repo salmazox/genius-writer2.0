@@ -80,7 +80,6 @@ const AuthPageEnhanced: React.FC = () => {
           turnstileToken: turnstileToken || undefined,
         });
 
-        console.log('Login successful:', result);
         navigate('/dashboard');
         window.location.reload();
       } else {
@@ -105,7 +104,6 @@ const AuthPageEnhanced: React.FC = () => {
           turnstileToken: turnstileToken || undefined,
         } as SignupData);
 
-        console.log('Signup successful:', result);
         // Redirect to dashboard to start working
         navigate('/dashboard');
         window.location.reload();

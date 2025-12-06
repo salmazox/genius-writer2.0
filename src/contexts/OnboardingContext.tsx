@@ -43,7 +43,6 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
 
     // Check if tour was already completed
     if (hasCompletedTour(tourId) && !tour.autoStart) {
-      console.log(`Tour already completed: ${tourId}`);
       return;
     }
 

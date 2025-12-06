@@ -75,15 +75,11 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
 
       // Render new widget
       try {
-        console.log('[TURNSTILE] Rendering widget with site key:', siteKey.substring(0, 10) + '...');
-        console.log('[TURNSTILE] Current domain:', window.location.hostname);
-
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
           theme,
           size,
           callback: (token: string) => {
-            console.log('[TURNSTILE] ✅ Verification successful, token received:', token.substring(0, 20) + '...');
             callbacksRef.current.onVerify(token);
           },
           'error-callback': (errorCode: string) => {
@@ -97,7 +93,6 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
             if (callbacksRef.current.onError) callbacksRef.current.onError();
           },
           'expired-callback': () => {
-            console.log('[TURNSTILE] ⏱️ Token expired (tokens last 5 minutes)');
             if (callbacksRef.current.onExpire) callbacksRef.current.onExpire();
           },
           'timeout-callback': () => {
@@ -108,7 +103,6 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
         });
 
         isRendered = true;
-        console.log('[TURNSTILE] Widget rendered with ID:', widgetIdRef.current);
       } catch (error) {
         console.error('[TURNSTILE] Render error:', error);
         if (callbacksRef.current.onError) callbacksRef.current.onError();

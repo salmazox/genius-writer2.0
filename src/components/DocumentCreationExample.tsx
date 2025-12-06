@@ -26,11 +26,8 @@ export const DocumentCreationExample: React.FC = () => {
         templateId: 'blog-post',
       });
 
-      console.log('Document created successfully:', result);
-
       // Show usage info if available
       if (result.usage) {
-        console.log('Usage stats:', result.usage);
         // You could show a toast notification here
         alert(`Document created! ${result.usage.documents?.remaining || 0} documents remaining this month.`);
       }

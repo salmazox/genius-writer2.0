@@ -63,7 +63,6 @@ const LiveInterview: React.FC = () => {
                 },
                 callbacks: {
                     onopen: () => {
-                        console.log('Session opened');
                         setStatus('connected');
                         
                         // Start Audio Processing when session opens
@@ -100,7 +99,6 @@ const LiveInterview: React.FC = () => {
                         }
                     },
                     onclose: () => {
-                        console.log('Session closed');
                         cleanup();
                         setStatus('idle');
                     },
