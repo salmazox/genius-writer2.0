@@ -16,6 +16,7 @@ import {
 } from '../services/plagiarismChecker';
 import { ToolType } from '../types';
 import { Button } from './ui/Button';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface PlagiarismPanelProps {
   content: string;
@@ -28,18 +29,19 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
   toolType = ToolType.SMART_EDITOR,
   onResultChange
 }) => {
+  const { t } = useThemeLanguage();
   const [result, setResult] = useState<PlagiarismResult | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleCheck = async () => {
     if (!content || content.trim().length === 0) {
-      setError('Please write some content first');
+      setError(t('ui.plagiarism.errors.noContent'));
       return;
     }
 
     if (content.trim().length < 50) {
-      setError('Content is too short to check (minimum 50 characters)');
+      setError(t('ui.plagiarism.errors.tooShort'));
       return;
     }
 
@@ -51,7 +53,7 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
       setResult(plagiarismResult);
       onResultChange?.(plagiarismResult);
     } catch (err) {
-      setError('Failed to check originality. Please try again.');
+      setError(t('ui.plagiarism.errors.failed'));
       console.error('Plagiarism check error:', err);
     } finally {
       setIsChecking(false);
@@ -80,7 +82,7 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
       <div className="flex items-center justify-between mb-3">
         <h4 className="font-bold flex items-center gap-2 text-slate-800">
           <Shield size={18} className="text-indigo-600" />
-          Originality Check
+          {t('ui.plagiarism.title')}
         </h4>
         {result && (
           <button
@@ -90,7 +92,7 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
             }}
             className="text-xs text-slate-500 hover:text-slate-700"
           >
-            Clear
+            {t('ui.plagiarism.clear')}
           </button>
         )}
       </div>
@@ -101,18 +103,15 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
           <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800 flex items-start gap-2">
             <Info size={14} className="mt-0.5 flex-shrink-0" />
             <span>
-              Check your content for originality. Our AI will identify common phrases,
-              clichés, and generic expressions that reduce uniqueness.
+              {t('ui.plagiarism.info.description')}
             </span>
           </div>
           <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded text-xs text-amber-900 flex items-start gap-2">
             <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-semibold mb-1">Important Limitation:</p>
+              <p className="font-semibold mb-1">{t('ui.plagiarism.info.limitationTitle')}</p>
               <p>
-                This is NOT a true plagiarism detector. It uses AI pattern analysis and cannot
-                access external sources to verify if content is copied. For professional plagiarism
-                detection, use dedicated services like Copyscape or Turnitin.
+                {t('ui.plagiarism.info.limitationText')}
               </p>
             </div>
           </div>
@@ -138,12 +137,12 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
           {isChecking ? (
             <>
               <Loader size={14} className="animate-spin mr-2" />
-              Checking Originality...
+              {t('ui.plagiarism.checking')}
             </>
           ) : (
             <>
               <Shield size={14} className="mr-2" />
-              Check Originality
+              {t('ui.plagiarism.checkButton')}
             </>
           )}
         </Button>
@@ -183,7 +182,7 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
                   {getScoreDescription(result.score)}
                 </p>
                 <div className="text-xs text-slate-500">
-                  Status: <span className="font-semibold">{result.status}</span>
+                  {t('ui.plagiarism.status')}: <span className="font-semibold">{result.status}</span>
                 </div>
               </div>
             </div>
@@ -192,25 +191,25 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
           {/* Analysis Metrics */}
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="p-2 bg-slate-50 rounded">
-              <div className="text-slate-600">Unique Content</div>
+              <div className="text-slate-600">{t('ui.plagiarism.metrics.uniqueContent')}</div>
               <div className="font-bold text-slate-800">
                 {result.analysis.uniqueContentPercentage}%
               </div>
             </div>
             <div className="p-2 bg-slate-50 rounded">
-              <div className="text-slate-600">Common Phrases</div>
+              <div className="text-slate-600">{t('ui.plagiarism.metrics.commonPhrases')}</div>
               <div className="font-bold text-slate-800">
                 {result.analysis.commonPhrasesCount}
               </div>
             </div>
             <div className="p-2 bg-slate-50 rounded">
-              <div className="text-slate-600">Overused Expressions</div>
+              <div className="text-slate-600">{t('ui.plagiarism.metrics.overusedExpressions')}</div>
               <div className="font-bold text-slate-800">
                 {result.analysis.overusedExpressionsCount}
               </div>
             </div>
             <div className="p-2 bg-slate-50 rounded">
-              <div className="text-slate-600">Clichés</div>
+              <div className="text-slate-600">{t('ui.plagiarism.metrics.cliches')}</div>
               <div className="font-bold text-slate-800">
                 {result.analysis.clicheCount}
               </div>
@@ -222,7 +221,7 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
             <div>
               <h5 className="text-xs font-bold text-slate-800 mb-2 flex items-center gap-1">
                 <AlertTriangle size={14} />
-                Flagged Phrases ({result.flaggedPhrases.length})
+                {t('ui.plagiarism.flaggedPhrases')} ({result.flaggedPhrases.length})
               </h5>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {result.flaggedPhrases.map((fp, idx) => (
@@ -247,7 +246,7 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
           {result.suggestions.length > 0 && (
             <div>
               <h5 className="text-xs font-bold text-slate-800 mb-2">
-                💡 Suggestions for Improvement
+                {t('ui.plagiarism.suggestions')}
               </h5>
               <ul className="space-y-1.5 text-xs text-slate-700">
                 {result.suggestions.map((suggestion, idx) => (
@@ -271,7 +270,7 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
             {isChecking ? (
               <>
                 <Loader size={14} className="animate-spin mr-2" />
-                Re-checking...
+                {t('ui.plagiarism.rechecking')}
               </>
             ) : (
               'Check Again'
@@ -283,7 +282,7 @@ export const PlagiarismPanel: React.FC<PlagiarismPanelProps> = ({
       {/* Last Checked Timestamp */}
       {result && (
         <div className="mt-3 pt-3 border-t text-[10px] text-slate-400 text-center">
-          Last checked: {new Date(result.checkedAt).toLocaleString()}
+          {t('ui.plagiarism.lastChecked')} {new Date(result.checkedAt).toLocaleString()}
         </div>
       )}
     </div>

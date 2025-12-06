@@ -36,6 +36,7 @@ import {
   SEOKeywordAnalysis,
   SEORecommendation
 } from '../services/seoScorer';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface SEOPanelProps {
   content: string;
@@ -52,6 +53,7 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
   metaDescription,
   onKeywordsChange
 }) => {
+  const { t } = useThemeLanguage();
   const [keywordInput, setKeywordInput] = useState(keywords.join(', '));
   const [seoScore, setSeoScore] = useState<SEOScore | null>(null);
   const [expandedSections, setExpandedSections] = useState({
@@ -127,7 +129,7 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
         <div className="text-center py-8">
           <Search size={48} className="mx-auto text-slate-300 mb-3" />
           <p className="text-sm text-slate-400">
-            Start writing to see SEO analysis
+            {t('ui.seo.emptyState')}
           </p>
         </div>
       </div>
@@ -141,7 +143,7 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
         <div className="flex items-center justify-between mb-2">
           <h4 className="font-bold flex items-center gap-2">
             <TrendingUp size={18} />
-            SEO Score
+            {t('ui.seo.title')}
           </h4>
           <span className="text-xs font-semibold uppercase">
             {getScoreLabel(seoScore.overall)}
@@ -170,22 +172,22 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
       <div className="grid grid-cols-2 gap-2">
         <ScoreCard
           icon={<Target size={14} />}
-          label="Keywords"
+          label={t('ui.seo.breakdown.keywords')}
           score={seoScore.breakdown.keywords}
         />
         <ScoreCard
           icon={<FileText size={14} />}
-          label="Readability"
+          label={t('ui.seo.breakdown.readability')}
           score={seoScore.breakdown.readability}
         />
         <ScoreCard
           icon={<Layout size={14} />}
-          label="Structure"
+          label={t('ui.seo.breakdown.structure')}
           score={seoScore.breakdown.structure}
         />
         <ScoreCard
           icon={<Hash size={14} />}
-          label="Meta Tags"
+          label={t('ui.seo.breakdown.metaTags')}
           score={seoScore.breakdown.meta}
         />
       </div>
@@ -193,17 +195,17 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
       {/* Keyword Input */}
       <div>
         <label className="block text-xs font-bold text-slate-700 mb-1.5">
-          Target Keywords
+          {t('ui.seo.keywords.label')}
         </label>
         <input
           type="text"
           value={keywordInput}
           onChange={(e) => handleKeywordChange(e.target.value)}
-          placeholder="e.g., content marketing, SEO tips"
+          placeholder={t('ui.seo.keywords.placeholder')}
           className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
         />
         <p className="text-[10px] text-slate-400 mt-1">
-          Comma-separated keywords to track
+          {t('ui.seo.keywords.hint')}
         </p>
       </div>
 
@@ -216,7 +218,7 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
           >
             <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
               <Target size={14} />
-              Keyword Analysis ({seoScore.keywordAnalysis.length})
+              {t('ui.seo.keywords.analysis')} ({seoScore.keywordAnalysis.length})
             </span>
             {expandedSections.keywords ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
@@ -230,17 +232,17 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-bold text-sm">"{kw.keyword}"</span>
                     <span className="text-[10px] font-semibold uppercase">
-                      {kw.distribution === 'good' ? '✓ Good' : kw.distribution === 'low' ? '⚠ Low' : '⚠ High'}
+                      {kw.distribution === 'good' ? `✓ ${t('ui.seo.keywords.distribution.good')}` : kw.distribution === 'low' ? `⚠ ${t('ui.seo.keywords.distribution.low')}` : `⚠ ${t('ui.seo.keywords.distribution.high')}`}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-[10px]">
-                    <span>Count: {kw.count}</span>
-                    <span>Density: {kw.density.toFixed(2)}%</span>
+                    <span>{t('ui.seo.keywords.count')}: {kw.count}</span>
+                    <span>{t('ui.seo.keywords.density')}: {kw.density.toFixed(2)}%</span>
                   </div>
                   <div className="flex items-center gap-2 mt-1.5 text-[10px]">
-                    {kw.inTitle && <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded">Title ✓</span>}
-                    {kw.inFirstParagraph && <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded">Intro ✓</span>}
-                    {kw.inHeadings > 0 && <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded">H2/H3 ({kw.inHeadings})</span>}
+                    {kw.inTitle && <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded">{t('ui.seo.keywords.placement.title')}</span>}
+                    {kw.inFirstParagraph && <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded">{t('ui.seo.keywords.placement.intro')}</span>}
+                    {kw.inHeadings > 0 && <span className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded">{t('ui.seo.keywords.placement.headings')} ({kw.inHeadings})</span>}
                   </div>
                 </div>
               ))}
@@ -257,7 +259,7 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
         >
           <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
             <FileText size={14} />
-            Readability Metrics
+            {t('ui.seo.readability.title')}
           </span>
           {expandedSections.readability ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
@@ -265,24 +267,24 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
           <div className="p-3 space-y-2 border-t border-slate-200">
             <div className="grid grid-cols-2 gap-2">
               <MetricCard
-                label="Flesch Score"
+                label={t('ui.seo.readability.fleschScore')}
                 value={Math.round(seoScore.readability.fleschScore)}
                 subtext={seoScore.readability.fleschLevel}
               />
               <MetricCard
-                label="Word Count"
+                label={t('ui.seo.readability.wordCount')}
                 value={seoScore.readability.wordCount}
-                subtext={`${seoScore.readability.sentenceCount} sentences`}
+                subtext={`${seoScore.readability.sentenceCount} ${t('ui.seo.readability.sentences')}`}
               />
               <MetricCard
-                label="Avg Words/Sentence"
+                label={t('ui.seo.readability.avgWordsPerSentence')}
                 value={Math.round(seoScore.readability.averageWordsPerSentence)}
-                subtext="Aim for 15-20"
+                subtext={t('ui.seo.readability.aimFor')}
               />
               <MetricCard
-                label="Avg Syllables/Word"
+                label={t('ui.seo.readability.avgSyllablesPerWord')}
                 value={seoScore.readability.averageSyllablesPerWord.toFixed(1)}
-                subtext="Simpler is better"
+                subtext={t('ui.seo.readability.simplerIsBetter')}
               />
             </div>
           </div>
@@ -297,7 +299,7 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
         >
           <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
             <Layout size={14} />
-            Content Structure
+            {t('ui.seo.structure.title')}
           </span>
           {expandedSections.structure ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
@@ -305,34 +307,34 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
           <div className="p-3 space-y-2 border-t border-slate-200">
             <div className="grid grid-cols-2 gap-2">
               <MetricCard
-                label="H1 Tags"
+                label={t('ui.seo.structure.h1Tags')}
                 value={seoScore.structure.h1Count}
-                subtext={seoScore.structure.h1Count === 1 ? '✓ Perfect' : 'Use exactly 1'}
+                subtext={seoScore.structure.h1Count === 1 ? t('ui.seo.structure.perfect') : t('ui.seo.structure.useExactlyOne')}
               />
               <MetricCard
-                label="H2 Tags"
+                label={t('ui.seo.structure.h2Tags')}
                 value={seoScore.structure.h2Count}
-                subtext="Section breaks"
+                subtext={t('ui.seo.structure.sectionBreaks')}
               />
               <MetricCard
-                label="Paragraphs"
+                label={t('ui.seo.structure.paragraphs')}
                 value={seoScore.structure.paragraphCount}
-                subtext={`~${Math.round(seoScore.structure.averageParagraphLength)} words avg`}
+                subtext={`~${Math.round(seoScore.structure.averageParagraphLength)} ${t('ui.seo.structure.wordsAvg')}`}
               />
               <MetricCard
-                label="Lists"
+                label={t('ui.seo.structure.lists')}
                 value={seoScore.structure.listCount}
-                subtext="For scannability"
+                subtext={t('ui.seo.structure.forScannability')}
               />
               <MetricCard
-                label="Images"
+                label={t('ui.seo.structure.images')}
                 value={seoScore.structure.imageCount}
-                subtext={`${seoScore.structure.imagesWithAlt} with alt text`}
+                subtext={`${seoScore.structure.imagesWithAlt} ${t('ui.seo.structure.withAltText')}`}
               />
               <MetricCard
-                label="Links"
+                label={t('ui.seo.structure.links')}
                 value={seoScore.structure.linkCount}
-                subtext={`${seoScore.structure.internalLinks} internal`}
+                subtext={`${seoScore.structure.internalLinks} ${t('ui.seo.structure.internal')}`}
               />
             </div>
           </div>
@@ -348,7 +350,7 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
           >
             <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
               <Lightbulb size={14} />
-              Recommendations ({seoScore.recommendations.length})
+              {t('ui.seo.recommendations.title')} ({seoScore.recommendations.length})
             </span>
             {expandedSections.recommendations ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
@@ -377,7 +379,7 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
                             rec.impact === 'medium' ? 'bg-yellow-100 text-yellow-700' :
                             'bg-slate-100 text-slate-700'
                           }`}>
-                            {rec.impact} impact
+                            {rec.impact === 'high' ? t('ui.seo.recommendations.impact.high') : rec.impact === 'medium' ? t('ui.seo.recommendations.impact.medium') : t('ui.seo.recommendations.impact.low')}
                           </span>
                         </div>
                       </div>
@@ -393,17 +395,17 @@ export const SEOPanel: React.FC<SEOPanelProps> = ({
       <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
         <div className="flex items-center gap-2 mb-2">
           <BarChart3 size={14} className="text-slate-500" />
-          <span className="text-xs font-bold text-slate-700">Quick Stats</span>
+          <span className="text-xs font-bold text-slate-700">{t('ui.seo.quickStats.title')}</span>
         </div>
         <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-600">
           <div>
-            <span className="font-semibold">{seoScore.readability.wordCount}</span> words
+            <span className="font-semibold">{seoScore.readability.wordCount}</span> {t('ui.seo.quickStats.words')}
           </div>
           <div>
-            <span className="font-semibold">{Math.ceil(seoScore.readability.wordCount / 200)}</span> min read
+            <span className="font-semibold">{Math.ceil(seoScore.readability.wordCount / 200)}</span> {t('ui.seo.quickStats.minRead')}
           </div>
           <div>
-            <span className="font-semibold">{seoScore.structure.h2Count + seoScore.structure.h3Count}</span> headings
+            <span className="font-semibold">{seoScore.structure.h2Count + seoScore.structure.h3Count}</span> {t('ui.seo.quickStats.headings')}
           </div>
         </div>
       </div>

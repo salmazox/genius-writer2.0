@@ -23,6 +23,7 @@ import {
   getToneTips,
   VoiceAnalysisResult
 } from '../services/brandVoiceAnalyzer';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface BrandConsistencyPanelProps {
   content: string;
@@ -33,6 +34,7 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
   content,
   onClose
 }) => {
+  const { t } = useThemeLanguage();
   const [analysis, setAnalysis] = useState<VoiceAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const brandKit = getBrandKit();
@@ -104,7 +106,7 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
             <div className="flex items-center gap-2">
               <Shield size={20} className="text-indigo-600 dark:text-indigo-400" />
               <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-                Brand Consistency
+                {t('ui.brandConsistency.title')}
               </h2>
             </div>
             {onClose && (
@@ -122,10 +124,10 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
           <div className="text-center">
             <Shield size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
             <p className="text-slate-500 dark:text-slate-400 mb-2">
-              No Brand Kit found
+              {t('ui.brandConsistency.emptyState.noBrandKit')}
             </p>
             <p className="text-sm text-slate-400 dark:text-slate-500">
-              Set up your brand kit to check content consistency
+              {t('ui.brandConsistency.emptyState.noBrandKitDesc')}
             </p>
           </div>
         </div>
@@ -141,7 +143,7 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
             <div className="flex items-center gap-2">
               <Shield size={20} className="text-indigo-600 dark:text-indigo-400" />
               <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-                Brand Consistency
+                {t('ui.brandConsistency.title')}
               </h2>
             </div>
             {onClose && (
@@ -159,7 +161,7 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
           <div className="text-center">
             <Shield size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
             <p className="text-slate-500 dark:text-slate-400">
-              Start writing to check brand consistency
+              {t('ui.brandConsistency.emptyState.noContent')}
             </p>
           </div>
         </div>
@@ -207,14 +209,14 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
                   {getScoreIcon(analysis.score)}
                 </div>
                 <div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">Overall Score</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">{t('ui.brandConsistency.overallScore')}</p>
                   <p className={`text-2xl font-bold ${getScoreColor(analysis.score)}`}>
                     {analysis.score}/100
                   </p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-xs text-slate-600 dark:text-slate-400">Brand Tone</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">{t('ui.brandConsistency.brandTone')}</p>
                 <p className="text-sm font-semibold text-slate-900 dark:text-white capitalize">
                   {brandKit.voice.tone}
                 </p>
@@ -229,14 +231,14 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
         {isAnalyzing ? (
           <div className="text-center py-12">
             <RefreshCw size={32} className="mx-auto text-indigo-600 mb-3 animate-spin" />
-            <p className="text-slate-500 dark:text-slate-400">Analyzing content...</p>
+            <p className="text-slate-500 dark:text-slate-400">{t('ui.brandConsistency.analyzing')}</p>
           </div>
         ) : analysis ? (
           <div className="space-y-4">
             {/* Metrics */}
             <div className="grid grid-cols-2 gap-3">
               <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Tone Match</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('ui.brandConsistency.metrics.toneMatch')}</p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
@@ -251,7 +253,7 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
               </div>
 
               <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Style Match</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('ui.brandConsistency.metrics.styleMatch')}</p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
@@ -266,7 +268,7 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
               </div>
 
               <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Terminology</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('ui.brandConsistency.metrics.terminology')}</p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
@@ -281,7 +283,7 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
               </div>
 
               <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-3">
-                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Violations</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('ui.brandConsistency.metrics.violations')}</p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
                     <span className={`text-2xl font-bold ${
@@ -306,7 +308,7 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <AlertCircle size={16} />
-                  Issues Found
+                  {t('ui.brandConsistency.issuesFound')}
                 </h3>
                 <div className="space-y-2">
                   {analysis.issues.map((issue, index) => (
@@ -334,7 +336,7 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                   <Lightbulb size={16} />
-                  Suggestions
+                  {t('ui.brandConsistency.suggestions')}
                 </h3>
                 <div className="space-y-2">
                   {analysis.suggestions.map((suggestion, index) => (
@@ -353,7 +355,7 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
             {toneTips.length > 0 && (
               <div>
                 <h3 className="font-semibold text-slate-900 dark:text-white mb-3">
-                  {brandKit.voice.tone.charAt(0).toUpperCase() + brandKit.voice.tone.slice(1)} Tone Tips
+                  {brandKit.voice.tone.charAt(0).toUpperCase() + brandKit.voice.tone.slice(1)} {t('ui.brandConsistency.toneTips')}
                 </h3>
                 <ul className="space-y-2">
                   {toneTips.map((tip, index) => (
@@ -374,10 +376,10 @@ export const BrandConsistencyPanel: React.FC<BrandConsistencyPanelProps> = ({
               <div className="text-center py-8">
                 <CheckCircle size={48} className="mx-auto text-green-600 mb-3" />
                 <p className="text-green-600 dark:text-green-400 font-semibold mb-1">
-                  Excellent Brand Consistency!
+                  {t('ui.brandConsistency.excellent.title')}
                 </p>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Your content aligns well with your brand voice
+                  {t('ui.brandConsistency.excellent.description')}
                 </p>
               </div>
             )}

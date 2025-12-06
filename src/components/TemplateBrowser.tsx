@@ -29,6 +29,7 @@ import {
 } from '../services/contentTemplates';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface TemplateBrowserProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
   onSelectTemplate,
   currentToolType
 }) => {
+  const { t } = useThemeLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all' | 'popular'>('popular');
   const [selectedTemplate, setSelectedTemplate] = useState<ContentTemplate | null>(null);
@@ -151,10 +153,10 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
               <Sparkles size={20} className="text-indigo-600 flex-shrink-0 md:w-6 md:h-6" />
               <div className="min-w-0">
                 <h2 className="text-lg md:text-2xl font-bold text-slate-900 truncate">
-                  Content Templates
+                  {t('ui.templates.title')}
                 </h2>
                 <p className="text-xs md:text-sm text-slate-600 truncate">
-                  {filteredTemplates.length} templates
+                  {filteredTemplates.length} {t('ui.templates.count')}
                 </p>
               </div>
             </div>
@@ -163,7 +165,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
               className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm font-semibold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors flex-shrink-0"
             >
               <Filter size={14} className="md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Filters</span>
+              <span className="hidden sm:inline">{t('ui.templates.filters')}</span>
               {showFilters ? <ChevronUp size={12} className="md:w-3.5 md:h-3.5" /> : <ChevronDown size={12} className="md:w-3.5 md:h-3.5" />}
             </button>
           </div>
@@ -175,7 +177,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search templates, use cases, or tags..."
+              placeholder={t('ui.templates.search')}
               className="w-full pl-10 pr-4 py-3 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               autoFocus
             />
@@ -186,7 +188,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
             <div className="mt-4 p-4 bg-slate-50 rounded-lg space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-2 uppercase">
-                  Difficulty Level
+                  {t('ui.templates.difficulty.label')}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {['beginner', 'intermediate', 'advanced'].map(difficulty => (
@@ -199,7 +201,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                           : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
                       }`}
                     >
-                      {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                      {t(`ui.templates.difficulty.${difficulty}`)}
                     </button>
                   ))}
                 </div>
@@ -211,14 +213,14 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
           {!currentToolType && !isLoading && (
             <div className="flex gap-2 overflow-x-auto pb-2 mt-4 scrollbar-hide">
               <CategoryTab
-                label="Popular"
+                label={t('ui.templates.categories.popular')}
                 icon="⭐"
                 count={allTemplates.filter(t => t.popular).length}
                 active={selectedCategory === 'popular'}
                 onClick={() => setSelectedCategory('popular')}
               />
               <CategoryTab
-                label="All"
+                label={t('ui.templates.categories.all')}
                 icon="📁"
                 count={allTemplates.length}
                 active={selectedCategory === 'all'}
@@ -245,14 +247,14 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
             {isLoading ? (
               <div className="text-center py-12">
                 <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-                <p className="text-slate-600">Loading templates...</p>
+                <p className="text-slate-600">{t('ui.templates.loading')}</p>
               </div>
             ) : filteredTemplates.length === 0 ? (
               <div className="text-center py-12">
                 <Search size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-600 mb-2">No templates found</p>
+                <p className="text-slate-600 mb-2">{t('ui.templates.noResults')}</p>
                 <p className="text-sm text-slate-400">
-                  Try adjusting your search or filters
+                  {t('ui.templates.tryAdjusting')}
                 </p>
               </div>
             ) : (
@@ -277,7 +279,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                           {template.popular && (
                             <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded font-semibold">
                               <TrendingUp size={10} />
-                              Popular
+                              {t('ui.templates.popularBadge')}
                             </span>
                           )}
                         </div>
@@ -293,7 +295,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                     <div className="flex items-center gap-3 text-xs text-slate-500">
                       <span className="flex items-center gap-1">
                         <Clock size={12} />
-                        {template.estimatedTime} min
+                        {template.estimatedTime} {t('ui.templates.time')}
                       </span>
                       <span className={`px-2 py-0.5 rounded ${
                         template.difficulty === 'beginner' ? 'bg-green-100 text-green-700' :
@@ -348,7 +350,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
-                    Use Cases
+                    {t('ui.templates.useCases')}
                   </label>
                   <ul className="space-y-1">
                     {selectedTemplate.useCases.map((useCase, idx) => (
@@ -362,23 +364,23 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
-                    Details
+                    {t('ui.templates.details')}
                   </label>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-slate-600">Difficulty:</span>
+                      <span className="text-slate-600">{t('ui.templates.detailLabels.difficulty')}</span>
                       <span className="font-semibold text-slate-900 capitalize">
                         {selectedTemplate.difficulty}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-600">Time:</span>
+                      <span className="text-slate-600">{t('ui.templates.detailLabels.time')}</span>
                       <span className="font-semibold text-slate-900">
-                        ~{selectedTemplate.estimatedTime} minutes
+                        ~{selectedTemplate.estimatedTime} {t('ui.templates.minutes')}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-600">Industry:</span>
+                      <span className="text-slate-600">{t('ui.templates.detailLabels.industry')}</span>
                       <span className="font-semibold text-slate-900 capitalize">
                         {selectedTemplate.industry}
                       </span>
@@ -388,7 +390,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2">
-                    Tags
+                    {t('ui.templates.tags')}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {selectedTemplate.tags.map(tag => (
@@ -407,7 +409,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                 onClick={handleUseTemplate}
                 className="w-full"
               >
-                Use This Template
+                {t('ui.templates.useTemplate')}
               </Button>
             </div>
           )}
@@ -420,9 +422,9 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                   onClick={handleCloseMobilePreview}
                   className="flex items-center gap-2 text-slate-600 hover:text-slate-900"
                 >
-                  ← Back
+                  ← {t('ui.templates.back')}
                 </button>
-                <span className="text-sm font-semibold text-slate-900">Template Details</span>
+                <span className="text-sm font-semibold text-slate-900">{t('ui.templates.templateDetails')}</span>
                 <div className="w-16"></div>
               </div>
 
@@ -465,19 +467,19 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                     </label>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-slate-600">Difficulty:</span>
+                        <span className="text-slate-600">{t('ui.templates.detailLabels.difficulty')}</span>
                         <span className="font-semibold text-slate-900 capitalize">
                           {selectedTemplate.difficulty}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-600">Time:</span>
+                        <span className="text-slate-600">{t('ui.templates.detailLabels.time')}</span>
                         <span className="font-semibold text-slate-900">
-                          ~{selectedTemplate.estimatedTime} minutes
+                          ~{selectedTemplate.estimatedTime} {t('ui.templates.minutes')}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-600">Industry:</span>
+                        <span className="text-slate-600">{t('ui.templates.detailLabels.industry')}</span>
                         <span className="font-semibold text-slate-900 capitalize">
                           {selectedTemplate.industry}
                         </span>

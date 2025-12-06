@@ -931,6 +931,225 @@ export const translations = {
             createNew: 'Create New',
             docs: 'Docs',
             profile: 'Profile'
+        },
+        seo: {
+            title: 'SEO Score',
+            emptyState: 'Start writing to see SEO analysis',
+            scoreLabels: {
+                excellent: 'Excellent',
+                good: 'Good',
+                fair: 'Fair',
+                poor: 'Poor',
+                veryPoor: 'Very Poor'
+            },
+            breakdown: {
+                keywords: 'Keywords',
+                readability: 'Readability',
+                structure: 'Structure',
+                metaTags: 'Meta Tags'
+            },
+            keywords: {
+                label: 'Target Keywords',
+                placeholder: 'z.B. Content-Marketing, SEO-Tipps',
+                hint: 'Kommagetrennte Schlüsselwörter zum Verfolgen',
+                analysis: 'Schlüsselwort-Analyse',
+                count: 'Count',
+                density: 'Density',
+                distribution: {
+                    good: 'Good',
+                    low: 'Low',
+                    high: 'High'
+                },
+                placement: {
+                    title: 'Title ✓',
+                    intro: 'Intro ✓',
+                    headings: 'H2/H3'
+                }
+            },
+            readability: {
+                title: 'Readability Metrics',
+                fleschScore: 'Flesch Score',
+                wordCount: 'Word Count',
+                sentences: 'sentences',
+                avgWordsPerSentence: 'Avg Words/Sentence',
+                avgSyllablesPerWord: 'Avg Syllables/Word',
+                aimFor: 'Aim for 15-20',
+                simplerIsBetter: 'Simpler is better'
+            },
+            structure: {
+                title: 'Content Structure',
+                h1Tags: 'H1 Tags',
+                h2Tags: 'H2 Tags',
+                paragraphs: 'Paragraphs',
+                lists: 'Lists',
+                images: 'Images',
+                links: 'Links',
+                perfect: '✓ Perfect',
+                useExactlyOne: 'Use exactly 1',
+                sectionBreaks: 'Section breaks',
+                forScannability: 'For scannability',
+                withAltText: 'with alt text',
+                internal: 'internal',
+                wordsAvg: 'words avg'
+            },
+            recommendations: {
+                title: 'Recommendations',
+                impact: {
+                    high: 'high impact',
+                    medium: 'medium impact',
+                    low: 'low impact'
+                }
+            },
+            quickStats: {
+                title: 'Quick Stats',
+                words: 'words',
+                minRead: 'min read',
+                headings: 'headings'
+            }
+        },
+        contentAnalysis: {
+            title: 'Content Quality',
+            emptyState: 'Start writing to see content analysis',
+            stats: {
+                words: 'Words',
+                sentences: 'Sentences',
+                paragraphs: 'Paragraphs',
+                uniqueWords: 'Unique Words'
+            },
+            readability: {
+                title: 'Readability',
+                readingEase: 'Reading Ease',
+                gradeLevel: 'Grade Level',
+                grade: 'Grade',
+                avgSentenceLength: 'Avg Sentence Length',
+                avgWordLength: 'Avg Word Length',
+                words: 'words',
+                chars: 'chars',
+                complexWordsWarning: 'complex words. Consider simpler alternatives.'
+            },
+            tone: {
+                title: 'Tone Analysis',
+                confidence: 'confidence'
+            },
+            sentiment: {
+                title: 'Sentiment',
+                labels: {
+                    positive: 'Positive',
+                    neutral: 'Neutral',
+                    negative: 'Negative'
+                },
+                score: 'Score',
+                emotionalKeywords: 'Emotional Keywords:'
+            }
+        },
+        plagiarism: {
+            title: 'Originality Check',
+            clear: 'Clear',
+            checkButton: 'Check Originality',
+            checking: 'Checking Originality...',
+            checkAgain: 'Check Again',
+            rechecking: 'Re-checking...',
+            lastChecked: 'Last checked:',
+            info: {
+                description: 'Check your content for originality. Our AI will identify common phrases, clichés, and generic expressions that reduce uniqueness.',
+                limitationTitle: 'Important Limitation:',
+                limitationText: 'This is NOT a true plagiarism detector. It uses AI pattern analysis and cannot access external sources to verify if content is copied. For professional plagiarism detection, use dedicated services like Copyscape or Turnitin.'
+            },
+            errors: {
+                noContent: 'Please write some content first',
+                tooShort: 'Content is too short to check (minimum 50 characters)',
+                failed: 'Failed to check originality. Please try again.'
+            },
+            scores: {
+                excellent: 'Excellent',
+                good: 'Good',
+                fair: 'Fair',
+                poor: 'Poor',
+                veryPoor: 'Very Poor'
+            },
+            descriptions: {
+                excellent: 'Your content is highly original',
+                good: 'Mostly original with minor issues',
+                fair: 'Contains some generic phrases',
+                poor: 'Significant originality concerns',
+                veryPoor: 'Content may be copied or highly generic'
+            },
+            metrics: {
+                uniqueContent: 'Unique Content',
+                commonPhrases: 'Common Phrases',
+                overusedExpressions: 'Overused Expressions',
+                cliches: 'Clichés'
+            },
+            flaggedPhrases: 'Flagged Phrases',
+            severity: {
+                low: 'low',
+                medium: 'medium',
+                high: 'high'
+            },
+            suggestions: 'Suggestions for Improvement',
+            status: 'Status'
+        },
+        templates: {
+            title: 'Content Templates',
+            filters: 'Filters',
+            search: 'Search templates, use cases, or tags...',
+            difficulty: {
+                label: 'Difficulty Level',
+                beginner: 'Beginner',
+                intermediate: 'Intermediate',
+                advanced: 'Advanced'
+            },
+            categories: {
+                popular: 'Popular',
+                all: 'All'
+            },
+            loading: 'Loading templates...',
+            noResults: 'No templates found',
+            tryAdjusting: 'Try adjusting your search or filters',
+            popularBadge: 'Popular',
+            time: 'min',
+            useCases: 'Use Cases',
+            details: 'Details',
+            detailLabels: {
+                difficulty: 'Difficulty:',
+                time: 'Time:',
+                industry: 'Industry:'
+            },
+            minutes: 'minutes',
+            tags: 'Tags',
+            useTemplate: 'Use This Template',
+            back: 'Back',
+            templateDetails: 'Template Details',
+            count: 'templates'
+        },
+        brandConsistency: {
+            title: 'Brand Consistency',
+            emptyState: {
+                noBrandKit: 'No Brand Kit found',
+                noBrandKitDesc: 'Set up your brand kit to check content consistency',
+                noContent: 'Start writing to check brand consistency'
+            },
+            overallScore: 'Overall Score',
+            brandTone: 'Brand Tone',
+            analyzing: 'Analyzing content...',
+            metrics: {
+                toneMatch: 'Tone Match',
+                styleMatch: 'Style Match',
+                terminology: 'Terminology',
+                violations: 'Violations'
+            },
+            issuesFound: 'Issues Found',
+            severity: {
+                low: 'low',
+                medium: 'medium',
+                high: 'high'
+            },
+            suggestions: 'Suggestions',
+            toneTips: 'Tone Tips',
+            excellent: {
+                title: 'Excellent Brand Consistency!',
+                description: 'Your content aligns well with your brand voice'
+            }
         }
     }
   },
@@ -1865,6 +2084,225 @@ export const translations = {
             createNew: 'Neu erstellen',
             docs: 'Dokumente',
             profile: 'Profil'
+        },
+        seo: {
+            title: 'SEO-Bewertung',
+            emptyState: 'Schreiben Sie, um die SEO-Analyse zu sehen',
+            scoreLabels: {
+                excellent: 'Ausgezeichnet',
+                good: 'Gut',
+                fair: 'Befriedigend',
+                poor: 'Mangelhaft',
+                veryPoor: 'Ungenügend'
+            },
+            breakdown: {
+                keywords: 'Schlüsselwörter',
+                readability: 'Lesbarkeit',
+                structure: 'Struktur',
+                metaTags: 'Meta-Tags'
+            },
+            keywords: {
+                label: 'Ziel-Schlüsselwörter',
+                placeholder: 'z.B. Content-Marketing, SEO-Tipps',
+                hint: 'Kommagetrennte Schlüsselwörter zum Verfolgen',
+                analysis: 'Schlüsselwort-Analyse',
+                count: 'Anzahl',
+                density: 'Dichte',
+                distribution: {
+                    good: 'Good',
+                    low: 'Low',
+                    high: 'High'
+                },
+                placement: {
+                    title: 'Title ✓',
+                    intro: 'Intro ✓',
+                    headings: 'H2/H3'
+                }
+            },
+            readability: {
+                title: 'Lesbarkeits-Metriken',
+                fleschScore: 'Flesch-Wert',
+                wordCount: 'Wortanzahl',
+                sentences: 'Sätze',
+                avgWordsPerSentence: 'Durchschn. Wörter/Satz',
+                avgSyllablesPerWord: 'Durchschn. Silben/Wort',
+                aimFor: 'Ziel: 15-20',
+                simplerIsBetter: 'Einfacher ist besser'
+            },
+            structure: {
+                title: 'Inhaltsstruktur',
+                h1Tags: 'H1-Tags',
+                h2Tags: 'H2-Tags',
+                paragraphs: 'Absätze',
+                lists: 'Listen',
+                images: 'Bilder',
+                links: 'Links',
+                perfect: '✓ Perfekt',
+                useExactlyOne: 'Genau 1 verwenden',
+                sectionBreaks: 'Abschnittsumbrüche',
+                forScannability: 'Für Lesbarkeit',
+                withAltText: 'mit Alt-Text',
+                internal: 'intern',
+                wordsAvg: 'Wörter Ø'
+            },
+            recommendations: {
+                title: 'Empfehlungen',
+                impact: {
+                    high: 'hohe Auswirkung',
+                    medium: 'mittlere Auswirkung',
+                    low: 'geringe Auswirkung'
+                }
+            },
+            quickStats: {
+                title: 'Schnellstatistik',
+                words: 'Wörter',
+                minRead: 'Min. Lesezeit',
+                headings: 'Überschriften'
+            }
+        },
+        contentAnalysis: {
+            title: 'Inhaltsqualität',
+            emptyState: 'Schreiben Sie, um die Inhaltsanalyse zu sehen',
+            stats: {
+                words: 'Words',
+                sentences: 'Sentences',
+                paragraphs: 'Absätze',
+                uniqueWords: 'Unique Words'
+            },
+            readability: {
+                title: 'Readability',
+                readingEase: 'Leseleichtigkeit',
+                gradeLevel: 'Klassenstufe',
+                grade: 'Klasse',
+                avgSentenceLength: 'Durchschn. Satzlänge',
+                avgWordLength: 'Durchschn. Wortlänge',
+                words: 'Wörter',
+                chars: 'Zeichen',
+                complexWordsWarning: 'komplexe Wörter. Erwägen Sie einfachere Alternativen.'
+            },
+            tone: {
+                title: 'Tonfall-Analyse',
+                confidence: 'Konfidenz'
+            },
+            sentiment: {
+                title: 'Stimmung',
+                labels: {
+                    positive: 'Positiv',
+                    neutral: 'Neutral',
+                    negative: 'Negativ'
+                },
+                score: 'Bewertung',
+                emotionalKeywords: 'Emotionale Schlüsselwörter:'
+            }
+        },
+        plagiarism: {
+            title: 'Originalitätsprüfung',
+            clear: 'Löschen',
+            checkButton: 'Originalität prüfen',
+            checking: 'Prüfe Originalität...',
+            checkAgain: 'Erneut prüfen',
+            rechecking: 'Prüfe erneut...',
+            lastChecked: 'Zuletzt geprüft:',
+            info: {
+                description: 'Prüfen Sie Ihren Inhalt auf Originalität. Unsere KI identifiziert gängige Phrasen, Klischees und allgemeine Ausdrücke, die die Einzigartigkeit reduzieren.',
+                limitationTitle: 'Wichtige Einschränkung:',
+                limitationText: 'Dies ist KEIN echter Plagiatsdetektor. Es verwendet KI-Musteranalyse und kann nicht auf externe Quellen zugreifen, um zu überprüfen, ob Inhalte kopiert wurden. Verwenden Sie für professionelle Plagiatserkennung spezielle Dienste wie Copyscape oder Turnitin.'
+            },
+            errors: {
+                noContent: 'Bitte schreiben Sie zuerst etwas',
+                tooShort: 'Inhalt ist zu kurz zum Prüfen (mindestens 50 Zeichen)',
+                failed: 'Originalitätsprüfung fehlgeschlagen. Bitte versuchen Sie es erneut.'
+            },
+            scores: {
+                excellent: 'Excellent',
+                good: 'Good',
+                fair: 'Fair',
+                poor: 'Poor',
+                veryPoor: 'Very Poor'
+            },
+            descriptions: {
+                excellent: 'Ihr Inhalt ist sehr original',
+                good: 'Größtenteils original mit kleineren Problemen',
+                fair: 'Enthält einige allgemeine Phrasen',
+                poor: 'Erhebliche Originalitätsbedenken',
+                veryPoor: 'Inhalt könnte kopiert oder sehr allgemein sein'
+            },
+            metrics: {
+                uniqueContent: 'Eindeutiger Inhalt',
+                commonPhrases: 'Gängige Phrasen',
+                overusedExpressions: 'Überstrapazierte Ausdrücke',
+                cliches: 'Klischees'
+            },
+            flaggedPhrases: 'Markierte Phrasen',
+            severity: {
+                low: 'low',
+                medium: 'medium',
+                high: 'high'
+            },
+            suggestions: 'Verbesserungsvorschläge',
+            status: 'Status'
+        },
+        templates: {
+            title: 'Inhaltsvorlagen',
+            filters: 'Filter',
+            search: 'Vorlagen, Anwendungsfälle oder Tags durchsuchen...',
+            difficulty: {
+                label: 'Schwierigkeitsgrad',
+                beginner: 'Anfänger',
+                intermediate: 'Fortgeschritten',
+                advanced: 'Experte'
+            },
+            categories: {
+                popular: 'Beliebt',
+                all: 'Alle'
+            },
+            loading: 'Lade Vorlagen...',
+            noResults: 'Keine Vorlagen gefunden',
+            tryAdjusting: 'Versuchen Sie, Ihre Suche oder Filter anzupassen',
+            popularBadge: 'Beliebt',
+            time: 'Min.',
+            useCases: 'Anwendungsfälle',
+            details: 'Details',
+            detailLabels: {
+                difficulty: 'Schwierigkeit:',
+                time: 'Zeit:',
+                industry: 'Branche:'
+            },
+            minutes: 'Minuten',
+            tags: 'Tags',
+            useTemplate: 'Diese Vorlage verwenden',
+            back: 'Zurück',
+            templateDetails: 'Vorlagendetails',
+            count: 'Vorlagen'
+        },
+        brandConsistency: {
+            title: 'Markenkonsistenz',
+            emptyState: {
+                noBrandKit: 'Kein Brand Kit gefunden',
+                noBrandKitDesc: 'Richten Sie Ihr Brand Kit ein, um die Inhaltskonsistenz zu prüfen',
+                noContent: 'Schreiben Sie, um die Markenkonsistenz zu prüfen'
+            },
+            overallScore: 'Gesamtbewertung',
+            brandTone: 'Markenton',
+            analyzing: 'Analysiere Inhalt...',
+            metrics: {
+                toneMatch: 'Ton-Übereinstimmung',
+                styleMatch: 'Stil-Übereinstimmung',
+                terminology: 'Terminologie',
+                violations: 'Verstöße'
+            },
+            issuesFound: 'Probleme gefunden',
+            severity: {
+                low: 'low',
+                medium: 'medium',
+                high: 'high'
+            },
+            suggestions: 'Vorschläge',
+            toneTips: 'Ton-Tipps',
+            excellent: {
+                title: 'Ausgezeichnete Markenkonsistenz!',
+                description: 'Ihr Inhalt passt gut zu Ihrer Markenstimme'
+            }
         }
     }
   }

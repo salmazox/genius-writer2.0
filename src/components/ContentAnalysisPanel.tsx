@@ -18,6 +18,7 @@ import {
   CheckCircle,
   Info
 } from 'lucide-react';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { analyzeContent, ContentQualityReport } from '../services/contentAnalysis';
 
 interface ContentAnalysisPanelProps {
@@ -31,6 +32,7 @@ export const ContentAnalysisPanel: React.FC<ContentAnalysisPanelProps> = ({
   className = '',
   compact = false
 }) => {
+  const { t } = useThemeLanguage();
   const analysis = useMemo(() => {
     return analyzeContent(content);
   }, [content]);
@@ -41,7 +43,7 @@ export const ContentAnalysisPanel: React.FC<ContentAnalysisPanelProps> = ({
         <div className="text-center">
           <Info className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Start writing to see content analysis
+            {t('ui.contentAnalysis.emptyState')}
           </p>
         </div>
       </div>
@@ -54,7 +56,7 @@ export const ContentAnalysisPanel: React.FC<ContentAnalysisPanelProps> = ({
       <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold uppercase tracking-wide opacity-90">
-            Content Quality
+            {t('ui.contentAnalysis.title')}
           </h3>
           <TrendingUp size={20} />
         </div>
@@ -73,10 +75,10 @@ export const ContentAnalysisPanel: React.FC<ContentAnalysisPanelProps> = ({
       {/* Stats Grid */}
       {!compact && (
         <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Words" value={analysis.wordCount} />
-          <StatCard label="Sentences" value={analysis.sentenceCount} />
-          <StatCard label="Paragraphs" value={analysis.paragraphCount} />
-          <StatCard label="Unique Words" value={analysis.uniqueWords} />
+          <StatCard label={t('ui.contentAnalysis.stats.words')} value={analysis.wordCount} />
+          <StatCard label={t('ui.contentAnalysis.stats.sentences')} value={analysis.sentenceCount} />
+          <StatCard label={t('ui.contentAnalysis.stats.paragraphs')} value={analysis.paragraphCount} />
+          <StatCard label={t('ui.contentAnalysis.stats.uniqueWords')} value={analysis.uniqueWords} />
         </div>
       )}
 
@@ -84,35 +86,35 @@ export const ContentAnalysisPanel: React.FC<ContentAnalysisPanelProps> = ({
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 space-y-4">
         <div className="flex items-center gap-2 mb-3">
           <BookOpen size={18} className="text-blue-600 dark:text-blue-400" />
-          <h4 className="font-bold text-slate-900 dark:text-white">Readability</h4>
+          <h4 className="font-bold text-slate-900 dark:text-white">{t('ui.contentAnalysis.readability.title')}</h4>
         </div>
 
         <div className="space-y-3">
           <MetricRow
-            label="Reading Ease"
+            label={t('ui.contentAnalysis.readability.readingEase')}
             value={analysis.readability.fleschReadingEase}
             max={100}
             color="blue"
             badge={analysis.readability.readingLevel}
           />
           <MetricRow
-            label="Grade Level"
+            label={t('ui.contentAnalysis.readability.gradeLevel')}
             value={analysis.readability.fleschKincaidGrade}
             max={18}
             color="cyan"
-            badge={`Grade ${Math.round(analysis.readability.fleschKincaidGrade)}`}
+            badge={`${t('ui.contentAnalysis.readability.grade')} ${Math.round(analysis.readability.fleschKincaidGrade)}`}
           />
 
           {!compact && (
             <>
               <div className="grid grid-cols-2 gap-2 pt-2">
                 <MiniStat
-                  label="Avg Sentence Length"
-                  value={`${analysis.readability.averageSentenceLength} words`}
+                  label={t('ui.contentAnalysis.readability.avgSentenceLength')}
+                  value={`${analysis.readability.averageSentenceLength} ${t('ui.contentAnalysis.readability.words')}`}
                 />
                 <MiniStat
-                  label="Avg Word Length"
-                  value={`${analysis.readability.averageWordLength} chars`}
+                  label={t('ui.contentAnalysis.readability.avgWordLength')}
+                  value={`${analysis.readability.averageWordLength} ${t('ui.contentAnalysis.readability.chars')}`}
                 />
               </div>
 
@@ -120,7 +122,7 @@ export const ContentAnalysisPanel: React.FC<ContentAnalysisPanelProps> = ({
                 <div className="flex gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-900/50">
                   <AlertCircle size={16} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-900 dark:text-amber-200">
-                    {analysis.readability.complexWordPercentage.toFixed(1)}% complex words. Consider simpler alternatives.
+                    {analysis.readability.complexWordPercentage.toFixed(1)}% {t('ui.contentAnalysis.readability.complexWordsWarning')}
                   </p>
                 </div>
               )}
@@ -137,7 +139,7 @@ export const ContentAnalysisPanel: React.FC<ContentAnalysisPanelProps> = ({
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 space-y-4">
         <div className="flex items-center gap-2 mb-3">
           <MessageCircle size={18} className="text-purple-600 dark:text-purple-400" />
-          <h4 className="font-bold text-slate-900 dark:text-white">Tone Analysis</h4>
+          <h4 className="font-bold text-slate-900 dark:text-white">{t('ui.contentAnalysis.tone.title')}</h4>
         </div>
 
         <div className="flex items-center justify-between">
@@ -146,7 +148,7 @@ export const ContentAnalysisPanel: React.FC<ContentAnalysisPanelProps> = ({
               {analysis.tone.primaryTone}
             </div>
             <div className="text-sm text-slate-600 dark:text-slate-400">
-              {analysis.tone.confidence}% confidence
+              {analysis.tone.confidence}% {t('ui.contentAnalysis.tone.confidence')}
             </div>
           </div>
           <div className="relative w-16 h-16">
@@ -197,7 +199,7 @@ export const ContentAnalysisPanel: React.FC<ContentAnalysisPanelProps> = ({
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 space-y-4">
         <div className="flex items-center gap-2 mb-3">
           <Smile size={18} className="text-green-600 dark:text-green-400" />
-          <h4 className="font-bold text-slate-900 dark:text-white">Sentiment</h4>
+          <h4 className="font-bold text-slate-900 dark:text-white">{t('ui.contentAnalysis.sentiment.title')}</h4>
         </div>
 
         <div className="flex items-center gap-4">
@@ -213,14 +215,14 @@ export const ContentAnalysisPanel: React.FC<ContentAnalysisPanelProps> = ({
             <div className="text-2xl font-bold text-slate-900 dark:text-white">
               {analysis.sentiment.score > 0 ? '+' : ''}{(analysis.sentiment.score * 100).toFixed(0)}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400">Score</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t('ui.contentAnalysis.sentiment.score')}</div>
           </div>
         </div>
 
         {!compact && analysis.sentiment.emotionalWords.length > 0 && (
           <div>
             <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
-              Emotional Keywords:
+              {t('ui.contentAnalysis.sentiment.emotionalKeywords')}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {analysis.sentiment.emotionalWords.map((item, idx) => (
