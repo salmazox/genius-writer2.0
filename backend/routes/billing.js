@@ -400,4 +400,98 @@ router.get('/usage', authenticate, async (req, res) => {
   }
 });
 
+// Update billing address and sync with Stripe
+router.put('/billing-address', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { street, city, state, postalCode, country } = req.body;
+
+    // Update user's billing address in database
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        billingStreet: street || null,
+        billingCity: city || null,
+        billingState: state || null,
+        billingPostalCode: postalCode || null,
+        billingCountry: country || null
+      }
+    });
+
+    // Get subscription to find Stripe customer ID
+    const subscription = await prisma.subscription.findFirst({
+      where: { userId }
+    });
+
+    // Sync with Stripe if customer exists
+    if (subscription && subscription.stripeCustomerId) {
+      await stripe.customers.update(subscription.stripeCustomerId, {
+        address: {
+          line1: street || '',
+          city: city || '',
+          state: state || '',
+          postal_code: postalCode || '',
+          country: country || ''
+        }
+      });
+      console.log(`[BILLING] Billing address synced with Stripe for customer: ${subscription.stripeCustomerId}`);
+    }
+
+    res.json({
+      message: 'Billing address updated successfully',
+      billingAddress: {
+        street: updatedUser.billingStreet,
+        city: updatedUser.billingCity,
+        state: updatedUser.billingState,
+        postalCode: updatedUser.billingPostalCode,
+        country: updatedUser.billingCountry
+      }
+    });
+  } catch (error) {
+    console.error('[BILLING] Update billing address error:', error);
+    res.status(500).json({
+      error: 'Failed to update billing address',
+      message: 'An error occurred while updating billing address'
+    });
+  }
+});
+
+// Get billing address
+router.get('/billing-address', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        billingStreet: true,
+        billingCity: true,
+        billingState: true,
+        billingPostalCode: true,
+        billingCountry: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      billingAddress: {
+        street: user.billingStreet,
+        city: user.billingCity,
+        state: user.billingState,
+        postalCode: user.billingPostalCode,
+        country: user.billingCountry
+      }
+    });
+  } catch (error) {
+    console.error('[BILLING] Get billing address error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch billing address',
+      message: 'An error occurred while fetching billing address'
+    });
+  }
+});
+
 module.exports = router;
