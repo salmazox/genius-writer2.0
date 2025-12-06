@@ -4,6 +4,7 @@ import { aiService } from '../services/aiService';
 import { useDebounce } from '../hooks/useDebounce';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { GlossaryManager } from '../components/GlossaryManager';
 import {
   TranslationGlossary,
@@ -19,6 +20,7 @@ const LANGUAGES = [
 ];
 
 const Translator: React.FC = () => {
+    const { t } = useThemeLanguage();
     const copyToClipboard = useCopyToClipboard();
 
     // Persist state
@@ -107,7 +109,7 @@ Rules:
                                 list="languages-list"
                                 value={sourceLang}
                                 onChange={(e) => setSourceLang(e.target.value)}
-                                placeholder="Detect Language"
+                                placeholder={t('translator.detectLanguage')}
                                 className="bg-transparent font-bold text-indigo-600 focus:outline-none placeholder-indigo-300 w-full"
                             />
                             <datalist id="languages-list">
@@ -120,10 +122,10 @@ Rules:
                             <button
                                 onClick={() => setShowGlossaryManager(true)}
                                 className="flex items-center gap-1.5 px-2 py-1 text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-colors"
-                                title="Manage Glossaries"
+                                title={t('translator.glossaries')}
                             >
                                 <BookOpen size={14} />
-                                <span>Glossaries</span>
+                                <span>{t('translator.glossaries')}</span>
                             </button>
 
                             {availableGlossaries.length > 0 && (
@@ -135,24 +137,24 @@ Rules:
                                     }}
                                     className="text-xs border border-slate-200 rounded px-2 py-1 bg-white"
                                 >
-                                    <option value="">No Glossary</option>
+                                    <option value="">{t('translator.noGlossary')}</option>
                                     {availableGlossaries.map(g => (
                                         <option key={g.id} value={g.id}>
-                                            {g.name} ({g.entries.length} terms)
+                                            {g.name} ({g.entries.length} {t('translator.terms')})
                                         </option>
                                     ))}
                                 </select>
                             )}
                         </div>
                     </div>
-                <textarea 
-                    className="flex-1 resize-none bg-transparent outline-none text-lg md:text-xl text-slate-800 dark:text-slate-200 placeholder:text-slate-300" 
-                    placeholder="Type to translate..."
+                <textarea
+                    className="flex-1 resize-none bg-transparent outline-none text-lg md:text-xl text-slate-800 dark:text-slate-200 placeholder:text-slate-300"
+                    placeholder={t('translator.typeToTranslate')}
                     value={documentContent}
                     onChange={(e) => setDocumentContent(e.target.value)}
                 />
                 <div className="mt-2 text-xs text-slate-400 flex justify-end">
-                    {isLoading ? <span className="flex items-center gap-1"><Loader2 className="animate-spin" size={12}/> Translating...</span> : <span>Autosaved</span>}
+                    {isLoading ? <span className="flex items-center gap-1"><Loader2 className="animate-spin" size={12}/> {t('translator.translating')}</span> : <span>{t('translator.autosaved')}</span>}
                 </div>
             </div>
 
@@ -180,7 +182,7 @@ Rules:
                     </div>
                 </div>
                 <div id="translation-output" className="flex-1 text-lg md:text-xl text-slate-800 dark:text-slate-200 overflow-y-auto pb-24 md:pb-0">
-                    {translationOutput || <span className="text-slate-400 italic">Translation appears here...</span>}
+                    {translationOutput || <span className="text-slate-400 italic">{t('translator.translationAppearsHere')}</span>}
                 </div>
             </div>
         </div>
