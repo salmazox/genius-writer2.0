@@ -694,6 +694,43 @@ export const translations = {
         connecting: 'Connecting to {platform}...',
         disconnected: 'Disconnected from {platform}',
         linked: 'Successfully linked {platform}'
+    },
+    ui: {
+        featureGate: {
+            premiumFeature: 'Premium Feature',
+            requiresPlan: 'This feature requires a {plans} plan',
+            upgradeToUnlock: 'Upgrade to Unlock',
+            requires: 'Requires {plan} Plan',
+            upgrade: 'Upgrade'
+        },
+        upgradeModal: {
+            upgradeRequired: 'Upgrade Required',
+            upgradeToPro: 'Upgrade to Pro',
+            limitReached: 'Limit Reached',
+            chooseYourPlan: 'Choose Your Plan',
+            close: 'Close',
+            notNow: 'Not Now'
+        },
+        offline: {
+            youAreOffline: 'You are offline',
+            reconnecting: 'Reconnecting...',
+            backOnline: 'Back online'
+        },
+        common: {
+            loading: 'Loading...',
+            save: 'Save',
+            cancel: 'Cancel',
+            delete: 'Delete',
+            edit: 'Edit',
+            confirm: 'Confirm',
+            areYouSure: 'Are you sure?',
+            yes: 'Yes',
+            no: 'No',
+            ok: 'OK',
+            error: 'Error',
+            success: 'Success',
+            warning: 'Warning'
+        }
     }
   },
   de: {
@@ -1390,6 +1427,43 @@ export const translations = {
         connecting: 'Verbinde mit {platform}...',
         disconnected: 'Getrennt von {platform}',
         linked: 'Erfolgreich mit {platform} verbunden'
+    },
+    ui: {
+        featureGate: {
+            premiumFeature: 'Premium-Funktion',
+            requiresPlan: 'Diese Funktion erfordert einen {plans} Plan',
+            upgradeToUnlock: 'Upgraden zum Freischalten',
+            requires: 'Erfordert {plan} Plan',
+            upgrade: 'Upgraden'
+        },
+        upgradeModal: {
+            upgradeRequired: 'Upgrade erforderlich',
+            upgradeToPro: 'Auf Pro upgraden',
+            limitReached: 'Limit erreicht',
+            chooseYourPlan: 'Wähle deinen Plan',
+            close: 'Schließen',
+            notNow: 'Nicht jetzt'
+        },
+        offline: {
+            youAreOffline: 'Du bist offline',
+            reconnecting: 'Verbinde neu...',
+            backOnline: 'Wieder online'
+        },
+        common: {
+            loading: 'Wird geladen...',
+            save: 'Speichern',
+            cancel: 'Abbrechen',
+            delete: 'Löschen',
+            edit: 'Bearbeiten',
+            confirm: 'Bestätigen',
+            areYouSure: 'Bist du sicher?',
+            yes: 'Ja',
+            no: 'Nein',
+            ok: 'OK',
+            error: 'Fehler',
+            success: 'Erfolg',
+            warning: 'Warnung'
+        }
     }
   }
 };
