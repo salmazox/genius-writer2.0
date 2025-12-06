@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Quote, Eye, EyeOff, Chrome, Github, Sparkles, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
+import { Quote, Eye, EyeOff, Chrome, Github, Sparkles, AlertCircle, CheckCircle2, Lock, ArrowLeft } from 'lucide-react';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { Logo } from '../components/Logo';
 import { authService, SignupData } from '../services/authService';
@@ -106,8 +106,8 @@ const AuthPageEnhanced: React.FC = () => {
         } as SignupData);
 
         console.log('Signup successful:', result);
-        // Redirect to plan selection for new users
-        navigate('/choose-plan');
+        // Redirect to dashboard to start working
+        navigate('/dashboard');
         window.location.reload();
       }
     } catch (err: any) {
@@ -138,6 +138,17 @@ const AuthPageEnhanced: React.FC = () => {
       {/* Left Side: Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12 overflow-y-auto">
         <div className="max-w-md w-full space-y-8 my-8">
+          {/* Back to Homepage Button */}
+          <div className="flex justify-start">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
+              <ArrowLeft size={16} />
+              Back to Homepage
+            </Link>
+          </div>
+
           <div className="text-center">
             <div className="mx-auto h-16 w-16 flex items-center justify-center mb-4">
               <Logo size={64} />
