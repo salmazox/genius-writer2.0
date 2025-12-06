@@ -229,11 +229,91 @@ export async function openCustomerPortal(): Promise<void> {
   }
 }
 
+/**
+ * Get invoices from Stripe
+ */
+export async function getInvoices(): Promise<{
+  invoices?: any[];
+  error?: string;
+}> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/billing/invoices`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch invoices');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[BILLING API] Get invoices error:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to fetch invoices'
+    };
+  }
+}
+
+/**
+ * Get usage data
+ */
+export async function getUsage(): Promise<{
+  usage?: {
+    aiGenerations: number;
+    documents: number;
+    storage: number;
+    collaborators: number;
+  };
+  plan?: string;
+  error?: string;
+}> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/billing/usage`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch usage');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[BILLING API] Get usage error:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to fetch usage'
+    };
+  }
+}
+
 export default {
   createCheckoutSession,
   createPortalSession,
   getSubscription,
   cancelSubscription,
   reactivateSubscription,
-  openCustomerPortal
+  openCustomerPortal,
+  getInvoices,
+  getUsage
 };
