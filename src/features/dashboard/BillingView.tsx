@@ -8,6 +8,7 @@ import { PlanCard } from '../../components/billing/PlanCard';
 import { SubscriptionStatusBadge } from '../../components/billing/SubscriptionStatusBadge';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { UsageAlert } from '../../components/alerts/UsageAlert';
+import { BillingAddressForm } from '../../components/billing/BillingAddressForm';
 import { SubscriptionTier, getAllPlans, getPlan, mapBackendPlanToTier, mapTierToBackendPlan } from '../../config/pricing';
 import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 import { useUser } from '../../contexts/UserContext';
@@ -531,6 +532,9 @@ export const BillingView: React.FC = () => {
                      )}
                  </div>
              </div>
+
+             {/* Billing Address */}
+             <BillingAddressForm />
 
              {/* Cancel Subscription Confirmation Modal */}
              <ConfirmModal

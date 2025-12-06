@@ -307,6 +307,92 @@ export async function getUsage(): Promise<{
   }
 }
 
+/**
+ * Get billing address
+ */
+export async function getBillingAddress(): Promise<{
+  billingAddress?: {
+    street: string | null;
+    city: string | null;
+    state: string | null;
+    postalCode: string | null;
+    country: string | null;
+  };
+  error?: string;
+}> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/billing/billing-address`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch billing address');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[BILLING API] Get billing address error:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to fetch billing address'
+    };
+  }
+}
+
+/**
+ * Update billing address (syncs with Stripe)
+ */
+export async function updateBillingAddress(address: {
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}): Promise<{
+  message?: string;
+  billingAddress?: any;
+  error?: string;
+}> {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/billing/billing-address`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include',
+      body: JSON.stringify(address)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update billing address');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[BILLING API] Update billing address error:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to update billing address'
+    };
+  }
+}
+
 export default {
   createCheckoutSession,
   createPortalSession,
@@ -315,5 +401,7 @@ export default {
   reactivateSubscription,
   openCustomerPortal,
   getInvoices,
-  getUsage
+  getUsage,
+  getBillingAddress,
+  updateBillingAddress
 };
