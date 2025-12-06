@@ -7,8 +7,15 @@
 
 import React, { useState } from 'react';
 import { Linkedin, Wand2, Loader2, Copy, Check, X, Hash, Sparkles } from 'lucide-react';
-import { generateLinkedInPosts, type LinkedInPost } from '../../services/gemini';
+import { aiService } from '../../services/aiService';
 import { CVData } from '../../types';
+
+// Define LinkedInPost type locally since it's no longer exported from gemini service
+export interface LinkedInPost {
+  style: string;
+  content: string;
+  hashtags: string[];
+}
 
 // ============================================================================
 // INTERFACES
@@ -47,7 +54,81 @@ const LinkedInPostsPanel: React.FC<LinkedInPostsPanelProps> = ({
     setError(null);
 
     try {
-      const generatedPosts = await generateLinkedInPosts(cvData, customTarget || undefined);
+      // Build CV summary for the prompt
+      const cvSummary = {
+        name: cvData.personal.fullName,
+        title: cvData.personal.jobTitle,
+        summary: cvData.personal.summary,
+        topSkills: cvData.skills.slice(0, 8).join(', '),
+        recentExperience: cvData.experience[0] ? `${cvData.experience[0].title} at ${cvData.experience[0].company}` : 'Experienced professional',
+        education: cvData.education[0] ? `${cvData.education[0].degree} from ${cvData.education[0].school}` : null
+      };
+
+      const targetRole = customTarget || cvData.personal.jobTitle || 'new opportunities';
+
+      // Use secure backend API for LinkedIn post generation
+      const response = await aiService.generate({
+        prompt: `You are a LinkedIn content expert helping a job seeker create engaging posts.
+
+CANDIDATE INFO:
+- Name: ${cvSummary.name}
+- Current/Target Title: ${cvSummary.title}
+- Target Role: ${targetRole}
+- Top Skills: ${cvSummary.topSkills}
+- Recent Experience: ${cvSummary.recentExperience}
+- Summary: ${cvSummary.summary}
+
+Create 4 LinkedIn post variations for this person who is looking for ${targetRole} opportunities. Each post should be:
+- 150-250 words
+- Include line breaks for readability
+- Be authentic and engaging
+- Subtly signal they are open to opportunities without being desperate
+- End with a call-to-action
+
+REQUIRED STYLES:
+1. Professional - Formal, straightforward announcement
+2. Storytelling - Personal narrative with journey/lessons learned
+3. Achievement - Highlight recent accomplishments and skills
+4. Casual - Conversational, relatable, warm tone
+
+OUTPUT FORMAT (strict JSON, no markdown):
+[
+  {
+    "style": "professional",
+    "content": "The post content with \\n for line breaks",
+    "hashtags": ["OpenToWork", "Hiring", "JobSearch", "RelevantSkill1", "RelevantSkill2"]
+  },
+  {
+    "style": "storytelling",
+    "content": "...",
+    "hashtags": ["..."]
+  },
+  {
+    "style": "achievement",
+    "content": "...",
+    "hashtags": ["..."]
+  },
+  {
+    "style": "casual",
+    "content": "...",
+    "hashtags": ["..."]
+  }
+]
+
+IMPORTANT:
+- Each post must have 5-7 relevant hashtags
+- Use \\n for line breaks in content
+- No emojis unless in casual style (max 2-3)
+- Make posts specific to their background
+- Return ONLY the JSON array`,
+        model: 'gemini-2.5-flash',
+        temperature: 0.8
+      });
+
+      const text = response.text || "[]";
+      const cleanedText = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      const generatedPosts: LinkedInPost[] = JSON.parse(cleanedText);
+
       setPosts(generatedPosts);
     } catch (err) {
       console.error('LinkedIn posts generation error:', err);
