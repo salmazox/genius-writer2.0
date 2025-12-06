@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { authService } from '../services/authService';
+import { TurnstileWidget } from '../components/TurnstileWidget';
 
 export const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
+
+  // Cloudflare Turnstile site key
+  const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +33,7 @@ export const ForgotPasswordPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await authService.forgotPassword(email);
+      await authService.forgotPassword(email, turnstileToken || undefined);
       setEmailSent(true);
     } catch (err: any) {
       console.error('Forgot password error:', err);
@@ -122,6 +127,22 @@ export const ForgotPasswordPage: React.FC = () => {
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
                 <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              </div>
+            )}
+
+            {/* Cloudflare Turnstile Bot Protection */}
+            {TURNSTILE_SITE_KEY && (
+              <div className="flex justify-center">
+                <TurnstileWidget
+                  siteKey={TURNSTILE_SITE_KEY}
+                  onVerify={(token) => setTurnstileToken(token)}
+                  onError={() => {
+                    setTurnstileToken('');
+                    setError('Security verification failed. Please try again.');
+                  }}
+                  theme="auto"
+                  size="normal"
+                />
               </div>
             )}
 

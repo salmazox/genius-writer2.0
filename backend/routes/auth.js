@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate } = require('../middleware/auth');
 const emailService = require('../services/emailService');
+const { verifyTurnstileToken } = require('../utils/turnstile');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -28,7 +29,8 @@ router.post('/signup', async (req, res) => {
       state,
       postalCode,
       country,
-      termsAccepted
+      termsAccepted,
+      turnstileToken
     } = req.body;
 
     console.log('[SIGNUP] Attempt for email:', email);
@@ -81,6 +83,18 @@ router.post('/signup', async (req, res) => {
         error: 'Weak password',
         message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
       });
+    }
+
+    // Verify Turnstile token (bot protection)
+    if (turnstileToken) {
+      const turnstileResult = await verifyTurnstileToken(turnstileToken, req.ip);
+      if (!turnstileResult.success) {
+        console.log('[SIGNUP] Turnstile verification failed');
+        return res.status(400).json({
+          error: 'Security verification failed',
+          message: 'Please complete the security check and try again'
+        });
+      }
     }
 
     // Check if user already exists
@@ -171,7 +185,7 @@ router.post('/signup', async (req, res) => {
  */
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, turnstileToken } = req.body;
 
     console.log('[LOGIN] Attempt for email:', email);
 
@@ -182,6 +196,20 @@ router.post('/login', async (req, res) => {
         error: 'Missing credentials',
         message: 'Email and password are required'
       });
+    }
+
+    // Verify Turnstile token (bot protection)
+    if (turnstileToken) {
+      console.log('[LOGIN] Verifying Turnstile token...');
+      const turnstileResult = await verifyTurnstileToken(turnstileToken, req.ip);
+      if (!turnstileResult.success) {
+        console.log('[LOGIN] Turnstile verification failed:', turnstileResult.error);
+        return res.status(400).json({
+          error: 'Security verification failed',
+          message: 'Please complete the security check and try again'
+        });
+      }
+      console.log('[LOGIN] Turnstile verification passed');
     }
 
     // Find user
@@ -649,7 +677,7 @@ if (process.env.NODE_ENV === 'development') {
  */
 router.post('/forgot-password', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, turnstileToken } = req.body;
 
     console.log('[FORGOT PASSWORD] Request for email:', email);
 
@@ -659,6 +687,20 @@ router.post('/forgot-password', async (req, res) => {
         error: 'Missing email',
         message: 'Email address is required'
       });
+    }
+
+    // Verify Turnstile token (bot protection)
+    if (turnstileToken) {
+      console.log('[FORGOT PASSWORD] Verifying Turnstile token...');
+      const turnstileResult = await verifyTurnstileToken(turnstileToken, req.ip);
+      if (!turnstileResult.success) {
+        console.log('[FORGOT PASSWORD] Turnstile verification failed:', turnstileResult.error);
+        return res.status(400).json({
+          error: 'Security verification failed',
+          message: 'Please complete the security check and try again'
+        });
+      }
+      console.log('[FORGOT PASSWORD] Turnstile verification passed');
     }
 
     // Find user by email
