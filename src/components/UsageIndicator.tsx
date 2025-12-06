@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Zap, AlertTriangle } from 'lucide-react';
 import { usageService, UsageStats } from '../services/usageService';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface UsageIndicatorProps {
   compact?: boolean;
@@ -9,6 +10,7 @@ interface UsageIndicatorProps {
 export const UsageIndicator: React.FC<UsageIndicatorProps> = ({ compact = false }) => {
   const [stats, setStats] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useThemeLanguage();
 
   useEffect(() => {
     loadStats();
@@ -66,7 +68,7 @@ export const UsageIndicator: React.FC<UsageIndicatorProps> = ({ compact = false 
             href="/pricing"
             className="ml-2 text-xs underline hover:no-underline"
           >
-            Upgrade
+            {t('ui.usage.upgrade')}
           </a>
         )}
       </div>
@@ -77,10 +79,10 @@ export const UsageIndicator: React.FC<UsageIndicatorProps> = ({ compact = false 
     <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          Quick Usage
+          {t('ui.usage.quickUsage')}
         </h3>
         <span className="text-xs text-slate-500 dark:text-slate-400">
-          {stats.plan} Plan
+          {stats.plan} {t('ui.usage.plan')}
         </span>
       </div>
 
@@ -88,7 +90,7 @@ export const UsageIndicator: React.FC<UsageIndicatorProps> = ({ compact = false 
         {/* AI Generations */}
         <div>
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-slate-600 dark:text-slate-400">AI Generations</span>
+            <span className="text-slate-600 dark:text-slate-400">{t('ui.usage.aiGenerations')}</span>
             <span className="font-medium text-slate-900 dark:text-slate-100">
               {stats.usage.aiGenerations.current}/{usageService.formatLimit(stats.usage.aiGenerations.limit)}
             </span>
@@ -110,7 +112,7 @@ export const UsageIndicator: React.FC<UsageIndicatorProps> = ({ compact = false 
         {/* Documents */}
         <div>
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-slate-600 dark:text-slate-400">Documents</span>
+            <span className="text-slate-600 dark:text-slate-400">{t('ui.usage.documents')}</span>
             <span className="font-medium text-slate-900 dark:text-slate-100">
               {stats.usage.documents.currentMonth}/{usageService.formatLimit(stats.usage.documents.limit)}
             </span>
@@ -132,7 +134,7 @@ export const UsageIndicator: React.FC<UsageIndicatorProps> = ({ compact = false 
         {/* Storage */}
         <div>
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-slate-600 dark:text-slate-400">Storage</span>
+            <span className="text-slate-600 dark:text-slate-400">{t('ui.usage.storage')}</span>
             <span className="font-medium text-slate-900 dark:text-slate-100">
               {stats.usage.storage.used}/{stats.usage.storage.limit}
             </span>
@@ -158,7 +160,7 @@ export const UsageIndicator: React.FC<UsageIndicatorProps> = ({ compact = false 
             href="/pricing"
             className="block text-center text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
           >
-            {atLimit ? 'Upgrade to continue →' : 'Running low? Upgrade →'}
+            {atLimit ? t('ui.usage.upgradeToContinue') : t('ui.usage.runningLow')}
           </a>
         </div>
       )}

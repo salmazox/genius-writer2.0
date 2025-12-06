@@ -740,10 +740,56 @@ export const translations = {
                 advancedAnalytics: 'Advanced analytics'
             }
         },
+        errors: {
+            boundaryTitle: 'Oops! Something went wrong',
+            boundaryMessage: 'We\'re sorry, but an unexpected error occurred. Don\'t worry, your data is safe. Try refreshing the page or going back home.',
+            tryAgain: 'Try Again',
+            goHome: 'Go Home',
+            reloadPage: 'Reload Page',
+            showDetails: 'Show Error Details',
+            hideDetails: 'Hide Error Details',
+            errorMessage: 'Error Message:',
+            stackTrace: 'Stack Trace:',
+            componentStack: 'Component Stack:',
+            supportMessage: 'If this problem persists, please contact support with the error details above.'
+        },
         offline: {
             youAreOffline: 'You are offline',
             reconnecting: 'Reconnecting...',
-            backOnline: 'Back online'
+            backOnline: 'Back online',
+            offlineMessage: 'You are currently offline. AI features will be unavailable and changes may not sync.'
+        },
+        modals: {
+            confirm: 'Confirm',
+            cancel: 'Cancel'
+        },
+        usage: {
+            quickUsage: 'Quick Usage',
+            plan: 'Plan',
+            aiGenerations: 'AI Generations',
+            documents: 'Documents',
+            storage: 'Storage',
+            upgrade: 'Upgrade',
+            upgradeToContinue: 'Upgrade to continue →',
+            runningLow: 'Running low? Upgrade →',
+            typeLabels: {
+                aiGenerations: 'AI generations',
+                documents: 'documents',
+                storage: 'storage',
+                collaborators: 'team members'
+            },
+            alerts: {
+                limitReachedTitle: 'You\'ve reached your {type} limit',
+                limitReachedMessage: 'You\'ve used all {limit} of your {type}. Upgrade to continue.',
+                almostAtLimitTitle: 'Almost at your {type} limit',
+                almostAtLimitMessage: '{current}/{limit} used ({percentage}%). Upgrade to avoid hitting your limit.',
+                highUsageTitle: 'High {type} usage',
+                highUsageMessage: 'You\'ve used {current}/{limit} ({percentage}%) of your {type} this month.',
+                upgradeNow: 'Upgrade Now',
+                viewPlans: 'View Plans',
+                seeUpgradeOptions: 'See Upgrade Options',
+                percentUsed: '{percentage}% of {type} used'
+            }
         },
         common: {
             loading: 'Loading...',
@@ -1502,10 +1548,56 @@ export const translations = {
                 advancedAnalytics: 'Erweiterte Analysen'
             }
         },
+        errors: {
+            boundaryTitle: 'Hoppla! Etwas ist schiefgelaufen',
+            boundaryMessage: 'Es tut uns leid, aber ein unerwarteter Fehler ist aufgetreten. Keine Sorge, deine Daten sind sicher. Versuche die Seite zu aktualisieren oder zurück zur Startseite zu gehen.',
+            tryAgain: 'Erneut versuchen',
+            goHome: 'Zur Startseite',
+            reloadPage: 'Seite neu laden',
+            showDetails: 'Fehlerdetails anzeigen',
+            hideDetails: 'Fehlerdetails verbergen',
+            errorMessage: 'Fehlermeldung:',
+            stackTrace: 'Stack Trace:',
+            componentStack: 'Komponenten-Stack:',
+            supportMessage: 'Wenn dieses Problem weiterhin besteht, kontaktiere bitte den Support mit den obigen Fehlerdetails.'
+        },
         offline: {
             youAreOffline: 'Du bist offline',
             reconnecting: 'Verbinde neu...',
-            backOnline: 'Wieder online'
+            backOnline: 'Wieder online',
+            offlineMessage: 'Du bist derzeit offline. KI-Funktionen sind nicht verfügbar und Änderungen werden möglicherweise nicht synchronisiert.'
+        },
+        modals: {
+            confirm: 'Bestätigen',
+            cancel: 'Abbrechen'
+        },
+        usage: {
+            quickUsage: 'Schnellübersicht',
+            plan: 'Plan',
+            aiGenerations: 'KI-Generierungen',
+            documents: 'Dokumente',
+            storage: 'Speicher',
+            upgrade: 'Upgraden',
+            upgradeToContinue: 'Upgraden um fortzufahren →',
+            runningLow: 'Limit fast erreicht? Upgraden →',
+            typeLabels: {
+                aiGenerations: 'KI-Generierungen',
+                documents: 'Dokumente',
+                storage: 'Speicher',
+                collaborators: 'Team-Mitglieder'
+            },
+            alerts: {
+                limitReachedTitle: 'Du hast dein {type}-Limit erreicht',
+                limitReachedMessage: 'Du hast alle {limit} deiner {type} verbraucht. Upgrade um fortzufahren.',
+                almostAtLimitTitle: 'Fast am {type}-Limit',
+                almostAtLimitMessage: '{current}/{limit} verbraucht ({percentage}%). Upgrade um das Limit nicht zu erreichen.',
+                highUsageTitle: 'Hohe {type}-Nutzung',
+                highUsageMessage: 'Du hast {current}/{limit} ({percentage}%) deiner {type} diesen Monat verbraucht.',
+                upgradeNow: 'Jetzt upgraden',
+                viewPlans: 'Pläne ansehen',
+                seeUpgradeOptions: 'Upgrade-Optionen ansehen',
+                percentUsed: '{percentage}% der {type} verbraucht'
+            }
         },
         common: {
             loading: 'Wird geladen...',

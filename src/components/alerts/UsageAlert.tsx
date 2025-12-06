@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle, TrendingUp, X, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 
 type UsageType = 'aiGenerations' | 'documents' | 'storage' | 'collaborators';
 
@@ -21,27 +22,19 @@ export const UsageAlert: React.FC<UsageAlertProps> = ({
   onDismiss,
   dismissible = true
 }) => {
+  const { t } = useThemeLanguage();
   const percentage = limit === -1 ? 0 : (current / limit) * 100;
 
   // Don't show if under 80% or unlimited
   if (percentage < 80 || limit === -1) return null;
 
   const getTypeLabel = () => {
-    switch (type) {
-      case 'aiGenerations':
-        return 'AI generations';
-      case 'documents':
-        return 'documents';
-      case 'storage':
-        return 'storage';
-      case 'collaborators':
-        return 'team members';
-      default:
-        return type;
-    }
+    return t(`ui.usage.typeLabels.${type}` as any);
   };
 
   const getConfig = () => {
+    const typeLabel = getTypeLabel();
+
     if (percentage >= 100) {
       return {
         colorClass: 'red',
@@ -52,9 +45,11 @@ export const UsageAlert: React.FC<UsageAlertProps> = ({
         buttonClass: 'bg-red-600 hover:bg-red-700',
         icon: <AlertTriangle size={20} />,
         iconColor: 'text-red-600 dark:text-red-400',
-        title: `You've reached your ${getTypeLabel()} limit`,
-        message: `You've used all ${limit.toLocaleString()} of your ${getTypeLabel()}. Upgrade to continue.`,
-        action: 'Upgrade Now'
+        title: t('ui.usage.alerts.limitReachedTitle').replace('{type}', typeLabel),
+        message: t('ui.usage.alerts.limitReachedMessage')
+          .replace('{limit}', limit.toLocaleString())
+          .replace('{type}', typeLabel),
+        action: t('ui.usage.alerts.upgradeNow')
       };
     } else if (percentage >= 90) {
       return {
@@ -66,9 +61,12 @@ export const UsageAlert: React.FC<UsageAlertProps> = ({
         buttonClass: 'bg-orange-600 hover:bg-orange-700',
         icon: <AlertTriangle size={20} />,
         iconColor: 'text-orange-600 dark:text-orange-400',
-        title: `Almost at your ${getTypeLabel()} limit`,
-        message: `${current.toLocaleString()}/${limit.toLocaleString()} used (${Math.round(percentage)}%). Upgrade to avoid hitting your limit.`,
-        action: 'View Plans'
+        title: t('ui.usage.alerts.almostAtLimitTitle').replace('{type}', typeLabel),
+        message: t('ui.usage.alerts.almostAtLimitMessage')
+          .replace('{current}', current.toLocaleString())
+          .replace('{limit}', limit.toLocaleString())
+          .replace('{percentage}', Math.round(percentage).toString()),
+        action: t('ui.usage.alerts.viewPlans')
       };
     } else {
       return {
@@ -80,9 +78,13 @@ export const UsageAlert: React.FC<UsageAlertProps> = ({
         buttonClass: 'bg-yellow-600 hover:bg-yellow-700',
         icon: <TrendingUp size={20} />,
         iconColor: 'text-yellow-600 dark:text-yellow-400',
-        title: `High ${getTypeLabel()} usage`,
-        message: `You've used ${current.toLocaleString()}/${limit.toLocaleString()} (${Math.round(percentage)}%) of your ${getTypeLabel()} this month.`,
-        action: 'See Upgrade Options'
+        title: t('ui.usage.alerts.highUsageTitle').replace('{type}', typeLabel),
+        message: t('ui.usage.alerts.highUsageMessage')
+          .replace('{current}', current.toLocaleString())
+          .replace('{limit}', limit.toLocaleString())
+          .replace('{percentage}', Math.round(percentage).toString())
+          .replace('{type}', typeLabel),
+        action: t('ui.usage.alerts.seeUpgradeOptions')
       };
     }
   };
@@ -153,23 +155,13 @@ export const UsageAlertCompact: React.FC<UsageAlertProps> = ({
   limit,
   onUpgrade
 }) => {
+  const { t } = useThemeLanguage();
   const percentage = limit === -1 ? 0 : (current / limit) * 100;
 
   if (percentage < 90 || limit === -1) return null;
 
   const getTypeLabel = () => {
-    switch (type) {
-      case 'aiGenerations':
-        return 'AI generations';
-      case 'documents':
-        return 'documents';
-      case 'storage':
-        return 'storage';
-      case 'collaborators':
-        return 'team members';
-      default:
-        return type;
-    }
+    return t(`ui.usage.typeLabels.${type}` as any);
   };
 
   return (
@@ -177,14 +169,16 @@ export const UsageAlertCompact: React.FC<UsageAlertProps> = ({
       <div className="flex items-center gap-2">
         <AlertTriangle className="text-orange-600 dark:text-orange-400" size={16} />
         <span className="text-sm text-orange-900 dark:text-orange-100 font-medium">
-          {Math.round(percentage)}% of {getTypeLabel()} used
+          {t('ui.usage.alerts.percentUsed')
+            .replace('{percentage}', Math.round(percentage).toString())
+            .replace('{type}', getTypeLabel())}
         </span>
       </div>
       <button
         onClick={onUpgrade}
         className="text-sm text-orange-700 dark:text-orange-300 hover:underline font-medium"
       >
-        Upgrade
+        {t('ui.usage.upgrade')}
       </button>
     </div>
   );

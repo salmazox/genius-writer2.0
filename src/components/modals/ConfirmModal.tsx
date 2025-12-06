@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, AlertTriangle, Info, CheckCircle } from 'lucide-react';
+import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -20,12 +21,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   title,
   message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText,
+  cancelText,
   type = 'info',
   confirmButtonClass,
   children
 }) => {
+  const { t } = useThemeLanguage();
   if (!isOpen) return null;
 
   const handleConfirm = () => {
@@ -109,13 +111,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             onClick={onClose}
             className="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
           >
-            {cancelText}
+            {cancelText || t('ui.modals.cancel')}
           </button>
           <button
             onClick={handleConfirm}
             className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${getDefaultButtonClass()}`}
           >
-            {confirmText}
+            {confirmText || t('ui.modals.confirm')}
           </button>
         </div>
       </div>
