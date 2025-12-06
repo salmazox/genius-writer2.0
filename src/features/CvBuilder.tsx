@@ -3,7 +3,11 @@ import { LayoutTemplate, Palette, Trophy, Download, Target, Eye, Edit3, Save, Ch
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
-import { generateContent, analyzeATS, parseResume, generateCoverLetter, parseLinkedInProfile, parsePDFResume } from '../services/gemini';
+import { aiService } from '../services/aiService';
+import { getPromptConfig } from '../config/aiPrompts';
+// Note: parseResume, parsePDFResume, parseLinkedInProfile still use client-side API
+// These require multimodal backend support (image/PDF upload) not yet implemented
+import { parseResume, parseLinkedInProfile, parsePDFResume } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { ToolType, CVData, CVTheme, ATSAnalysis, CVExperience } from '../types';
 import { Button } from '../components/ui/Button';
@@ -271,13 +275,23 @@ const CvBuilder: React.FC = () => {
         setIsLoading(true);
         try {
             const prompt = `Write a professional, bulleted job description for a ${item.title} at ${item.company || 'a company'}.`;
-            const result = await generateContent(ToolType.CV_BUILDER, { content: prompt }, undefined, controller.signal); 
-            
-            setCvData(prev => ({ 
-                ...prev, 
-                experience: prev.experience.map(e => e.id === id ? { ...e, description: result } : e) 
+
+            // Use secure backend API for job description generation
+            const promptConfig = getPromptConfig(ToolType.CV_BUILDER, { content: prompt });
+            const response = await aiService.generate({
+                prompt: promptConfig.generatePrompt({ content: prompt }),
+                model: promptConfig.modelName as 'gemini-2.0-flash-exp' | 'gemini-2.5-pro-preview' | 'gemini-2.5-flash' | 'gemini-2.5-flash-image',
+                systemInstruction: promptConfig.systemInstruction,
+                temperature: 0.7
+            });
+
+            const result = response.text;
+
+            setCvData(prev => ({
+                ...prev,
+                experience: prev.experience.map(e => e.id === id ? { ...e, description: result } : e)
             }));
-            
+
             showToast(t('dashboard.toasts.descGenerated'), "success");
         } catch (e: any) {
             if (e.name !== 'AbortError') showToast(e.message || "Failed to generate", "error");
@@ -295,7 +309,54 @@ const CvBuilder: React.FC = () => {
         const controller = resetAbortController();
         setIsLoading(true);
         try {
-            const result = await analyzeATS(cvData, jobDescription, controller.signal);
+            // Build CV text summary for analysis
+            const cvText = `
+    Name: ${cvData.personal.fullName}
+    Title: ${cvData.personal.jobTitle}
+    Summary: ${cvData.personal.summary}
+    Skills: ${cvData.skills.join(', ')}
+    Experience: ${cvData.experience.map(e => `${e.title} at ${e.company}: ${e.description}`).join('\n')}
+    Education: ${cvData.education.map(e => `${e.degree} at ${e.school}`).join('\n')}
+    Certifications: ${cvData.certifications.map(c => c.name).join(', ')}
+    languages: ${cvData.languages.map(l => l.language).join(', ')}
+    `;
+
+            // Use secure backend API for ATS analysis
+            const response = await aiService.generate({
+                prompt: `
+            You are an expert ATS (Applicant Tracking System) algorithm analyzer.
+            Analyze the following CV against the provided Job Description.
+
+            CV DATA:
+            ${cvText}
+
+            JOB DESCRIPTION:
+            ${jobDescription}
+
+            Task:
+            1. Calculate a match score (0-100).
+            2. Identify strictly missing technical keywords.
+            3. Provide specific suggestions.
+            4. Write a brief summary.
+            5. Rewrite the "Summary" section to align with the JD.
+
+            Return the response in this exact JSON format:
+            {
+                "score": number,
+                "missingKeywords": ["keyword1", "keyword2"],
+                "suggestions": ["tip1", "tip2"],
+                "summary": "analysis summary",
+                "improvedSummary": "The rewritten profile summary..."
+            }
+            `,
+                model: 'gemini-2.5-pro-preview',
+                temperature: 0.5
+            });
+
+            const text = response.text || "{}";
+            const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const result: ATSAnalysis = JSON.parse(jsonStr);
+
             setAtsAnalysis(result);
             showToast(t('dashboard.toasts.analysisComplete'), "success");
         } catch(e: any) {
