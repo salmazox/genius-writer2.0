@@ -104,6 +104,7 @@ router.post('/create-checkout', authenticate, async (req, res) => {
         }
       ],
       mode: 'subscription',
+      locale: 'de',  // Set German locale for Klarna and other localized payment methods
       success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard/billing?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard/billing?payment=cancelled`,
       metadata: {
@@ -124,7 +125,13 @@ router.post('/create-checkout', authenticate, async (req, res) => {
       // Allow promotion codes
       allow_promotion_codes: true,
       // Collect billing address for SEPA and other payment methods
-      billing_address_collection: 'required'
+      billing_address_collection: 'required',
+      // Klarna-specific configuration
+      payment_method_options: {
+        klarna: {
+          preferred_locale: 'de-DE'  // German locale for Klarna
+        }
+      }
     });
 
     res.json({
