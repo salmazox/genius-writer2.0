@@ -35,6 +35,7 @@ import {
 import { Button } from './ui/Button';
 import { Modal } from './ui/Modal';
 import { useToast } from '../contexts/ToastContext';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface GlossaryManagerProps {
   isOpen: boolean;
@@ -52,6 +53,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
   onSelectGlossary
 }) => {
   const { showToast } = useToast();
+  const { t } = useThemeLanguage();
   const [glossaries, setGlossaries] = useState<TranslationGlossary[]>([]);
   const [selectedGlossary, setSelectedGlossary] = useState<TranslationGlossary | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -79,7 +81,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
 
   const handleCreateGlossary = () => {
     if (!newGlossaryName.trim()) {
-      showToast('Please enter a glossary name', 'error');
+      showToast(t('glossary.enterName'), 'error');
       return;
     }
 
@@ -95,24 +97,24 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
     setIsCreating(false);
     setNewGlossaryName('');
     setNewGlossaryDesc('');
-    showToast('Glossary created successfully', 'success');
+    showToast(t('glossary.created'), 'success');
   };
 
   const handleDeleteGlossary = (id: string) => {
-    if (!confirm('Are you sure you want to delete this glossary?')) return;
+    if (!confirm(t('glossary.confirmDelete'))) return;
 
     deleteGlossary(id);
     loadGlossaries();
     if (selectedGlossary?.id === id) {
       setSelectedGlossary(null);
     }
-    showToast('Glossary deleted', 'success');
+    showToast(t('glossary.deleted'), 'success');
   };
 
   const handleAddEntry = () => {
     if (!selectedGlossary) return;
     if (!newEntrySource.trim() || !newEntryTarget.trim()) {
-      showToast('Source and target are required', 'error');
+      showToast(t('glossary.sourceTargetRequired'), 'error');
       return;
     }
 
@@ -132,7 +134,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
     setNewEntryTarget('');
     setNewEntryContext('');
     setNewEntryCaseSensitive(false);
-    showToast('Entry added', 'success');
+    showToast(t('glossary.entryAdded'), 'success');
   };
 
   const handleUpdateEntry = () => {
@@ -152,7 +154,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
     setNewEntrySource('');
     setNewEntryTarget('');
     setNewEntryContext('');
-    showToast('Entry updated', 'success');
+    showToast(t('glossary.entryUpdated'), 'success');
   };
 
   const handleDeleteEntry = (entryId: string) => {
@@ -162,7 +164,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
 
     const updated = getGlossary(selectedGlossary.id);
     if (updated) setSelectedGlossary(updated);
-    showToast('Entry deleted', 'success');
+    showToast(t('glossary.entryDeleted'), 'success');
   };
 
   const handleExport = () => {
@@ -178,7 +180,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('Glossary exported', 'success');
+    showToast(t('glossary.exported'), 'success');
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,11 +196,11 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
 
       if (result.errors.length > 0) {
         showToast(
-          `Imported ${result.success} entries with ${result.errors.length} errors`,
+          t('glossary.importedWithErrors').replace('{success}', result.success.toString()).replace('{errors}', result.errors.length.toString()),
           'info'
         );
       } else {
-        showToast(`Imported ${result.success} entries successfully`, 'success');
+        showToast(t('glossary.imported').replace('{count}', result.success.toString()), 'success');
       }
 
       const updated = getGlossary(selectedGlossary.id);
@@ -226,16 +228,16 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Translation Glossaries" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('glossary.title')} size="lg">
       <div className="flex flex-col md:flex-row h-[600px]">
         {/* Left Sidebar - Glossary List */}
         <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-slate-200 pb-4 md:pb-0 md:pr-4 max-h-64 md:max-h-full overflow-y-auto">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-sm text-slate-600 uppercase">Glossaries</h3>
+            <h3 className="font-bold text-sm text-slate-600 uppercase">{t('glossary.glossaries')}</h3>
             <button
               onClick={() => setIsCreating(true)}
               className="p-1.5 hover:bg-indigo-50 rounded transition-colors"
-              title="Create Glossary"
+              title={t('glossary.create')}
             >
               <Plus size={16} className="text-indigo-600" />
             </button>
@@ -248,13 +250,13 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
                 type="text"
                 value={newGlossaryName}
                 onChange={(e) => setNewGlossaryName(e.target.value)}
-                placeholder="Glossary name"
+                placeholder={t('glossary.name')}
                 className="w-full text-sm border rounded px-2 py-1.5"
               />
               <textarea
                 value={newGlossaryDesc}
                 onChange={(e) => setNewGlossaryDesc(e.target.value)}
-                placeholder="Description (optional)"
+                placeholder={t('glossary.description')}
                 className="w-full text-xs border rounded px-2 py-1.5 resize-none"
                 rows={2}
               />
@@ -283,7 +285,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
               </div>
               <div className="flex gap-1">
                 <Button size="sm" onClick={handleCreateGlossary} className="flex-1">
-                  Create
+                  {t('glossary.create')}
                 </Button>
                 <Button
                   size="sm"
@@ -291,7 +293,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
                   onClick={() => setIsCreating(false)}
                   className="flex-1"
                 >
-                  Cancel
+                  {t('glossary.cancel')}
                 </Button>
               </div>
             </div>
@@ -301,7 +303,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
           <div className="space-y-1 overflow-y-auto max-h-[500px]">
             {glossaries.length === 0 ? (
               <p className="text-xs text-slate-400 text-center py-4">
-                No glossaries yet
+                {t('glossary.noGlossaries')}
               </p>
             ) : (
               glossaries.map(glossary => (
@@ -323,7 +325,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
                         {glossary.sourceLang} → {glossary.targetLang}
                       </p>
                       <p className="text-[10px] text-slate-400">
-                        {glossary.entries.length} entries
+                        {t('glossary.entries').replace('{count}', glossary.entries.length.toString())}
                       </p>
                     </div>
                     <button
@@ -332,7 +334,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
                         handleDeleteGlossary(glossary.id);
                       }}
                       className="p-1 hover:bg-red-50 rounded transition-colors"
-                      title="Delete"
+                      title={t('glossary.delete')}
                     >
                       <Trash2 size={12} className="text-red-500" />
                     </button>
@@ -385,21 +387,21 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
               {/* Add/Edit Entry Form */}
               <div className="mb-4 p-3 md:p-4 bg-slate-50 rounded-lg space-y-2">
                 <h4 className="text-xs md:text-sm font-bold text-slate-700">
-                  {editingEntry ? 'Edit Entry' : 'Add New Entry'}
+                  {editingEntry ? t('glossary.editEntry') : t('glossary.addEntry')}
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input
                     type="text"
                     value={newEntrySource}
                     onChange={(e) => setNewEntrySource(e.target.value)}
-                    placeholder="Source term"
+                    placeholder={t('glossary.sourceTerm')}
                     className="text-sm border rounded px-3 py-2"
                   />
                   <input
                     type="text"
                     value={newEntryTarget}
                     onChange={(e) => setNewEntryTarget(e.target.value)}
-                    placeholder="Target translation"
+                    placeholder={t('glossary.targetTranslation')}
                     className="text-sm border rounded px-3 py-2"
                   />
                 </div>
@@ -407,7 +409,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
                   type="text"
                   value={newEntryContext}
                   onChange={(e) => setNewEntryContext(e.target.value)}
-                  placeholder="Context or notes (optional)"
+                  placeholder={t('glossary.context')}
                   className="w-full text-xs border rounded px-3 py-2"
                 />
                 <div className="flex items-center justify-between">
@@ -418,19 +420,19 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
                       onChange={(e) => setNewEntryCaseSensitive(e.target.checked)}
                       className="rounded"
                     />
-                    Case sensitive
+                    {t('glossary.caseSensitive')}
                   </label>
                   <div className="flex gap-1">
                     {editingEntry && (
                       <Button size="sm" variant="secondary" onClick={cancelEdit}>
-                        Cancel
+                        {t('glossary.cancel')}
                       </Button>
                     )}
                     <Button
                       size="sm"
                       onClick={editingEntry ? handleUpdateEntry : handleAddEntry}
                     >
-                      {editingEntry ? 'Update' : 'Add'}
+                      {editingEntry ? t('glossary.update') : t('glossary.add')}
                     </Button>
                   </div>
                 </div>
@@ -439,11 +441,11 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
               {/* Entries List */}
               <div className="flex-1 overflow-y-auto">
                 <h4 className="text-sm font-bold text-slate-700 mb-2">
-                  Entries ({selectedGlossary.entries.length})
+                  {t('glossary.entriesList').replace('{count}', selectedGlossary.entries.length.toString())}
                 </h4>
                 {selectedGlossary.entries.length === 0 ? (
                   <p className="text-sm text-slate-400 text-center py-8">
-                    No entries yet. Add your first translation pair above.
+                    {t('glossary.noEntries')}
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -470,7 +472,7 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
                             )}
                             {entry.caseSensitive && (
                               <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
-                                Case Sensitive
+                                {t('glossary.caseSensitive')}
                               </span>
                             )}
                           </div>
@@ -478,14 +480,14 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
                             <button
                               onClick={() => startEditEntry(entry)}
                               className="p-1.5 hover:bg-blue-50 rounded transition-colors"
-                              title="Edit"
+                              title={t('glossary.edit')}
                             >
                               <Edit2 size={14} className="text-blue-600" />
                             </button>
                             <button
                               onClick={() => handleDeleteEntry(entry.id)}
                               className="p-1.5 hover:bg-red-50 rounded transition-colors"
-                              title="Delete"
+                              title={t('glossary.delete')}
                             >
                               <Trash2 size={14} className="text-red-500" />
                             </button>
@@ -501,8 +503,8 @@ export const GlossaryManager: React.FC<GlossaryManagerProps> = ({
             <div className="flex-1 flex items-center justify-center text-slate-400">
               <div className="text-center">
                 <BookOpen size={48} className="mx-auto mb-3 opacity-50" />
-                <p className="text-sm font-medium">Select a glossary</p>
-                <p className="text-xs mt-1">Or create a new one to get started</p>
+                <p className="text-sm font-medium">{t('glossary.selectGlossary')}</p>
+                <p className="text-xs mt-1">{t('glossary.createToStart')}</p>
               </div>
             </div>
           )}

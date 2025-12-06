@@ -3,11 +3,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Mic, MicOff, PhoneOff, Activity, Loader2, Sparkles, AlertCircle, BarChart3 } from 'lucide-react';
 import { createLiveSession } from '../services/gemini';
 import { useToast } from '../contexts/ToastContext';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { Button } from '../components/ui/Button';
 import { LiveServerMessage, Modality, Blob } from '@google/genai';
 
 const LiveInterview: React.FC = () => {
     const { showToast } = useToast();
+    const { t } = useThemeLanguage();
     
     // State
     const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
@@ -104,7 +106,7 @@ const LiveInterview: React.FC = () => {
                     },
                     onerror: (err: any) => {
                         console.error('Session error', err);
-                        showToast("Connection error", "error");
+                        showToast(t('liveInterview.connectionError'), "error");
                         cleanup();
                         setStatus('error');
                     }
@@ -118,7 +120,7 @@ const LiveInterview: React.FC = () => {
 
         } catch (e) {
             console.error(e);
-            showToast("Failed to access microphone or connect.", "error");
+            showToast(t('liveInterview.microphoneError'), "error");
             setStatus('error');
             cleanup();
         }
@@ -268,47 +270,47 @@ const LiveInterview: React.FC = () => {
                         {/* Status Icon Overlay */}
                         <div className="absolute -bottom-3 bg-slate-800 px-3 py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider border border-slate-700 flex items-center gap-2 shadow-lg">
                             <span className={`w-2 h-2 rounded-full ${status === 'connected' ? 'bg-green-500 animate-pulse' : status === 'error' ? 'bg-red-500' : 'bg-slate-500'}`}></span>
-                            {status === 'idle' ? 'Ready' : status}
+                            {status === 'idle' ? t('liveInterview.statusReady') : status === 'connecting' ? t('liveInterview.statusConnecting') : status === 'connected' ? t('liveInterview.statusConnected') : t('liveInterview.statusError')}
                         </div>
                     </div>
                 </div>
 
                 {/* Instructions / Feedback */}
                 <div className="text-center w-full space-y-3 px-2">
-                    <h2 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Live Interview Coach</h2>
+                    <h2 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">{t('liveInterview.title')}</h2>
                     <p className="text-slate-400 text-sm leading-relaxed max-w-sm mx-auto">
-                        {status === 'idle' 
-                            ? "Practice your interview skills with real-time feedback. Click the microphone to begin." 
-                            : status === 'connecting' 
-                                ? "Establishing secure connection to Gemini Live..."
-                                : "Session active. Speak clearly. The AI will respond naturally."}
+                        {status === 'idle'
+                            ? t('liveInterview.instructionsIdle')
+                            : status === 'connecting'
+                                ? t('liveInterview.instructionsConnecting')
+                                : t('liveInterview.instructionsActive')}
                     </p>
                 </div>
 
                 {/* Controls */}
                 <div className="flex items-center gap-6 md:gap-8 pb-8 md:pb-0">
                     {status === 'idle' || status === 'error' ? (
-                        <button 
+                        <button
                             onClick={startSession}
                             className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-green-500 hover:bg-green-400 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all group"
-                            title="Start Session"
+                            title={t('liveInterview.startSession')}
                         >
                             <Mic size={28} className="group-hover:animate-pulse md:w-8 md:h-8" />
                         </button>
                     ) : (
                         <>
-                            <button 
+                            <button
                                 onClick={() => setIsMuted(!isMuted)}
                                 className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all shadow-md ${isMuted ? 'bg-red-500 text-white hover:bg-red-400' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'}`}
-                                title={isMuted ? "Unmute" : "Mute"}
+                                title={isMuted ? t('liveInterview.unmute') : t('liveInterview.mute')}
                             >
                                 {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
                             </button>
-                            
-                            <button 
+
+                            <button
                                 onClick={() => { cleanup(); setStatus('idle'); }}
                                 className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
-                                title="End Session"
+                                title={t('liveInterview.endSession')}
                             >
                                 <PhoneOff size={24} />
                             </button>
@@ -319,7 +321,7 @@ const LiveInterview: React.FC = () => {
             
             {/* Tech Badge */}
             <div className="absolute bottom-4 flex items-center gap-2 text-[10px] md:text-xs text-indigo-400/60 font-mono">
-                <Sparkles size={10} /> Powered by Gemini 2.0 Flash
+                <Sparkles size={10} /> {t('liveInterview.poweredBy')}
             </div>
         </div>
     );

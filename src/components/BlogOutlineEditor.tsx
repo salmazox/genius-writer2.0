@@ -24,6 +24,7 @@ import {
   getOutlineStats
 } from '../services/blogOutlineGenerator';
 import { Button } from './ui/Button';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface BlogOutlineEditorProps {
   outline: BlogOutline;
@@ -38,6 +39,7 @@ export const BlogOutlineEditor: React.FC<BlogOutlineEditorProps> = ({
   onGenerate,
   isGenerating = false
 }) => {
+  const { t } = useThemeLanguage();
   const [validation, setValidation] = useState(validateOutline(outline));
   const stats = getOutlineStats(outline);
 

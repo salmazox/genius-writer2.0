@@ -45,6 +45,7 @@ import {
   checkWCAGCompliance
 } from '../services/colorExtractor';
 import { useToast } from '../contexts/ToastContext';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface BrandKitManagerProps {
   onClose?: () => void;
@@ -54,6 +55,7 @@ type TabType = 'logos' | 'colors' | 'fonts' | 'voice';
 
 export const BrandKitManager: React.FC<BrandKitManagerProps> = ({ onClose }) => {
   const { showToast } = useToast();
+  const { t } = useThemeLanguage();
   const [brandKit, setBrandKit] = useState<BrandKit | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('logos');
   const [isExtracting, setIsExtracting] = useState(false);
@@ -231,7 +233,7 @@ export const BrandKitManager: React.FC<BrandKitManagerProps> = ({ onClose }) => 
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <Sparkles size={48} className="mx-auto text-slate-300 mb-3 animate-spin" />
-          <p className="text-slate-500">Loading Brand Kit...</p>
+          <p className="text-slate-500">{t('ui.brandKit.title')}</p>
         </div>
       </div>
     );
@@ -245,7 +247,7 @@ export const BrandKitManager: React.FC<BrandKitManagerProps> = ({ onClose }) => 
           <div className="flex items-center gap-2">
             <Palette size={20} className="text-indigo-600 dark:text-indigo-400" />
             <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-              Brand Kit
+              {t('ui.brandKit.title')}
             </h2>
           </div>
           {onClose && (
@@ -269,7 +271,7 @@ export const BrandKitManager: React.FC<BrandKitManagerProps> = ({ onClose }) => 
             }`}
           >
             <ImageIcon size={16} />
-            Logos
+            {t('ui.brandKit.logos')}
           </button>
           <button
             onClick={() => setActiveTab('colors')}
@@ -280,7 +282,7 @@ export const BrandKitManager: React.FC<BrandKitManagerProps> = ({ onClose }) => 
             }`}
           >
             <Palette size={16} />
-            Colors
+            {t('ui.brandKit.colors')}
           </button>
           <button
             onClick={() => setActiveTab('fonts')}
@@ -291,7 +293,7 @@ export const BrandKitManager: React.FC<BrandKitManagerProps> = ({ onClose }) => 
             }`}
           >
             <Type size={16} />
-            Fonts
+            {t('ui.brandKit.fonts')}
           </button>
           <button
             onClick={() => setActiveTab('voice')}
@@ -302,7 +304,7 @@ export const BrandKitManager: React.FC<BrandKitManagerProps> = ({ onClose }) => 
             }`}
           >
             <MessageSquare size={16} />
-            Voice
+            {t('ui.brandKit.voice')}
           </button>
         </div>
       </div>

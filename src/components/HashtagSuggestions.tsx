@@ -18,6 +18,7 @@ import {
   getPlatformGuidelines
 } from '../services/hashtagGenerator';
 import { Button } from './ui/Button';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface HashtagSuggestionsProps {
   content: string;
@@ -32,6 +33,7 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
   onHashtagClick,
   onCopyAll
 }) => {
+  const { t } = useThemeLanguage();
   const [result, setResult] = useState<HashtagResult | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +42,7 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
 
   const handleGenerate = async () => {
     if (!content || content.trim().length === 0) {
-      setError('Please write some content first');
+      setError(t('ui.hashtags.writeContentFirst'));
       return;
     }
 
@@ -51,7 +53,7 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
       const hashtagResult = await generateHashtags(content, platform);
       setResult(hashtagResult);
     } catch (err) {
-      setError('Failed to generate hashtags. Please try again.');
+      setError(t('ui.hashtags.generationFailed'));
       console.error('Hashtag generation error:', err);
     } finally {
       setIsGenerating(false);
@@ -85,7 +87,7 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
       <div className="flex items-center justify-between">
         <h4 className="font-bold flex items-center gap-2 text-slate-800">
           <Hash size={18} className="text-indigo-600" />
-          Hashtag Suggestions
+          {t('ui.hashtags.title')}
         </h4>
         {!result && (
           <Button
@@ -96,12 +98,12 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
             {isGenerating ? (
               <>
                 <Loader size={14} className="animate-spin mr-2" />
-                Generating...
+                {t('ui.hashtags.generating')}
               </>
             ) : (
               <>
                 <Sparkles size={14} className="mr-2" />
-                Generate
+                {t('ui.hashtags.generate')}
               </>
             )}
           </Button>
@@ -115,11 +117,11 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
             <Info size={14} className="mt-0.5 flex-shrink-0" />
             <div>
               <p className="font-semibold mb-1">
-                {platform.charAt(0).toUpperCase() + platform.slice(1)} Best Practices:
+                {t('ui.hashtags.platformBestPractices').replace('{platform}', platform.charAt(0).toUpperCase() + platform.slice(1))}
               </p>
               <ul className="space-y-1">
-                <li>• Recommended: {guidelines.recommended} hashtags</li>
-                <li>• Maximum: {guidelines.max} hashtags</li>
+                <li>• {t('ui.hashtags.recommended')}: {guidelines.recommended} {t('ui.hashtags.hashtags')}</li>
+                <li>• {t('ui.hashtags.maximum')}: {guidelines.max} {t('ui.hashtags.hashtags')}</li>
               </ul>
             </div>
           </div>
@@ -138,7 +140,7 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
             <Loader size={32} className="animate-spin text-indigo-600 mx-auto mb-2" />
-            <p className="text-sm text-slate-600">Analyzing your content...</p>
+            <p className="text-sm text-slate-600">{t('ui.hashtags.analyzingContent')}</p>
           </div>
         </div>
       )}
@@ -151,7 +153,7 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
             <div className="flex items-center gap-2 text-sm">
               <TrendingUp size={16} className="text-indigo-600" />
               <span className="font-semibold text-indigo-900">
-                {result.hashtags.length} hashtags generated
+                {t('ui.hashtags.hashtagsGenerated').replace('{count}', result.hashtags.length.toString())}
               </span>
             </div>
             <button
@@ -161,12 +163,12 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
               {copiedAll ? (
                 <>
                   <Check size={14} />
-                  Copied!
+                  {t('ui.hashtags.copied')}
                 </>
               ) : (
                 <>
                   <Copy size={14} />
-                  Copy All
+                  {t('ui.hashtags.copyAll')}
                 </>
               )}
             </button>
@@ -191,7 +193,7 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
                       </span>
                       {copiedIndividual === suggestion.hashtag && (
                         <span className="text-xs text-green-600 font-semibold">
-                          Copied!
+                          {t('ui.hashtags.copied')}
                         </span>
                       )}
                     </div>
@@ -200,8 +202,8 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
                         {getCategoryIcon(suggestion.category)}
                         <span className="capitalize">{suggestion.category}</span>
                       </span>
-                      <span className="capitalize">{suggestion.popularity}</span>
-                      <span className="capitalize">{suggestion.relevance} relevance</span>
+                      <span className="capitalize">{t(`ui.hashtags.popularity.${suggestion.popularity}`)}</span>
+                      <span>{t(`ui.hashtags.relevance.${suggestion.relevance}`)}</span>
                     </div>
                   </div>
                   <button
@@ -225,7 +227,7 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
           {/* Platform Tips */}
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
             <p className="text-xs font-bold text-slate-700 mb-2">
-              💡 Tips for {platform.charAt(0).toUpperCase() + platform.slice(1)}:
+              💡 {t('ui.hashtags.platformBestPractices').replace('{platform}', platform.charAt(0).toUpperCase() + platform.slice(1))}
             </p>
             <ul className="space-y-1 text-xs text-slate-600">
               {guidelines.tips.map((tip, idx) => (
@@ -245,12 +247,12 @@ export const HashtagSuggestions: React.FC<HashtagSuggestionsProps> = ({
             {isGenerating ? (
               <>
                 <Loader size={14} className="animate-spin mr-2" />
-                Regenerating...
+                {t('ui.hashtags.generating')}
               </>
             ) : (
               <>
                 <Sparkles size={14} className="mr-2" />
-                Generate New Hashtags
+                {t('ui.hashtags.generate')}
               </>
             )}
           </Button>

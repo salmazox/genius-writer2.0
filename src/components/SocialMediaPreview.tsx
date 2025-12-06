@@ -16,6 +16,7 @@ import {
   Bookmark,
   MoreHorizontal
 } from 'lucide-react';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 export type SocialPlatform = 'twitter' | 'linkedin' | 'instagram';
 
@@ -34,12 +35,12 @@ interface SocialMediaPreviewProps {
 /**
  * Generate default author based on platform
  */
-function getDefaultAuthor(platform: SocialPlatform) {
+function getDefaultAuthor(platform: SocialPlatform, t: (key: string) => string) {
   return {
-    name: 'Your Name',
-    handle: platform === 'linkedin' ? undefined : '@yourhandle',
-    avatar: `https://ui-avatars.com/api/?name=Your+Name&background=6366f1&color=fff&size=128`,
-    title: platform === 'linkedin' ? 'Professional Title' : undefined
+    name: t('ui.socialMedia.yourName'),
+    handle: platform === 'linkedin' ? undefined : t('ui.socialMedia.yourHandle'),
+    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(t('ui.socialMedia.yourName'))}&background=6366f1&color=fff&size=128`,
+    title: platform === 'linkedin' ? t('ui.socialMedia.professionalTitle') : undefined
   };
 }
 
@@ -57,7 +58,8 @@ const SocialMediaPreview: React.FC<SocialMediaPreviewProps> = ({
   imageUrl,
   author
 }) => {
-  const defaultAuthor = getDefaultAuthor(platform);
+  const { t } = useThemeLanguage();
+  const defaultAuthor = getDefaultAuthor(platform, t);
   const displayAuthor = { ...defaultAuthor, ...author };
 
   // Twitter Preview
@@ -160,7 +162,7 @@ const SocialMediaPreview: React.FC<SocialMediaPreviewProps> = ({
                 {displayAuthor.name}
               </div>
               <div className="text-xs text-slate-600 leading-tight">
-                {displayAuthor.title || 'Professional Title'}
+                {displayAuthor.title || t('ui.socialMedia.professionalTitle')}
               </div>
               <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
                 <span>{getMockTimestamp()}</span>
@@ -232,7 +234,7 @@ const SocialMediaPreview: React.FC<SocialMediaPreviewProps> = ({
           />
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-sm text-slate-900">
-              {displayAuthor.handle || '@yourhandle'}
+              {displayAuthor.handle || t('ui.socialMedia.yourHandle')}
             </div>
           </div>
           <button className="p-1">
@@ -280,7 +282,7 @@ const SocialMediaPreview: React.FC<SocialMediaPreviewProps> = ({
         <div className="px-3 pb-3">
           <p className="text-sm text-slate-900">
             <span className="font-semibold mr-2">
-              {displayAuthor.handle || '@yourhandle'}
+              {displayAuthor.handle || t('ui.socialMedia.yourHandle')}
             </span>
             <span className="whitespace-pre-wrap">{content}</span>
           </p>

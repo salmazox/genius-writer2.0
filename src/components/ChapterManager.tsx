@@ -25,6 +25,7 @@ import {
   deleteSection,
   Chapter
 } from '../services/documentOutliner';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface ChapterManagerProps {
   documentId: string;
@@ -39,6 +40,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
   onSectionClick,
   onClose
 }) => {
+  const { t } = useThemeLanguage();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
   const [showAddChapter, setShowAddChapter] = useState(false);
@@ -103,7 +105,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
   };
 
   const handleDeleteChapter = (chapterId: string, chapterTitle: string) => {
-    if (confirm(`Delete chapter "${chapterTitle}" and all its sections?`)) {
+    if (confirm(t('chapters.confirmDelete').replace('{title}', chapterTitle))) {
       deleteSection(documentId, chapterId);
       handleRefresh();
     }
@@ -123,11 +125,11 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
   const getStatusText = (status: Chapter['status']) => {
     switch (status) {
       case 'planning':
-        return 'Planning';
+        return t('chapters.statusPlanning');
       case 'in-progress':
-        return 'In Progress';
+        return t('chapters.statusInProgress');
       case 'complete':
-        return 'Complete';
+        return t('chapters.statusComplete');
     }
   };
 
@@ -148,7 +150,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
           <div className="flex items-center gap-2">
             <BookOpen size={20} className="text-indigo-600 dark:text-indigo-400" />
             <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-              Chapters
+              {t('chapters.title')}
             </h2>
           </div>
           {onClose && (
@@ -165,7 +167,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
         {chapters.length > 0 && totalGoal > 0 && (
           <div className="space-y-2 mb-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-600 dark:text-slate-400">Overall Progress</span>
+              <span className="text-slate-600 dark:text-slate-400">{t('chapters.overallProgress')}</span>
               <span className="font-semibold text-slate-900 dark:text-white">
                 {overallProgress}%
               </span>
@@ -177,9 +179,9 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
               />
             </div>
             <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-              <span>{chapters.length} chapters</span>
+              <span>{t('chapters.count').replace('{count}', chapters.length.toString())}</span>
               <span>
-                {totalWords.toLocaleString()} / {totalGoal.toLocaleString()} words
+                {totalWords.toLocaleString()} / {totalGoal.toLocaleString()} {t('chapters.words')}
               </span>
             </div>
           </div>
@@ -191,7 +193,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
           className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <Plus size={16} />
-          Add Chapter
+          {t('chapters.addChapter')}
         </button>
       </div>
 
@@ -210,7 +212,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
                 setNewChapterGoal('');
               }
             }}
-            placeholder="Chapter title..."
+            placeholder={t('chapters.chapterTitle')}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             autoFocus
           />
@@ -220,7 +222,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
               type="number"
               value={newChapterGoal}
               onChange={(e) => setNewChapterGoal(e.target.value)}
-              placeholder="Word count goal (optional)"
+              placeholder={t('chapters.wordCountGoal')}
               className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
 
@@ -229,7 +231,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
               disabled={!newChapterTitle.trim()}
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Add
+              {t('chapters.add')}
             </button>
 
             <button
@@ -240,7 +242,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
               }}
               className="px-4 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium"
             >
-              Cancel
+              {t('chapters.cancel')}
             </button>
           </div>
         </div>
@@ -252,10 +254,10 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
           <div className="text-center py-12">
             <BookOpen size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" />
             <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base mb-2">
-              No chapters yet
+              {t('chapters.noChapters')}
             </p>
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              Add chapters to organize your long-form document
+              {t('chapters.addChaptersHint')}
             </p>
           </div>
         ) : (
@@ -291,13 +293,13 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
                             onClick={() => handleSaveEdit(chapter.id)}
                             className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium"
                           >
-                            Save
+                            {t('chapters.save')}
                           </button>
                           <button
                             onClick={() => setEditingChapter(null)}
                             className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium"
                           >
-                            Cancel
+                            {t('chapters.cancel')}
                           </button>
                         </div>
                       </div>
@@ -332,12 +334,12 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
                             <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
                               <span className="flex items-center gap-1">
                                 <FileText size={12} />
-                                {chapter.sections.length} sections
+                                {t('chapters.sections').replace('{count}', chapter.sections.length.toString())}
                               </span>
                               {chapter.wordCountGoal && (
                                 <span className="flex items-center gap-1">
                                   <Target size={12} />
-                                  {chapter.wordCount.toLocaleString()} / {chapter.wordCountGoal.toLocaleString()} words
+                                  {chapter.wordCount.toLocaleString()} / {chapter.wordCountGoal.toLocaleString()} {t('chapters.words')}
                                 </span>
                               )}
                             </div>
@@ -347,14 +349,14 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
                             <button
                               onClick={() => handleStartEdit(chapter)}
                               className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
-                              title="Edit chapter"
+                              title={t('chapters.editChapter')}
                             >
                               <Edit2 size={14} className="text-slate-400" />
                             </button>
                             <button
                               onClick={() => handleDeleteChapter(chapter.id, chapter.title)}
                               className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
-                              title="Delete chapter"
+                              title={t('chapters.deleteChapter')}
                             >
                               <Trash2 size={14} className="text-red-400" />
                             </button>
@@ -388,7 +390,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
                               />
                             </div>
                             <div className="flex items-center justify-between mt-1 text-xs text-slate-500 dark:text-slate-400">
-                              <span>{progress}% complete</span>
+                              <span>{t('chapters.complete').replace('{progress}', progress.toString())}</span>
                             </div>
                           </div>
                         )}
@@ -410,7 +412,7 @@ export const ChapterManager: React.FC<ChapterManagerProps> = ({
                               {section.title}
                             </span>
                             <span className="text-xs text-slate-500 dark:text-slate-400">
-                              {section.wordCount} words
+                              {section.wordCount} {t('chapters.words')}
                             </span>
                           </div>
                         </div>

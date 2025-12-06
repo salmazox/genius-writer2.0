@@ -29,6 +29,7 @@ import {
   OutlineSection,
   DocumentOutline as DocumentOutlineType
 } from '../services/documentOutliner';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface DocumentOutlineProps {
   documentId: string;
@@ -281,6 +282,7 @@ export const DocumentOutline: React.FC<DocumentOutlineProps> = ({
   onSectionClick,
   onClose
 }) => {
+  const { t } = useThemeLanguage();
   const [outline, setOutline] = useState<DocumentOutlineType | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newSectionTitle, setNewSectionTitle] = useState('');

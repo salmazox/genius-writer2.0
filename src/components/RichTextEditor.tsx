@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { aiService } from '../services/aiService';
 import { useToast } from '../contexts/ToastContext';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { validateImageFile } from '../utils/security';
 
 interface RichTextEditorProps {
@@ -42,6 +43,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
     const editorRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { showToast } = useToast();
+    const { t } = useThemeLanguage();
     const isTypingRef = useRef(false);
 
     // State for UI

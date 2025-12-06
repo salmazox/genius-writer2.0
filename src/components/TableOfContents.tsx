@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { List, X, ChevronRight, Hash } from 'lucide-react';
 import { extractHeadings, Heading } from '../services/documentOutliner';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface TableOfContentsProps {
   content: string;
@@ -20,6 +21,7 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
   onHeadingClick,
   onClose
 }) => {
+  const { t } = useThemeLanguage();
   const [activeHeading, setActiveHeading] = useState<string | null>(null);
   const [collapsedLevels, setCollapsedLevels] = useState<Set<string>>(new Set());
 

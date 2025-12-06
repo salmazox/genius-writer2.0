@@ -23,6 +23,7 @@ import {
   getCategoriesWithCounts,
   ImageStylePreset
 } from '../services/imageStylePresets';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface ImageStyleSelectorProps {
   selectedStyleId?: string | null;
@@ -35,6 +36,7 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
   onSelectStyle,
   basePrompt
 }) => {
+  const { t } = useThemeLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ImageStylePreset['category'] | 'all' | 'popular'>('popular');
   const [showPromptPreview, setShowPromptPreview] = useState(false);
@@ -112,7 +114,7 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles size={18} className="text-indigo-600" />
-          <h4 className="font-bold text-slate-900">Style Presets</h4>
+          <h4 className="font-bold text-slate-900">{t('ui.imageStyle.title')}</h4>
         </div>
         {selectedPreset && (
           <button
@@ -120,7 +122,7 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
             className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
           >
             <X size={14} />
-            Clear Style
+            {t('ui.imageStyle.clearStyle')}
           </button>
         )}
       </div>
@@ -132,7 +134,7 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search styles..."
+          placeholder={t('ui.imageStyle.searchStyles')}
           className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
         />
       </div>
@@ -141,14 +143,14 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
       {!isLoading && (
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <CategoryTab
-            label="Popular"
+            label={t('ui.imageStyle.popular')}
             icon="⭐"
             count={allPresets.filter(p => p.popular).length}
             active={selectedCategory === 'popular'}
             onClick={() => setSelectedCategory('popular')}
           />
           <CategoryTab
-            label="All"
+            label={t('ui.imageStyle.all')}
             icon="📁"
             count={allPresets.length}
             active={selectedCategory === 'all'}
@@ -236,7 +238,7 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
                 </div>
                 {preset.popular && (
                   <span className="text-[9px] px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded font-semibold uppercase">
-                    Popular
+                    {t('ui.imageStyle.popular')}
                   </span>
                 )}
               </div>
@@ -254,7 +256,7 @@ export const ImageStyleSelector: React.FC<ImageStyleSelectorProps> = ({
           {filteredPresets.length === 0 && (
             <div className="col-span-2 text-center py-8 text-slate-400 text-sm">
               <Search size={32} className="mx-auto mb-2 text-slate-300" />
-              No styles found for "{searchQuery}"
+              {t('ui.imageStyle.noResults')}
             </div>
           )}
         </div>
