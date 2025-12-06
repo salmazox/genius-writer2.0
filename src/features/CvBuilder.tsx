@@ -5,9 +5,9 @@ import { useToast } from '../contexts/ToastContext';
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { aiService } from '../services/aiService';
 import { getPromptConfig } from '../config/aiPrompts';
-// Note: parseResume, parsePDFResume, parseLinkedInProfile still use client-side API
+// Note: parseResume, parsePDFResume, parseLinkedInProfile, generateCoverLetter still use client-side API
 // These require multimodal backend support (image/PDF upload) not yet implemented
-import { parseResume, parseLinkedInProfile, parsePDFResume } from '../services/gemini';
+import { parseResume, parseLinkedInProfile, parsePDFResume, generateCoverLetter } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { ToolType, CVData, CVTheme, ATSAnalysis, CVExperience } from '../types';
 import { Button } from '../components/ui/Button';
