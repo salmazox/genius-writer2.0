@@ -55,9 +55,22 @@ router.post('/create-checkout', authenticate, async (req, res) => {
       });
     }
 
-    // Log warning if using placeholder (for development)
+    // Block placeholder price IDs in production
     if (priceId.includes('placeholder')) {
-      console.warn(`[BILLING] Warning: Using placeholder price ID for ${plan} ${billingPeriod}. Configure STRIPE_PRICE_${plan}_${billingPeriod.toUpperCase()} in environment variables.`);
+      const envVarName = `STRIPE_PRICE_${plan}_${billingPeriod.toUpperCase()}`;
+      console.error(`[BILLING] ERROR: Placeholder price ID detected for ${plan} ${billingPeriod}. Set ${envVarName} environment variable.`);
+
+      // In production, reject the request
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(503).json({
+          error: 'Payment system not configured',
+          message: 'Payment processing is temporarily unavailable. Please contact support.',
+          details: process.env.NODE_ENV !== 'production' ? `Missing ${envVarName} environment variable` : undefined
+        });
+      }
+
+      // In development, log warning but continue
+      console.warn(`[BILLING] Development mode: Continuing with placeholder price ID. This will likely fail with Stripe API.`);
     }
 
     // Get user
