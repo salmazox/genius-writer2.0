@@ -288,7 +288,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 // Image Gen uses secure backend API
                 const response = await aiService.generate({
                     prompt: finalPromptConfig.generatePrompt(imageInputs),
-                    model: finalPromptConfig.modelName,
+                    model: finalPromptConfig.modelName as 'gemini-2.0-flash-exp' | 'gemini-2.5-pro-preview' | 'gemini-2.5-flash' | 'gemini-2.5-flash-image',
                     systemInstruction: systemInstruction,
                     temperature: 0.7
                 });
@@ -299,7 +299,7 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                 let fullText = '';
                 for await (const chunk of aiService.generateStream({
                     prompt: promptConfig.generatePrompt(inputsWithTheme),
-                    model: promptConfig.modelName,
+                    model: promptConfig.modelName as 'gemini-2.0-flash-exp' | 'gemini-2.5-pro-preview' | 'gemini-2.5-flash' | 'gemini-2.5-flash-image',
                     systemInstruction: systemInstruction,
                     temperature: 0.7
                 })) {

@@ -1,41 +1,30 @@
 /**
- * ⚠️ SECURITY NOTICE ⚠️
+ * ⚠️ SECURITY WARNING ⚠️
  *
- * CLIENT-SIDE GEMINI API CALLS ARE DISABLED FOR SECURITY
+ * TEMPORARY: This file still uses client-side Gemini API calls.
+ * This is INSECURE and should be migrated to backend proxy ASAP.
  *
- * This file previously contained client-side Gemini API calls with an exposed API key.
- * For production security, all AI generation must go through the backend API proxy.
+ * MIGRATION IN PROGRESS:
+ * - Some components have been migrated to use /src/services/aiService.ts
+ * - Remaining components still use this insecure approach
+ * - Once all components are migrated, this file will be removed
  *
- * MIGRATION REQUIRED:
- * 1. Components should use `/src/services/aiService.ts` instead
- * 2. Backend proxy is available at `/backend/routes/ai.js`
- * 3. Set GEMINI_API_KEY in backend environment variables only
- *
- * Example migration:
- *
- * // OLD (insecure):
- * import { generateContent } from './services/gemini';
- * const result = await generateContent(tool, inputs);
- *
- * // NEW (secure):
- * import { aiService } from './services/aiService';
- * const result = await aiService.generate({ prompt: '...', model: 'gemini-2.5-flash' });
- *
- * For existing code that hasn't been migrated yet, this placeholder prevents
- * compilation errors but will throw runtime errors if called.
+ * DO NOT ADD NEW CODE USING THIS API - Use aiService instead!
  */
 
-// Placeholder to prevent compilation errors
-export const ai = {
-  models: {
-    generateContent: () => {
-      throw new Error(
-        'Client-side Gemini API is disabled for security. Use aiService (backend proxy) instead. ' +
-        'See /src/services/aiService.ts for migration guide.'
-      );
-    }
-  }
-};
+import { GoogleGenAI } from "@google/genai";
+
+// TEMPORARY: Keep API functional for unmigrated components
+// This exposes the API key in the browser - SECURITY RISK!
+export const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+
+// Log warning when this module is imported
+if (import.meta.env.PROD) {
+  console.warn(
+    '⚠️ SECURITY WARNING: Using insecure client-side Gemini API. ' +
+    'This should be migrated to backend proxy. See /src/services/aiService.ts'
+  );
+}
 
 /**
  * Retry helper with exponential backoff
@@ -67,4 +56,5 @@ export const checkOnline = () => {
         throw new Error("No internet connection. Please check your network.");
     }
 };
+
 
