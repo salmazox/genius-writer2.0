@@ -11,11 +11,13 @@ export interface SignupData {
   postalCode?: string;
   country?: string;
   termsAccepted: boolean;
+  turnstileToken?: string;
 }
 
 export interface LoginData {
   email: string;
   password: string;
+  turnstileToken?: string;
 }
 
 export interface AuthResponse {
@@ -68,6 +70,7 @@ class AuthService {
         postalCode: data.postalCode,
         country: data.country,
         termsAccepted: data.termsAccepted,
+        turnstileToken: data.turnstileToken,
       }),
     });
 
@@ -268,13 +271,13 @@ class AuthService {
   /**
    * Request password reset - sends reset email
    */
-  async forgotPassword(email: string) {
+  async forgotPassword(email: string, turnstileToken?: string) {
     const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, turnstileToken }),
     });
 
     const result = await response.json();

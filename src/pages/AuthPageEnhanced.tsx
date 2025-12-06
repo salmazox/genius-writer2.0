@@ -4,6 +4,7 @@ import { Quote, Eye, EyeOff, Chrome, Github, Sparkles, AlertCircle, CheckCircle2
 import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import { Logo } from '../components/Logo';
 import { authService, SignupData } from '../services/authService';
+import { TurnstileWidget } from '../components/TurnstileWidget';
 
 const AuthPageEnhanced: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -30,6 +31,12 @@ const AuthPageEnhanced: React.FC = () => {
   // Password strength
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
+  // Turnstile token
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
+
+  // Cloudflare Turnstile site key
+  const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
 
   const handleDemoLogin = () => {
     const demoUser = {
@@ -70,6 +77,7 @@ const AuthPageEnhanced: React.FC = () => {
         const result = await authService.login({
           email: formData.email,
           password: formData.password,
+          turnstileToken: turnstileToken || undefined,
         });
 
         console.log('Login successful:', result);
@@ -92,7 +100,10 @@ const AuthPageEnhanced: React.FC = () => {
           throw new Error('You must accept the Terms of Service and Privacy Policy');
         }
 
-        const result = await authService.signup(formData as SignupData);
+        const result = await authService.signup({
+          ...formData,
+          turnstileToken: turnstileToken || undefined,
+        } as SignupData);
 
         console.log('Signup successful:', result);
         // Redirect to plan selection for new users
@@ -443,6 +454,22 @@ const AuthPageEnhanced: React.FC = () => {
                       . I understand that my data will be processed in accordance with GDPR regulations.
                     </label>
                   </div>
+                </div>
+              )}
+
+              {/* Cloudflare Turnstile Bot Protection */}
+              {TURNSTILE_SITE_KEY && (
+                <div className="flex justify-center">
+                  <TurnstileWidget
+                    siteKey={TURNSTILE_SITE_KEY}
+                    onVerify={(token) => setTurnstileToken(token)}
+                    onError={() => {
+                      setTurnstileToken('');
+                      setError('Security verification failed. Please try again.');
+                    }}
+                    theme="auto"
+                    size="normal"
+                  />
                 </div>
               )}
 

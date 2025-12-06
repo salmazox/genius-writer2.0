@@ -46,6 +46,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://genius-writer.vercel.app',
   'https://genius-writer-git-claude-fix-backend-docker-build-014t3v7ivvndurb7quvd46va-salmazoxs-projects.vercel.app',
+  'https://geniuswriter.de',
+  'https://www.geniuswriter.de',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
