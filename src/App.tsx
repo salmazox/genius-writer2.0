@@ -127,7 +127,6 @@ const App: React.FC = () => {
                       <Route path="*" element={<NotFoundPage />} />
                     </Routes>
                   </Suspense>
-                  <OnboardingTour />
                 </Layout>
               </Router>
             </HelpProvider>
