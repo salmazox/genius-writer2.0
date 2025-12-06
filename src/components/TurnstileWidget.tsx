@@ -26,6 +26,12 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const callbacksRef = useRef({ onVerify, onError, onExpire });
+
+  // Keep callbacks up to date without triggering re-render
+  useEffect(() => {
+    callbacksRef.current = { onVerify, onError, onExpire };
+  }, [onVerify, onError, onExpire]);
 
   useEffect(() => {
     // Skip if no site key
@@ -33,6 +39,8 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
       console.warn('[TURNSTILE] No site key provided');
       return;
     }
+
+    let isRendered = false;
 
     // Load Turnstile script
     const loadTurnstile = () => {
@@ -48,13 +56,13 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
       script.onload = renderWidget;
       script.onerror = () => {
         console.error('[TURNSTILE] Failed to load Turnstile script');
-        if (onError) onError();
+        if (callbacksRef.current.onError) callbacksRef.current.onError();
       };
       document.head.appendChild(script);
     };
 
     const renderWidget = () => {
-      if (!containerRef.current || !window.turnstile) return;
+      if (!containerRef.current || !window.turnstile || isRendered) return;
 
       // Remove existing widget if any
       if (widgetIdRef.current) {
@@ -76,7 +84,7 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
           size,
           callback: (token: string) => {
             console.log('[TURNSTILE] ✅ Verification successful, token received:', token.substring(0, 20) + '...');
-            onVerify(token);
+            callbacksRef.current.onVerify(token);
           },
           'error-callback': (errorCode: string) => {
             console.error('[TURNSTILE] ❌ Verification error. Error code:', errorCode);
@@ -86,23 +94,24 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
             console.error('[TURNSTILE] 3. Network issues');
             console.error('[TURNSTILE] Current domain:', window.location.hostname);
             console.error('[TURNSTILE] Add this domain to your Cloudflare Turnstile allowed domains list');
-            if (onError) onError();
+            if (callbacksRef.current.onError) callbacksRef.current.onError();
           },
           'expired-callback': () => {
             console.log('[TURNSTILE] ⏱️ Token expired (tokens last 5 minutes)');
-            if (onExpire) onExpire();
+            if (callbacksRef.current.onExpire) callbacksRef.current.onExpire();
           },
           'timeout-callback': () => {
             console.error('[TURNSTILE] ⏱️ Verification timeout');
             console.error('[TURNSTILE] This might indicate domain not configured in Cloudflare');
-            if (onError) onError();
+            if (callbacksRef.current.onError) callbacksRef.current.onError();
           }
         });
 
+        isRendered = true;
         console.log('[TURNSTILE] Widget rendered with ID:', widgetIdRef.current);
       } catch (error) {
         console.error('[TURNSTILE] Render error:', error);
-        if (onError) onError();
+        if (callbacksRef.current.onError) callbacksRef.current.onError();
       }
     };
 
@@ -111,10 +120,16 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
     // Cleanup
     return () => {
       if (widgetIdRef.current && window.turnstile) {
-        window.turnstile.remove(widgetIdRef.current);
+        try {
+          window.turnstile.remove(widgetIdRef.current);
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+        widgetIdRef.current = null;
       }
+      isRendered = false;
     };
-  }, [siteKey, theme, size, onVerify, onError, onExpire]);
+  }, [siteKey, theme, size]);
 
   return (
     <div
