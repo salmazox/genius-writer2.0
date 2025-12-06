@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Copy, Loader2, ArrowDown, BookOpen } from 'lucide-react';
-import { generateContent } from '../services/gemini';
-import { ToolType } from '../types';
+import { aiService } from '../services/aiService';
 import { useDebounce } from '../hooks/useDebounce';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
@@ -70,12 +69,22 @@ const Translator: React.FC = () => {
                     translationPrompt = glossaryContext + '\n\n' + debouncedContent;
                 }
 
-                const result = await generateContent(
-                    ToolType.TRANSLATE,
-                    { content: translationPrompt, sourceLang, targetLang },
-                    undefined
-                );
-                if (isMounted) setTranslationOutput(result);
+                // Use secure backend API for translation
+                const systemInstruction = `You are a professional UN-level interpreter and translator.
+Your task is to provide a translation that is not just literally correct, but culturally nuanced and native-sounding.
+Rules:
+1. Preserve the original tone (formal, casual, technical).
+2. Do NOT add preamble like "Here is the translation". Just output the target text.
+3. If the input is empty, return empty string.`;
+
+                const response = await aiService.generate({
+                    prompt: `Source Text:\n"${translationPrompt}"\n\nTarget Language: ${targetLang || 'English'}`,
+                    model: 'gemini-2.5-flash',
+                    systemInstruction: systemInstruction,
+                    temperature: 0.7
+                });
+
+                if (isMounted) setTranslationOutput(response.text);
             } catch (e) {
                 console.error(e);
             } finally {

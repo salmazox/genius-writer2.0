@@ -1,21 +1,45 @@
-import { GoogleGenAI } from "@google/genai";
-
 /**
- * ⚠️ SECURITY WARNING ⚠️
+ * ⚠️ SECURITY NOTICE ⚠️
  *
- * This application is currently configured for a client-side only demonstration.
- * The API key is exposed in the browser bundle via process.env.API_KEY.
+ * CLIENT-SIDE GEMINI API CALLS ARE DISABLED FOR SECURITY
  *
- * IN PRODUCTION:
- * 1. Do not expose your Gemini API key in client-side code.
- * 2. Implement a backend proxy (Node.js, Python, Go) to handle API calls.
- * 3. Store the API key securely in your backend server variables.
- * 4. Implement rate limiting and user authentication on your backend.
+ * This file previously contained client-side Gemini API calls with an exposed API key.
+ * For production security, all AI generation must go through the backend API proxy.
+ *
+ * MIGRATION REQUIRED:
+ * 1. Components should use `/src/services/aiService.ts` instead
+ * 2. Backend proxy is available at `/backend/routes/ai.js`
+ * 3. Set GEMINI_API_KEY in backend environment variables only
+ *
+ * Example migration:
+ *
+ * // OLD (insecure):
+ * import { generateContent } from './services/gemini';
+ * const result = await generateContent(tool, inputs);
+ *
+ * // NEW (secure):
+ * import { aiService } from './services/aiService';
+ * const result = await aiService.generate({ prompt: '...', model: 'gemini-2.5-flash' });
+ *
+ * For existing code that hasn't been migrated yet, this placeholder prevents
+ * compilation errors but will throw runtime errors if called.
  */
-export const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+// Placeholder to prevent compilation errors
+export const ai = {
+  models: {
+    generateContent: () => {
+      throw new Error(
+        'Client-side Gemini API is disabled for security. Use aiService (backend proxy) instead. ' +
+        'See /src/services/aiService.ts for migration guide.'
+      );
+    }
+  }
+};
 
 /**
  * Retry helper with exponential backoff
+ * This is still useful for backend API calls
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,
@@ -43,3 +67,4 @@ export const checkOnline = () => {
         throw new Error("No internet connection. Please check your network.");
     }
 };
+

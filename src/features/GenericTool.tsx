@@ -3,7 +3,9 @@ import { Copy, FileText, Layout, Eye, Download, FileType, Sparkles, Save, Check,
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ToolConfig, ToolType } from '../types';
-import { generateContent, generateContentStream, generateSpeech } from '../services/gemini';
+import { aiService } from '../services/aiService';
+import { getPromptConfig } from '../config/aiPrompts';
+import { generateSpeech } from '../services/gemini';
 import { documentService } from '../services/documentService';
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../contexts/ToastContext';
@@ -253,6 +255,15 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
         };
 
         try {
+            // Build prompt using getPromptConfig
+            const promptConfig = getPromptConfig(tool.id, inputsWithTheme);
+            let systemInstruction = promptConfig.systemInstruction;
+
+            // Apply brand voice to system instruction if selected
+            if (selectedVoice) {
+                systemInstruction += `\n\nCRITICAL BRAND VOICE INSTRUCTION: ${selectedVoice.name}: ${selectedVoice.description}. \nEnsure the output strictly adheres to this voice/persona.`;
+            }
+
             if (isImageTool) {
                 // Apply image style preset if selected
                 let imageInputs = { ...inputsWithTheme };
@@ -271,28 +282,32 @@ const GenericTool: React.FC<GenericToolProps> = ({ tool }) => {
                     }
                 }
 
-                // Image Gen uses normal generateContent
-                const result = await generateContent(
-                    tool.id,
-                    imageInputs,
-                    selectedVoice ? `${selectedVoice.name}: ${selectedVoice.description}` : undefined,
-                    controller.signal
-                );
-                setDocumentContent(result);
+                // Update prompt config with enhanced inputs
+                const finalPromptConfig = getPromptConfig(tool.id, imageInputs);
+
+                // Image Gen uses secure backend API
+                const response = await aiService.generate({
+                    prompt: finalPromptConfig.generatePrompt(imageInputs),
+                    model: finalPromptConfig.modelName,
+                    systemInstruction: systemInstruction,
+                    temperature: 0.7
+                });
+                setDocumentContent(response.text);
                 showToast(t('dashboard.toasts.generated'), 'success');
             } else {
                 // Text tools use Streaming for faster perception
-                await generateContentStream(
-                    tool.id,
-                    inputsWithTheme,
-                    (chunk) => {
-                        // Clean Markdown code blocks if they slip through
-                        let cleaned = chunk.replace(/```html/g, '').replace(/```/g, '');
-                        setDocumentContent(cleaned);
-                    },
-                    selectedVoice ? `${selectedVoice.name}: ${selectedVoice.description}` : undefined,
-                    controller.signal
-                );
+                let fullText = '';
+                for await (const chunk of aiService.generateStream({
+                    prompt: promptConfig.generatePrompt(inputsWithTheme),
+                    model: promptConfig.modelName,
+                    systemInstruction: systemInstruction,
+                    temperature: 0.7
+                })) {
+                    fullText += chunk;
+                    // Clean Markdown code blocks if they slip through
+                    let cleaned = fullText.replace(/```html/g, '').replace(/```/g, '');
+                    setDocumentContent(cleaned);
+                }
                 showToast(t('dashboard.toasts.generated'), 'success');
             }
             setMobileTab('result');
