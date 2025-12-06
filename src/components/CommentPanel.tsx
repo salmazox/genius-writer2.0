@@ -7,6 +7,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { MessageCircle, Send, Edit2, Trash2, Check, X, MoreVertical, Reply, CheckCircle } from 'lucide-react';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import {
   Comment,
   getComments,
@@ -48,6 +49,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   onResolve,
   isReply = false
 }) => {
+  const { t } = useThemeLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
   const [showMenu, setShowMenu] = useState(false);
@@ -91,7 +93,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 {comment.resolved && !isReply && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-600 text-white text-xs rounded-full flex-shrink-0">
                     <CheckCircle size={12} />
-                    Resolved
+                    {t('ui.comments.resolved')}
                   </span>
                 )}
               </div>
@@ -119,7 +121,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
                   >
                     <CheckCircle size={14} />
-                    {comment.resolved ? 'Reopen' : 'Resolve'}
+                    {comment.resolved ? t('ui.comments.reopen') : t('ui.comments.resolve')}
                   </button>
                 )}
                 {isOwner && (
@@ -132,7 +134,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                       className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
                     >
                       <Edit2 size={14} />
-                      Edit
+                      {t('ui.comments.edit')}
                     </button>
                     <button
                       onClick={() => {
@@ -142,7 +144,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                       className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-red-600"
                     >
                       <Trash2 size={14} />
-                      Delete
+                      {t('ui.comments.delete')}
                     </button>
                   </>
                 )}
@@ -158,7 +160,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"
-              placeholder="Edit your comment..."
+              placeholder={t('ui.comments.editPlaceholder')}
             />
             <div className="flex items-center gap-2">
               <button
@@ -166,14 +168,14 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 flex items-center gap-1"
               >
                 <Check size={14} />
-                Save
+                {t('ui.comments.save')}
               </button>
               <button
                 onClick={handleCancelEdit}
                 className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 flex items-center gap-1"
               >
                 <X size={14} />
-                Cancel
+                {t('ui.comments.cancel')}
               </button>
             </div>
           </div>
@@ -186,7 +188,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             {/* Selection Context */}
             {comment.selection && (
               <div className="mt-2 p-2 bg-amber-50 border-l-4 border-amber-400 rounded text-xs md:text-sm">
-                <div className="text-amber-800 font-medium mb-1">💬 Commented on:</div>
+                <div className="text-amber-800 font-medium mb-1">{t('ui.comments.commentedOn')}</div>
                 <div className="text-amber-700 italic">"{comment.selection.text}"</div>
               </div>
             )}
@@ -198,7 +200,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 className="mt-2 text-xs md:text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
               >
                 <Reply size={14} />
-                Reply
+                {t('ui.comments.reply')}
               </button>
             )}
           </>
@@ -260,6 +262,7 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
   onSuccess,
   onCancel
 }) => {
+  const { t } = useThemeLanguage();
   const [replyContent, setReplyContent] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -280,7 +283,7 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
         value={replyContent}
         onChange={(e) => setReplyContent(e.target.value)}
         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"
-        placeholder="Write a reply..."
+        placeholder={t('ui.comments.replyPlaceholder')}
       />
       <div className="flex items-center gap-2 mt-2">
         <button
@@ -289,14 +292,14 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
           className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
         >
           <Send size={14} />
-          Reply
+          {t('ui.comments.reply')}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200"
         >
-          Cancel
+          {t('ui.comments.cancel')}
         </button>
       </div>
     </form>
@@ -310,6 +313,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
   currentUserAvatar,
   onClose
 }) => {
+  const { t } = useThemeLanguage();
   const [newComment, setNewComment] = useState('');
   const [filter, setFilter] = useState<'all' | 'unresolved' | 'resolved'>('all');
   const [refreshKey, setRefreshKey] = useState(0);
@@ -355,7 +359,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
   };
 
   const handleDelete = (commentId: string) => {
-    if (confirm('Are you sure you want to delete this comment?')) {
+    if (confirm(t('ui.comments.deleteConfirm'))) {
       deleteComment(commentId);
       setRefreshKey(prev => prev + 1);
     }
@@ -373,7 +377,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <MessageCircle size={20} className="text-indigo-600" />
-            <h2 className="text-lg md:text-xl font-bold text-slate-900">Comments</h2>
+            <h2 className="text-lg md:text-xl font-bold text-slate-900">{t('ui.comments.title')}</h2>
           </div>
           {onClose && (
             <button
@@ -388,15 +392,15 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
         {/* Stats */}
         <div className="flex items-center gap-3 text-xs md:text-sm">
           <span className="text-slate-600">
-            <span className="font-semibold text-slate-900">{stats.total}</span> total
+            <span className="font-semibold text-slate-900">{stats.total}</span> {t('ui.comments.stats.total')}
           </span>
           <span className="text-slate-400">•</span>
           <span className="text-slate-600">
-            <span className="font-semibold text-amber-600">{stats.unresolved}</span> open
+            <span className="font-semibold text-amber-600">{stats.unresolved}</span> {t('ui.comments.stats.open')}
           </span>
           <span className="text-slate-400">•</span>
           <span className="text-slate-600">
-            <span className="font-semibold text-green-600">{stats.resolved}</span> resolved
+            <span className="font-semibold text-green-600">{stats.resolved}</span> {t('ui.comments.stats.resolved')}
           </span>
         </div>
 
@@ -410,7 +414,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
-            All ({stats.total})
+            {t('ui.comments.filters.all')} ({stats.total})
           </button>
           <button
             onClick={() => setFilter('unresolved')}
@@ -420,7 +424,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
-            Open ({stats.unresolved})
+            {t('ui.comments.filters.unresolved')} ({stats.unresolved})
           </button>
           <button
             onClick={() => setFilter('resolved')}
@@ -430,7 +434,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
-            Resolved ({stats.resolved})
+            {t('ui.comments.filters.resolved')} ({stats.resolved})
           </button>
         </div>
       </div>
@@ -442,10 +446,10 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
             <MessageCircle size={48} className="mx-auto text-slate-300 mb-3" />
             <p className="text-slate-500 text-sm md:text-base">
               {filter === 'all'
-                ? 'No comments yet. Be the first to comment!'
+                ? t('ui.comments.noComments')
                 : filter === 'unresolved'
-                ? 'No open comments'
-                : 'No resolved comments'}
+                ? t('ui.comments.noOpen')
+                : t('ui.comments.noResolved')}
             </p>
           </div>
         ) : (
@@ -472,12 +476,12 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-            placeholder="Add a comment... (use @username to mention)"
+            placeholder={t('ui.comments.addComment')}
             rows={3}
           />
           <div className="flex items-center justify-between mt-2">
             <span className="text-xs text-slate-500">
-              Tip: Use <span className="font-mono bg-slate-200 px-1 rounded">@username</span> to mention someone
+              {t('ui.comments.mentionTip')} <span className="font-mono bg-slate-200 px-1 rounded">{t('ui.comments.mentionExample')}</span> {t('ui.comments.mentionTipEnd')}
             </span>
             <button
               type="submit"
@@ -485,7 +489,7 @@ export const CommentPanel: React.FC<CommentPanelProps> = ({
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Send size={16} />
-              <span className="hidden sm:inline">Comment</span>
+              <span className="hidden sm:inline">{t('ui.comments.commentButton')}</span>
             </button>
           </div>
         </form>

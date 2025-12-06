@@ -10,6 +10,7 @@ import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { Copy, Trash2, Link2, Calendar, Lock, Eye, MessageCircle, Edit2, Globe } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 import {
   createShareLink,
   getShareLinks,
@@ -31,6 +32,7 @@ export const CollaborationShareModal: React.FC<CollaborationShareModalProps> = (
   onClose
 }) => {
   const { showToast } = useToast();
+  const { t } = useThemeLanguage();
 
   // Form state
   const [permission, setPermission] = useState<'view' | 'comment' | 'edit'>('view');
@@ -51,7 +53,7 @@ export const CollaborationShareModal: React.FC<CollaborationShareModalProps> = (
 
   const handleGenerateLink = () => {
     if (!documentId || !currentUserId) {
-      showToast('Invalid document or user', 'error');
+      showToast(t('ui.share.collaboration.invalidDoc'), 'error');
       return;
     }
 
@@ -74,7 +76,7 @@ export const CollaborationShareModal: React.FC<CollaborationShareModalProps> = (
     setExpirationDays('');
     setPassword('');
 
-    showToast('Share link created!', 'success');
+    showToast(t('ui.share.collaboration.linkCreated'), 'success');
   };
 
   const handleCopyLink = async (token: string) => {
@@ -82,21 +84,21 @@ export const CollaborationShareModal: React.FC<CollaborationShareModalProps> = (
 
     try {
       await navigator.clipboard.writeText(url);
-      showToast('Link copied to clipboard!', 'success');
+      showToast(t('ui.share.linkCopied'), 'success');
     } catch (err) {
       console.error('Failed to copy:', err);
-      showToast('Failed to copy link', 'error');
+      showToast(t('ui.share.collaboration.copyFailed'), 'error');
     }
   };
 
   const handleRevokeLink = (linkId: string) => {
-    if (confirm('Are you sure you want to revoke this share link?')) {
+    if (confirm(t('ui.share.collaboration.confirmRevoke'))) {
       const success = revokeShareLink(linkId);
       if (success) {
-        showToast('Share link revoked', 'success');
+        showToast(t('ui.share.collaboration.linkRevoked'), 'success');
         setRefreshKey(prev => prev + 1);
       } else {
-        showToast('Failed to revoke link', 'error');
+        showToast(t('ui.share.collaboration.revokeFailed'), 'error');
       }
     }
   };
@@ -124,40 +126,40 @@ export const CollaborationShareModal: React.FC<CollaborationShareModalProps> = (
   };
 
   const formatExpirationDate = (date?: Date) => {
-    if (!date) return 'Never';
+    if (!date) return t('ui.share.collaboration.never');
     const now = new Date();
-    if (date < now) return 'Expired';
+    if (date < now) return t('ui.share.collaboration.expired');
 
     const days = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (days === 1) return '1 day';
-    if (days < 7) return `${days} days`;
-    if (days < 30) return `${Math.ceil(days / 7)} weeks`;
-    return `${Math.ceil(days / 30)} months`;
+    if (days === 1) return t('ui.share.collaboration.day');
+    if (days < 7) return t('ui.share.collaboration.days').replace('{count}', String(days));
+    if (days < 30) return t('ui.share.collaboration.weeks').replace('{count}', String(Math.ceil(days / 7)));
+    return t('ui.share.collaboration.months').replace('{count}', String(Math.ceil(days / 30)));
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Share Document">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('ui.share.title')}>
       <div className="space-y-6">
         {/* Create Share Link Form */}
         <div className="bg-slate-50 dark:bg-slate-800/50 p-4 md:p-6 rounded-xl border border-slate-200 dark:border-slate-700">
           <h3 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <Link2 size={20} className="text-indigo-600" />
-            Create New Share Link
+            {t('ui.share.collaboration.createNew')}
           </h3>
 
           {/* Permission Selection */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Permission Level
+              {t('ui.share.collaboration.permissionLevel')}
             </label>
             <select
               value={permission}
               onChange={(e) => setPermission(e.target.value as 'view' | 'comment' | 'edit')}
               className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="view">Can View</option>
-              <option value="comment">Can Comment</option>
-              <option value="edit">Can Edit</option>
+              <option value="view">{t('ui.share.permissions.canView')}</option>
+              <option value="comment">{t('ui.share.permissions.canComment')}</option>
+              <option value="edit">{t('ui.share.permissions.canEdit')}</option>
             </select>
           </div>
 
@@ -165,33 +167,33 @@ export const CollaborationShareModal: React.FC<CollaborationShareModalProps> = (
           <div className="mb-4">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
               <Calendar size={16} />
-              Expiration (Optional)
+              {t('ui.share.collaboration.expiration')}
             </label>
             <input
               type="number"
               value={expirationDays}
               onChange={(e) => setExpirationDays(e.target.value)}
-              placeholder="Days until expiration"
+              placeholder={t('ui.share.collaboration.daysPlaceholder')}
               min="1"
               className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            <p className="text-xs text-slate-500 mt-1">Leave empty for no expiration</p>
+            <p className="text-xs text-slate-500 mt-1">{t('ui.share.collaboration.noExpiration')}</p>
           </div>
 
           {/* Password (Optional) */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
               <Lock size={16} />
-              Password Protection (Optional)
+              {t('ui.share.collaboration.password')}
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
+              placeholder={t('ui.share.collaboration.passwordPlaceholder')}
               className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            <p className="text-xs text-slate-500 mt-1">Require password to access this link</p>
+            <p className="text-xs text-slate-500 mt-1">{t('ui.share.collaboration.passwordHint')}</p>
           </div>
 
           {/* Generate Button */}
@@ -200,21 +202,21 @@ export const CollaborationShareModal: React.FC<CollaborationShareModalProps> = (
             className="w-full"
             icon={Globe}
           >
-            Generate Link
+            {t('ui.share.collaboration.generateLink')}
           </Button>
         </div>
 
         {/* Existing Share Links */}
         <div>
           <h3 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-3">
-            Active Share Links
+            {t('ui.share.collaboration.activeLinks')}
           </h3>
 
           {shareLinks.length === 0 ? (
             <div className="text-center py-8 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
               <Link2 size={40} className="mx-auto text-slate-300 dark:text-slate-600 mb-2" />
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                No share links yet. Create one above!
+                {t('ui.share.collaboration.noLinks')}
               </p>
             </div>
           ) : (
@@ -237,7 +239,7 @@ export const CollaborationShareModal: React.FC<CollaborationShareModalProps> = (
                       {link.password && (
                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
                           <Lock size={12} />
-                          Protected
+                          {t('ui.share.collaboration.protected')}
                         </span>
                       )}
 
@@ -265,9 +267,9 @@ export const CollaborationShareModal: React.FC<CollaborationShareModalProps> = (
                   {/* Link Stats & Actions */}
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="text-xs text-slate-500 dark:text-slate-400">
-                      <span className="font-medium">{link.accessCount}</span> access{link.accessCount !== 1 ? 'es' : ''}
+                      <span className="font-medium">{link.accessCount}</span> {link.accessCount !== 1 ? t('ui.share.collaboration.accesses') : t('ui.share.collaboration.access')}
                       {' • '}
-                      Created {new Date(link.createdAt).toLocaleDateString()}
+                      {t('ui.share.collaboration.created')} {new Date(link.createdAt).toLocaleDateString()}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -275,20 +277,20 @@ export const CollaborationShareModal: React.FC<CollaborationShareModalProps> = (
                       <button
                         onClick={() => handleCopyLink(link.token)}
                         className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
-                        title="Copy link"
+                        title={t('ui.share.copy')}
                       >
                         <Copy size={14} />
-                        <span className="hidden sm:inline">Copy</span>
+                        <span className="hidden sm:inline">{t('ui.share.copy')}</span>
                       </button>
 
                       {/* Revoke Button */}
                       <button
                         onClick={() => handleRevokeLink(link.id)}
                         className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
-                        title="Revoke link"
+                        title={t('ui.share.collaboration.revoke')}
                       >
                         <Trash2 size={14} />
-                        <span className="hidden sm:inline">Revoke</span>
+                        <span className="hidden sm:inline">{t('ui.share.collaboration.revoke')}</span>
                       </button>
                     </div>
                   </div>

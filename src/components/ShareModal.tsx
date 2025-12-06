@@ -7,6 +7,7 @@ import { Copy, Globe, Lock, Mail, UserPlus, X } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { SavedDocument, ShareSettings } from '../types';
 import { documentService } from '../services/documentService';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ interface ShareModalProps {
 
 export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, document }) => {
     const { showToast } = useToast();
+    const { t } = useThemeLanguage();
     const [email, setEmail] = useState('');
     const [permission, setPermission] = useState<'view' | 'comment' | 'edit'>('view');
     
@@ -34,7 +36,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, documen
 
     const handleInvite = () => {
         if (!email.includes('@')) {
-            showToast("Please enter a valid email", "error");
+            showToast(t('ui.share.validEmailError'), "error");
             return;
         }
         const newInvites = [
@@ -43,7 +45,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, documen
         ];
         updateSettings({ ...settings, invitedUsers: newInvites });
         setEmail('');
-        showToast(`Invite sent to ${email}`, "success");
+        showToast(t('ui.share.inviteSent').replace('{email}', email), "success");
     };
 
     const removeUser = (emailToRemove: string) => {
@@ -55,11 +57,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, documen
         // Simulate a shareable link
         const url = `${window.location.origin}/share/${document.id}`;
         navigator.clipboard.writeText(url);
-        showToast("Link copied to clipboard", "success");
+        showToast(t('ui.share.linkCopied'), "success");
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Share Document">
+        <Modal isOpen={isOpen} onClose={onClose} title={t('ui.share.title')}>
             <div className="space-y-6">
                 {/* Public Link Section */}
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -69,19 +71,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, documen
                                 {settings.isPublic ? <Globe size={20} /> : <Lock size={20} />}
                             </div>
                             <div>
-                                <h4 className="font-bold text-slate-900 dark:text-white text-sm">General Access</h4>
+                                <h4 className="font-bold text-slate-900 dark:text-white text-sm">{t('ui.share.generalAccess')}</h4>
                                 <p className="text-xs text-slate-500">
-                                    {settings.isPublic ? "Anyone with the link can view" : "Only invited people can access"}
+                                    {settings.isPublic ? t('ui.share.anyoneWithLink') : t('ui.share.onlyInvited')}
                                 </p>
                             </div>
                         </div>
-                        <select 
+                        <select
                             value={settings.isPublic ? 'public' : 'restricted'}
                             onChange={(e) => updateSettings({ ...settings, isPublic: e.target.value === 'public' })}
                             className="text-sm border border-slate-300 dark:border-slate-600 rounded-lg p-1.5 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
                         >
-                            <option value="restricted">Restricted</option>
-                            <option value="public">Anyone with link</option>
+                            <option value="restricted">{t('ui.share.restricted')}</option>
+                            <option value="public">{t('ui.share.publicAccess')}</option>
                         </select>
                     </div>
 
@@ -92,38 +94,38 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, documen
                                 value={`${window.location.origin}/share/${document.id}`}
                                 className="flex-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-500"
                              />
-                             <Button size="sm" variant="secondary" onClick={handleCopyLink} icon={Copy}>Copy</Button>
+                             <Button size="sm" variant="secondary" onClick={handleCopyLink} icon={Copy}>{t('ui.share.copy')}</Button>
                          </div>
                     )}
                 </div>
 
                 {/* Invite Section */}
                 <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-3">Invite People</h4>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-3">{t('ui.share.invitePeople')}</h4>
                     <div className="flex gap-2 mb-4">
-                        <Input 
-                            placeholder="Add email address" 
+                        <Input
+                            placeholder={t('ui.share.addEmail')}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
                             containerClassName="flex-1"
                         />
-                        <select 
+                        <select
                             value={permission}
                             onChange={(e) => setPermission(e.target.value as any)}
                             className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                         >
-                            <option value="view">Can view</option>
-                            <option value="comment">Can comment</option>
-                            <option value="edit">Can edit</option>
+                            <option value="view">{t('ui.share.permissions.view')}</option>
+                            <option value="comment">{t('ui.share.permissions.comment')}</option>
+                            <option value="edit">{t('ui.share.permissions.edit')}</option>
                         </select>
-                        <Button onClick={handleInvite} icon={UserPlus}>Invite</Button>
+                        <Button onClick={handleInvite} icon={UserPlus}>{t('ui.share.invite')}</Button>
                     </div>
 
                     {/* User List */}
                     <div className="space-y-3">
                         {settings.invitedUsers.length === 0 && (
-                            <p className="text-sm text-slate-400 italic text-center py-2">No one invited yet.</p>
+                            <p className="text-sm text-slate-400 italic text-center py-2">{t('ui.share.noOneInvited')}</p>
                         )}
                         {settings.invitedUsers.map(user => (
                             <div key={user.email} className="flex items-center justify-between p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg group">
@@ -133,7 +135,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, documen
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-slate-900 dark:text-white">{user.email}</p>
-                                        <p className="text-xs text-slate-500 capitalize">{user.permission}</p>
+                                        <p className="text-xs text-slate-500 capitalize">{t(`ui.share.permissions.${user.permission}`)}</p>
                                     </div>
                                 </div>
                                 <button onClick={() => removeUser(user.email)} className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
