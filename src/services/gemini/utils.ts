@@ -1,21 +1,34 @@
-import { GoogleGenAI } from "@google/genai";
-
 /**
  * ⚠️ SECURITY WARNING ⚠️
  *
- * This application is currently configured for a client-side only demonstration.
- * The API key is exposed in the browser bundle via process.env.API_KEY.
+ * TEMPORARY: This file still uses client-side Gemini API calls.
+ * This is INSECURE and should be migrated to backend proxy ASAP.
  *
- * IN PRODUCTION:
- * 1. Do not expose your Gemini API key in client-side code.
- * 2. Implement a backend proxy (Node.js, Python, Go) to handle API calls.
- * 3. Store the API key securely in your backend server variables.
- * 4. Implement rate limiting and user authentication on your backend.
+ * MIGRATION IN PROGRESS:
+ * - Some components have been migrated to use /src/services/aiService.ts
+ * - Remaining components still use this insecure approach
+ * - Once all components are migrated, this file will be removed
+ *
+ * DO NOT ADD NEW CODE USING THIS API - Use aiService instead!
  */
-export const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+import { GoogleGenAI } from "@google/genai";
+
+// TEMPORARY: Keep API functional for unmigrated components
+// This exposes the API key in the browser - SECURITY RISK!
+export const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+
+// Log warning when this module is imported
+if (import.meta.env.PROD) {
+  console.warn(
+    '⚠️ SECURITY WARNING: Using insecure client-side Gemini API. ' +
+    'This should be migrated to backend proxy. See /src/services/aiService.ts'
+  );
+}
 
 /**
  * Retry helper with exponential backoff
+ * This is still useful for backend API calls
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,
@@ -43,3 +56,5 @@ export const checkOnline = () => {
         throw new Error("No internet connection. Please check your network.");
     }
 };
+
+

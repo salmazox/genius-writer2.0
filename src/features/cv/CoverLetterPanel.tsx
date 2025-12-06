@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { FileText, Wand2, Loader2, Copy, Check, Download, Edit3, X } from 'lucide-react';
-import { generateCoverLetter } from '../../services/gemini';
+import { aiService } from '../../services/aiService';
 import { CVData } from '../../types';
 
 // ============================================================================
@@ -53,7 +53,33 @@ const CoverLetterPanel: React.FC<CoverLetterPanelProps> = ({
     setError(null);
 
     try {
-      const letter = await generateCoverLetter(cvData, jobDescription);
+      // Build CV summary for the prompt
+      const cvSummary = `
+    Name: ${cvData.personal.fullName}
+    Title: ${cvData.personal.jobTitle}
+    Experience: ${cvData.experience.map(e => `${e.title} at ${e.company}`).join(', ')}
+    Skills: ${cvData.skills.join(', ')}
+  `;
+
+      // Use secure backend API for cover letter generation
+      const response = await aiService.generate({
+        prompt: `
+          Write a compelling cover letter for the following applicant matching the job description.
+
+          APPLICANT:
+          ${cvSummary}
+
+          JOB DESCRIPTION:
+          ${jobDescription}
+
+          Format: HTML (using <p>, <br>, <strong>).
+          Tone: Professional, enthusiastic, and confident.
+        `,
+        model: 'gemini-2.5-flash',
+        temperature: 0.7
+      });
+
+      const letter = response.text || "";
       setCoverLetter(letter);
       setEditedContent(letter);
     } catch (err) {

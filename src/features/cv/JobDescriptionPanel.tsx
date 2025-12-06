@@ -7,7 +7,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Briefcase, Building, Sparkles, X, RefreshCw, AlertCircle, CheckCircle, Loader2, Wand2 } from 'lucide-react';
-import { generateContent, generateCVFromJobDescription } from '../../services/gemini';
+import { aiService } from '../../services/aiService';
+import { getPromptConfig } from '../../config/aiPrompts';
 import { ToolType, CVData } from '../../types';
 
 // ============================================================================
@@ -70,7 +71,7 @@ const JobDescriptionPanel: React.FC<JobDescriptionPanelProps> = ({
     setError(null);
 
     try {
-      // Call Gemini to extract structured data
+      // Use secure backend API to extract structured data
       const prompt = `Analyze this job description and extract key information as JSON.
 
 Job Description:
@@ -94,7 +95,15 @@ Rules:
 - Return valid JSON only, no extra text
 - If something is not found, use empty array or "Unknown"`;
 
-      const result = await generateContent(ToolType.CV_BUILDER, { content: prompt });
+      const promptConfig = getPromptConfig(ToolType.CV_BUILDER, { content: prompt });
+      const response = await aiService.generate({
+        prompt: promptConfig.generatePrompt({ content: prompt }),
+        model: promptConfig.modelName as 'gemini-2.0-flash-exp' | 'gemini-2.5-pro-preview' | 'gemini-2.5-flash' | 'gemini-2.5-flash-image',
+        systemInstruction: promptConfig.systemInstruction,
+        temperature: 0.5
+      });
+
+      const result = response.text;
 
       // Parse the response
       let parsed;
@@ -152,7 +161,74 @@ Rules:
     setError(null);
 
     try {
-      const generatedCV = await generateCVFromJobDescription(value);
+      // Use secure backend API for CV generation
+      const response = await aiService.generate({
+        prompt: `You are an expert CV/resume writer and career coach. Generate a complete, ATS-optimized CV tailored to the following job description.
+
+JOB DESCRIPTION:
+${value}
+
+IMPORTANT RULES:
+1. Create realistic, quantifiable achievements (use percentages, dollar amounts, metrics)
+2. Use strong action verbs (Led, Spearheaded, Architected, Optimized, etc.)
+3. Tailor ALL content to match the job description's requirements
+4. Include keywords from the job description naturally
+5. Make the candidate seem qualified but not overqualified
+6. Use HTML bullet points (<ul><li>) for descriptions
+7. Include 2-3 relevant experience entries
+8. Include 2 education entries (Bachelor's + relevant certification or Master's)
+9. Include 12-15 skills that match the job requirements
+10. Write a compelling 60-80 word professional summary
+11. Generate realistic dates (current year backwards)
+12. Include contact information
+
+OUTPUT FORMAT (strict JSON):
+{
+  "personal": {
+    "fullName": "string",
+    "email": "string (professional)",
+    "phone": "string (format: +1 555 0192)",
+    "address": "string (City, State/Country)",
+    "linkedin": "string (format: in/username)",
+    "jobTitle": "string (matches the job or similar)",
+    "summary": "string (60-80 words, compelling, tailored to job)"
+  },
+  "experience": [
+    {
+      "title": "string",
+      "company": "string (realistic company name)",
+      "location": "string",
+      "startDate": "YYYY-MM",
+      "endDate": "Present or YYYY-MM",
+      "current": boolean,
+      "description": "<ul><li>Achievement with quantifiable result</li><li>Another achievement with metrics</li></ul>"
+    }
+  ],
+  "education": [
+    {
+      "degree": "string (Bachelor's/Master's)",
+      "field": "string (relevant to job)",
+      "institution": "string (realistic university)",
+      "location": "string",
+      "graduationDate": "YYYY",
+      "gpa": "3.7" (optional),
+      "description": "string (honors, relevant coursework)"
+    }
+  ],
+  "skills": ["skill1", "skill2", ...],
+  "certifications": [],
+  "languages": [{"name": "English", "proficiency": "Native"}]
+}
+
+Generate the CV now. Return ONLY the JSON, no markdown formatting.`,
+        model: 'gemini-2.5-pro-preview',
+        temperature: 0.7
+      });
+
+      const text = response.text || "{}";
+      const cleanedText = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      const generatedCV = JSON.parse(cleanedText);
+
       onGenerateCV(generatedCV);
     } catch (err) {
       console.error('CV generation error:', err);

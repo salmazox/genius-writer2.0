@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Lock, Crown } from 'lucide-react';
 import { usageService } from '../services/usageService';
 import { UpgradeModal } from './UpgradeModal';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface FeatureGateProps {
   feature: string;
@@ -20,6 +21,7 @@ export const FeatureGate: React.FC<FeatureGateProps> = ({
   fallback,
   showUpgradeButton = true,
 }) => {
+  const { t } = useThemeLanguage();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [requiredPlans, setRequiredPlans] = useState<string[]>([]);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -71,17 +73,17 @@ export const FeatureGate: React.FC<FeatureGateProps> = ({
               </div>
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
-              Premium Feature
+              {t('ui.featureGate.premiumFeature')}
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-              This feature requires a {requiredPlans.join(' or ')} plan
+              {t('ui.featureGate.requiresPlan').replace('{plans}', requiredPlans.join(' or '))}
             </p>
             {showUpgradeButton && (
               <button
                 onClick={() => setShowUpgradeModal(true)}
                 className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all shadow-lg"
               >
-                Upgrade to Unlock
+                {t('ui.featureGate.upgradeToUnlock')}
               </button>
             )}
           </div>
@@ -94,7 +96,7 @@ export const FeatureGate: React.FC<FeatureGateProps> = ({
         onClose={() => setShowUpgradeModal(false)}
         limitType="feature"
         feature={feature}
-        message={`This feature requires a ${requiredPlans.join(' or ')} plan`}
+        message={t('ui.featureGate.requiresPlan').replace('{plans}', requiredPlans.join(' or '))}
       />
     </>
   );
@@ -115,6 +117,7 @@ export const FeatureLock: React.FC<FeatureLockProps> = ({
   requiredPlan = 'PRO',
   compact = false,
 }) => {
+  const { t } = useThemeLanguage();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   if (compact) {
@@ -132,7 +135,7 @@ export const FeatureLock: React.FC<FeatureLockProps> = ({
           onClose={() => setShowUpgradeModal(false)}
           limitType="feature"
           feature={feature}
-          message={`This feature requires a ${requiredPlan} plan`}
+          message={t('ui.featureGate.requiresPlan').replace('{plans}', requiredPlan)}
         />
       </>
     );
@@ -143,13 +146,13 @@ export const FeatureLock: React.FC<FeatureLockProps> = ({
       <div className="inline-flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg">
         <Lock size={16} className="text-indigo-600 dark:text-indigo-400" />
         <span className="text-sm text-slate-700 dark:text-slate-300">
-          Requires {requiredPlan} Plan
+          {t('ui.featureGate.requires').replace('{plan}', requiredPlan)}
         </span>
         <button
           onClick={() => setShowUpgradeModal(true)}
           className="ml-2 px-3 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded text-xs font-semibold transition-all"
         >
-          Upgrade
+          {t('ui.featureGate.upgrade')}
         </button>
       </div>
       <UpgradeModal
@@ -157,7 +160,7 @@ export const FeatureLock: React.FC<FeatureLockProps> = ({
         onClose={() => setShowUpgradeModal(false)}
         limitType="feature"
         feature={feature}
-        message={`This feature requires a ${requiredPlan} plan`}
+        message={t('ui.featureGate.requiresPlan').replace('{plans}', requiredPlan)}
       />
     </>
   );

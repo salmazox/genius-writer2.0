@@ -1,12 +1,12 @@
 
 import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
-import { 
-    Bold, Italic, Underline, List, ListOrdered, Undo, Redo, Sparkles, Loader2, 
-    Image as ImageIcon, Link as LinkIcon, AlignLeft, AlignCenter, AlignRight, 
+import {
+    Bold, Italic, Underline, List, ListOrdered, Undo, Redo, Sparkles, Loader2,
+    Image as ImageIcon, Link as LinkIcon, AlignLeft, AlignCenter, AlignRight,
     Check, X, Wand2, Strikethrough, Upload,
     ChevronDown
 } from 'lucide-react';
-import { refineContent } from '../services/gemini';
+import { aiService } from '../services/aiService';
 import { useToast } from '../contexts/ToastContext';
 import { validateImageFile } from '../utils/security';
 
@@ -231,7 +231,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
 
     const handleRefine = async (instruction: string, textOverride?: string) => {
         const textToRefine = textOverride || selectedText || editorRef.current?.innerText;
-        
+
         if (!textToRefine) {
             showToast("No text selected to refine", "error");
             return;
@@ -239,8 +239,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
 
         setIsRefining(true);
         try {
-            const refined = await refineContent(textToRefine, instruction);
-            
+            // Use secure backend API for content refinement
+            const systemInstruction = "You are a professional editor. Improve the text based on the user's specific instruction.";
+            const prompt = `Original Text:\n"${textToRefine}"\n\nInstruction: ${instruction}\n\nRewrite the text to follow the instruction. Return ONLY the rewritten text, no conversational filler. Keep existing HTML or Markdown formatting unless asked to change it.`;
+
+            const response = await aiService.generate({
+                prompt,
+                model: 'gemini-2.0-flash-exp',
+                systemInstruction,
+                temperature: 0.7
+            });
+
+            const refined = response.text;
+
             // If we have a saved range or active selection, replace it
             if (textOverride && savedRange) {
                 // Restore range to replace specifically the selected text
@@ -253,7 +264,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ value, onCha
             } else if (editorRef.current) {
                 editorRef.current.innerText = refined;
             }
-            
+
             if (editorRef.current) onChange(editorRef.current.innerHTML);
             showToast("Text refined!", "success");
             setFloatingPos(null); // Close menu

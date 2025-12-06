@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, Zap, Crown, Sparkles } from 'lucide-react';
+import { useThemeLanguage } from '../contexts/ThemeLanguageContext';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   currentPlan = 'FREE',
   message,
 }) => {
+  const { t } = useThemeLanguage();
+
   if (!isOpen) return null;
 
   const getLimitInfo = () => {
@@ -25,52 +28,52 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
       case 'aiGenerations':
         return {
           icon: <Zap className="text-yellow-500" size={48} />,
-          title: 'AI Generation Limit Reached',
-          description: message || 'You\'ve used all your AI generations for this month.',
+          title: t('ui.upgradeModal.aiGenerationLimitTitle'),
+          description: message || t('ui.upgradeModal.aiGenerationLimitDesc'),
           benefits: [
-            'PRO: 100 AI generations/month',
-            'AGENCY: 500 AI generations/month',
-            'ENTERPRISE: Unlimited generations',
+            t('ui.upgradeModal.benefits.proPro'),
+            t('ui.upgradeModal.benefits.proAgency'),
+            t('ui.upgradeModal.benefits.proEnterprise'),
           ],
         };
       case 'documents':
         return {
           icon: <Sparkles className="text-blue-500" size={48} />,
-          title: 'Document Limit Reached',
-          description: message || 'You\'ve reached your monthly document creation limit.',
+          title: t('ui.upgradeModal.documentLimitTitle'),
+          description: message || t('ui.upgradeModal.documentLimitDesc'),
           benefits: [
-            'PRO: 50 documents/month',
-            'AGENCY: 200 documents/month',
-            'ENTERPRISE: Unlimited documents',
+            t('ui.upgradeModal.benefits.docPro'),
+            t('ui.upgradeModal.benefits.docAgency'),
+            t('ui.upgradeModal.benefits.docEnterprise'),
           ],
         };
       case 'storage':
         return {
           icon: <Crown className="text-purple-500" size={48} />,
-          title: 'Storage Limit Reached',
-          description: message || 'You\'ve used all your available storage.',
+          title: t('ui.upgradeModal.storageLimitTitle'),
+          description: message || t('ui.upgradeModal.storageLimitDesc'),
           benefits: [
-            'PRO: 5 GB storage',
-            'AGENCY: 50 GB storage',
-            'ENTERPRISE: 500 GB storage',
+            t('ui.upgradeModal.benefits.storagePro'),
+            t('ui.upgradeModal.benefits.storageAgency'),
+            t('ui.upgradeModal.benefits.storageEnterprise'),
           ],
         };
       case 'feature':
         return {
           icon: <Crown className="text-purple-500" size={48} />,
-          title: `${feature || 'Premium Feature'} Not Available`,
-          description: message || `This feature is not available on your ${currentPlan} plan.`,
+          title: t('ui.upgradeModal.featureNotAvailable').replace('{feature}', feature || t('ui.featureGate.premiumFeature')),
+          description: message || t('ui.upgradeModal.featureNotAvailableDesc').replace('{plan}', currentPlan),
           benefits: [
-            'Access to all premium features',
-            'Priority support',
-            'Advanced analytics',
+            t('ui.upgradeModal.benefits.premiumFeatures'),
+            t('ui.upgradeModal.benefits.prioritySupport'),
+            t('ui.upgradeModal.benefits.advancedAnalytics'),
           ],
         };
       default:
         return {
           icon: <Zap className="text-indigo-500" size={48} />,
-          title: 'Upgrade Required',
-          description: message || 'Upgrade your plan to continue.',
+          title: t('ui.upgradeModal.upgradeRequired'),
+          description: message || t('ui.upgradeModal.upgradePlanDesc'),
           benefits: [],
         };
     }
@@ -150,7 +153,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
         {info.benefits.length > 0 && (
           <div className="px-6 py-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
             <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
-              Upgrade to unlock:
+              {t('ui.upgradeModal.upgradeToUnlock')}
             </h3>
             <ul className="space-y-1">
               {info.benefits.map((benefit, index) => (
@@ -166,7 +169,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
         {/* Plans */}
         <div className="px-6 py-6">
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4 text-center">
-            Choose Your Plan
+            {t('ui.upgradeModal.chooseYourPlan')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {plans.map((plan) => (
@@ -181,7 +184,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <span className="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                      Most Popular
+                      {t('ui.upgradeModal.mostPopular')}
                     </span>
                   </div>
                 )}
@@ -220,7 +223,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
                       : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100'
                   }`}
                 >
-                  {plan.name === 'ENTERPRISE' ? 'Contact Sales' : 'Upgrade Now'}
+                  {plan.name === 'ENTERPRISE' ? t('ui.upgradeModal.contactSales') : t('ui.upgradeModal.upgradeNow')}
                 </a>
               </div>
             ))}
@@ -231,13 +234,13 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
         <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900/50 rounded-b-2xl">
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              All plans include a 14-day money-back guarantee
+              {t('ui.upgradeModal.moneyBackGuarantee')}
             </p>
             <button
               onClick={onClose}
               className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
             >
-              Maybe later
+              {t('ui.upgradeModal.maybelater')}
             </button>
           </div>
         </div>

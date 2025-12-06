@@ -3,7 +3,7 @@ import { Plus, Trash2, Wand2, Loader2, MessageSquare, Save, X } from 'lucide-rea
 import { useUser } from '../contexts/UserContext';
 import { Button } from '../components/ui/Button';
 import { Input, Textarea } from '../components/ui/Forms';
-import { extractBrandVoice } from '../services/gemini';
+import { aiService } from '../services/aiService';
 import { useToast } from '../contexts/ToastContext';
 import { BrandVoice } from '../types';
 
@@ -42,10 +42,32 @@ export const BrandVoiceManager: React.FC<BrandVoiceManagerProps> = ({ onClose })
         }
         setIsAnalyzing(true);
         try {
-            const result = await extractBrandVoice(sampleText);
+            // Use secure backend API for brand voice extraction
+            const response = await aiService.generate({
+                prompt: `
+                Analyze the following text sample. Identify the Tone, Style, and Personality.
+
+                TEXT SAMPLE:
+                "${sampleText}"
+
+                Task:
+                1. Give it a catchy Name (max 3 words).
+                2. Write a concise Description (max 1 sentence) that describes instructions for an AI to write in this style.
+
+                Return response in JSON format:
+                { "name": "...", "description": "..." }
+                `,
+                model: 'gemini-2.5-flash',
+                temperature: 0.7
+            });
+
+            const text = response.text || "{}";
+            const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const result = JSON.parse(jsonStr);
             setNewVoice(result);
             setMode('create');
         } catch (e) {
+            console.error("Brand Voice Extraction Error", e);
             showToast("Analysis failed", "error");
         } finally {
             setIsAnalyzing(false);
