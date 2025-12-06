@@ -90,7 +90,13 @@ router.post('/create-checkout', authenticate, async (req, res) => {
     // Create checkout session with multiple payment methods
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ['card', 'paypal', 'link'], // Enable card, PayPal, and Link
+      payment_method_types: [
+        'card',           // Credit/Debit cards
+        'paypal',         // PayPal
+        'klarna',         // Klarna
+        'sepa_debit',     // SEPA Direct Debit
+        'link'            // Stripe Link
+      ],
       line_items: [
         {
           price: priceId,
@@ -116,7 +122,9 @@ router.post('/create-checkout', authenticate, async (req, res) => {
         enabled: false // Set to true if you have Stripe Tax configured
       },
       // Allow promotion codes
-      allow_promotion_codes: true
+      allow_promotion_codes: true,
+      // Collect billing address for SEPA and other payment methods
+      billing_address_collection: 'required'
     });
 
     res.json({
@@ -298,6 +306,190 @@ router.post('/reactivate-subscription', authenticate, async (req, res) => {
     res.status(500).json({
       error: 'Failed to reactivate subscription',
       message: 'An error occurred while reactivating the subscription'
+    });
+  }
+});
+
+// Get invoices
+router.get('/invoices', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get subscription to find Stripe customer ID
+    const subscription = await prisma.subscription.findFirst({
+      where: { userId }
+    });
+
+    if (!subscription || !subscription.stripeCustomerId) {
+      return res.json({ invoices: [] });
+    }
+
+    // Fetch invoices from Stripe
+    const invoices = await stripe.invoices.list({
+      customer: subscription.stripeCustomerId,
+      limit: 12 // Last 12 invoices
+    });
+
+    // Transform to frontend format
+    const formattedInvoices = invoices.data.map(invoice => ({
+      id: invoice.id,
+      number: invoice.number || invoice.id,
+      date: new Date(invoice.created * 1000).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }),
+      amount: (invoice.total / 100).toFixed(2),
+      currency: invoice.currency.toUpperCase(),
+      status: invoice.status === 'paid' ? 'Paid' :
+              invoice.status === 'open' ? 'Pending' :
+              invoice.status === 'void' ? 'Void' :
+              'Unpaid',
+      items: invoice.lines.data.map(line => line.description).join(', '),
+      invoicePdf: invoice.invoice_pdf,
+      hostedInvoiceUrl: invoice.hosted_invoice_url
+    }));
+
+    res.json({ invoices: formattedInvoices });
+  } catch (error) {
+    console.error('[BILLING] Get invoices error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch invoices',
+      message: 'An error occurred while fetching invoices'
+    });
+  }
+});
+
+// Get usage data
+router.get('/usage', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get user's current plan
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get usage from database (you'll need to implement usage tracking)
+    // For now, return structure with zero values that can be populated later
+    const usage = await prisma.usage.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
+    }).catch(() => null); // If usage table doesn't exist yet
+
+    res.json({
+      usage: usage || {
+        aiGenerations: 0,
+        documents: 0,
+        storage: 0,
+        collaborators: 0
+      },
+      plan: user.plan
+    });
+  } catch (error) {
+    console.error('[BILLING] Get usage error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch usage data',
+      message: 'An error occurred while fetching usage data'
+    });
+  }
+});
+
+// Update billing address and sync with Stripe
+router.put('/billing-address', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { street, city, state, postalCode, country } = req.body;
+
+    // Update user's billing address in database
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        billingStreet: street || null,
+        billingCity: city || null,
+        billingState: state || null,
+        billingPostalCode: postalCode || null,
+        billingCountry: country || null
+      }
+    });
+
+    // Get subscription to find Stripe customer ID
+    const subscription = await prisma.subscription.findFirst({
+      where: { userId }
+    });
+
+    // Sync with Stripe if customer exists
+    if (subscription && subscription.stripeCustomerId) {
+      await stripe.customers.update(subscription.stripeCustomerId, {
+        address: {
+          line1: street || '',
+          city: city || '',
+          state: state || '',
+          postal_code: postalCode || '',
+          country: country || ''
+        }
+      });
+      console.log(`[BILLING] Billing address synced with Stripe for customer: ${subscription.stripeCustomerId}`);
+    }
+
+    res.json({
+      message: 'Billing address updated successfully',
+      billingAddress: {
+        street: updatedUser.billingStreet,
+        city: updatedUser.billingCity,
+        state: updatedUser.billingState,
+        postalCode: updatedUser.billingPostalCode,
+        country: updatedUser.billingCountry
+      }
+    });
+  } catch (error) {
+    console.error('[BILLING] Update billing address error:', error);
+    res.status(500).json({
+      error: 'Failed to update billing address',
+      message: 'An error occurred while updating billing address'
+    });
+  }
+});
+
+// Get billing address
+router.get('/billing-address', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        billingStreet: true,
+        billingCity: true,
+        billingState: true,
+        billingPostalCode: true,
+        billingCountry: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      billingAddress: {
+        street: user.billingStreet,
+        city: user.billingCity,
+        state: user.billingState,
+        postalCode: user.billingPostalCode,
+        country: user.billingCountry
+      }
+    });
+  } catch (error) {
+    console.error('[BILLING] Get billing address error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch billing address',
+      message: 'An error occurred while fetching billing address'
     });
   }
 });

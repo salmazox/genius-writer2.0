@@ -50,9 +50,13 @@ export interface User {
 export interface Invoice {
   id: string;
   date: string;
-  amount: number;
-  status: 'Paid' | 'Pending' | 'Failed';
+  amount: number | string;
+  status: 'Paid' | 'Pending' | 'Failed' | 'Void' | 'Unpaid';
   items: string;
+  currency?: string;
+  number?: string;
+  invoicePdf?: string;
+  hostedInvoiceUrl?: string;
 }
 
 export interface BrandVoice {

@@ -20,12 +20,19 @@ model User {
   bio       String?
   plan      Plan     @default(FREE)
 
-  // Address Information
+  // Shipping Address Information
   street      String?
   city        String?
   state       String?
   postalCode  String?
   country     String?
+
+  // Billing Address Information (optional, separate from shipping)
+  billingStreet      String?
+  billingCity        String?
+  billingState       String?
+  billingPostalCode  String?
+  billingCountry     String?
 
   // Terms & Compliance
   termsAcceptedAt DateTime?

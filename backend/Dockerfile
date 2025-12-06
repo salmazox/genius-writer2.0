@@ -20,5 +20,6 @@ RUN npx prisma generate
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Start the application with migrations
+# This runs: npx prisma migrate deploy && node server.js
+CMD ["npm", "run", "deploy"]

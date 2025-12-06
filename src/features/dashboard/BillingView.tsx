@@ -8,6 +8,7 @@ import { PlanCard } from '../../components/billing/PlanCard';
 import { SubscriptionStatusBadge } from '../../components/billing/SubscriptionStatusBadge';
 import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { UsageAlert } from '../../components/alerts/UsageAlert';
+import { BillingAddressForm } from '../../components/billing/BillingAddressForm';
 import { SubscriptionTier, getAllPlans, getPlan, mapBackendPlanToTier, mapTierToBackendPlan } from '../../config/pricing';
 import { useThemeLanguage } from '../../contexts/ThemeLanguageContext';
 import { useUser } from '../../contexts/UserContext';
@@ -28,6 +29,10 @@ export const BillingView: React.FC = () => {
     const [canceling, setCanceling] = useState(false);
     const [reactivating, setReactivating] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [usage, setUsage] = useState<any>(null);
+    const [loadingInvoices, setLoadingInvoices] = useState(true);
+    const [loadingUsage, setLoadingUsage] = useState(true);
 
     // Determine current tier from subscription or user data
     // Convert backend plan names (PRO, AGENCY) to frontend enum (starter, professional)
@@ -39,6 +44,8 @@ export const BillingView: React.FC = () => {
     // Load subscription data
     useEffect(() => {
         loadSubscription();
+        loadInvoices();
+        loadUsage();
     }, []);
 
     // Handle automatic checkout from plan selection
@@ -83,42 +90,64 @@ export const BillingView: React.FC = () => {
         }
     };
 
-    // Mock usage data
+    const loadInvoices = async () => {
+        try {
+            setLoadingInvoices(true);
+            const data = await billingAPI.getInvoices();
+            if (data.invoices) {
+                setInvoices(data.invoices);
+            }
+        } catch (err) {
+            console.error('Failed to load invoices:', err);
+        } finally {
+            setLoadingInvoices(false);
+        }
+    };
+
+    const loadUsage = async () => {
+        try {
+            setLoadingUsage(true);
+            const data = await billingAPI.getUsage();
+            if (data.usage) {
+                setUsage(data.usage);
+            }
+        } catch (err) {
+            console.error('Failed to load usage:', err);
+        } finally {
+            setLoadingUsage(false);
+        }
+    };
+
+    // Real usage data from backend
     const usageMetrics = [
         {
             label: t('billing.usage.aiGenerations'),
-            current: 423,
+            current: usage?.aiGenerations || 0,
             limit: currentPlan.limits.aiGenerations,
             unit: t('billing.usage.generations'),
             icon: <Sparkles size={16} />
         },
         {
             label: t('billing.usage.documents'),
-            current: 156,
+            current: usage?.documents || 0,
             limit: currentPlan.limits.documentsPerMonth,
             unit: t('billing.usage.documents').toLowerCase(),
             icon: <FileText size={16} />
         },
         {
             label: t('billing.usage.storage'),
-            current: 32,
+            current: usage?.storage || 0,
             limit: currentPlan.limits.storageGB,
             unit: t('billing.usage.gb'),
             icon: <HardDrive size={16} />
         },
         {
             label: t('billing.usage.teamMembers'),
-            current: 3,
+            current: usage?.collaborators || 0,
             limit: currentPlan.limits.collaborators,
             unit: t('billing.usage.members'),
             icon: <Users size={16} />
         }
-    ];
-
-    const mockInvoices: Invoice[] = [
-        { id: 'INV-2023-001', date: 'Oct 24, 2023', amount: 29.00, status: 'Paid', items: 'Pro Plan - Monthly' },
-        { id: 'INV-2023-002', date: 'Sep 24, 2023', amount: 29.00, status: 'Paid', items: 'Pro Plan - Monthly' },
-        { id: 'INV-2023-003', date: 'Aug 24, 2023', amount: 29.00, status: 'Paid', items: 'Pro Plan - Monthly' },
     ];
 
     const handleUpgradeClick = () => {
@@ -459,21 +488,53 @@ export const BillingView: React.FC = () => {
                      <h3 className="font-bold text-lg text-slate-900 dark:text-white">{t('billing.invoices.title')}</h3>
                  </div>
                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                     {mockInvoices.map(invoice => (
-                         <div key={invoice.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                             <div className="flex flex-col">
-                                 <span className="font-bold text-slate-900 dark:text-white text-sm">{t('billing.invoices.proMonthly')}</span>
-                                 <span className="text-xs text-slate-500">{invoice.date}</span>
-                             </div>
-                             <div className="flex items-center gap-4">
-                                 <span className="font-bold text-slate-900 dark:text-white">€{invoice.amount.toFixed(2)}</span>
-                                 <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full font-bold">{t('billing.invoices.paid')}</span>
-                                 <button className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Download size={18} /></button>
-                             </div>
+                     {loadingInvoices ? (
+                         <div className="p-8 text-center text-slate-500">
+                             Loading invoices...
                          </div>
-                     ))}
+                     ) : invoices.length === 0 ? (
+                         <div className="p-8 text-center text-slate-500">
+                             No invoices yet. Invoices will appear here after your first payment.
+                         </div>
+                     ) : (
+                         invoices.map(invoice => (
+                             <div key={invoice.id} className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                 <div className="flex flex-col">
+                                     <span className="font-bold text-slate-900 dark:text-white text-sm">{invoice.items}</span>
+                                     <span className="text-xs text-slate-500">{invoice.date}</span>
+                                 </div>
+                                 <div className="flex items-center gap-4">
+                                     <span className="font-bold text-slate-900 dark:text-white">
+                                         {invoice.currency || 'EUR'} {typeof invoice.amount === 'number' ? invoice.amount.toFixed(2) : invoice.amount}
+                                     </span>
+                                     <span className={`px-2 py-0.5 text-xs rounded-full font-bold ${
+                                         invoice.status === 'Paid'
+                                             ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                             : invoice.status === 'Pending'
+                                             ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                                             : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                     }`}>
+                                         {invoice.status}
+                                     </span>
+                                     {invoice.invoicePdf && (
+                                         <a
+                                             href={invoice.invoicePdf}
+                                             target="_blank"
+                                             rel="noopener noreferrer"
+                                             className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
+                                         >
+                                             <Download size={18} />
+                                         </a>
+                                     )}
+                                 </div>
+                             </div>
+                         ))
+                     )}
                  </div>
              </div>
+
+             {/* Billing Address */}
+             <BillingAddressForm />
 
              {/* Cancel Subscription Confirmation Modal */}
              <ConfirmModal
